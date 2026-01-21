@@ -1,0 +1,42 @@
+services:
+  # Backend API
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: gretta-erp-backend
+    restart: unless-stopped
+    env_file:
+      - ./server/.env
+    ports:
+      - "5000:5000"
+    networks:
+      - easypanel
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gretta-api.rule=Host(`api.grettas-erp.com`)"
+      - "traefik.http.routers.gretta-api.entrypoints=websecure"
+      - "traefik.http.routers.gretta-api.tls=true"
+      - "traefik.http.routers.gretta-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.gretta-api.loadbalancer.server.port=5000"
+
+  # Frontend
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: gretta-erp-frontend
+    restart: unless-stopped
+    networks:
+      - easypanel
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gretta-web.rule=Host(`grettas-erp.com`) || Host(`www.grettas-erp.com`)"
+      - "traefik.http.routers.gretta-web.entrypoints=websecure"
+      - "traefik.http.routers.gretta-web.tls=true"
+      - "traefik.http.routers.gretta-web.tls.certresolver=letsencrypt"
+      - "traefik.http.services.gretta-web.loadbalancer.server.port=80"
+
+networks:
+  easypanel:
+    external: true

@@ -58,9 +58,9 @@ const AlertConfig = require('./AlertConfig')(sequelize);
 const SyncQueue = require('./SyncQueue')(sequelize);
 const SyncLog = require('./SyncLog')(sequelize);
 const AuditLog = require('./AuditLog')(sequelize);
-const ShippingZone = require('./shippingZone')(sequelize);
-const NeighborhoodMapping = require('./neighborhoodMapping')(sequelize);
-const SaleShipping = require('./saleShipping')(sequelize);
+const ShippingZone = require('./ShippingZone')(sequelize);
+const NeighborhoodMapping = require('./NeighborhoodMapping')(sequelize);
+const SaleShipping = require('./SaleShipping')(sequelize);
 const ExpenseCategory = require('./ExpenseCategory')(sequelize);
 const Expense = require('./Expense')(sequelize);
 
