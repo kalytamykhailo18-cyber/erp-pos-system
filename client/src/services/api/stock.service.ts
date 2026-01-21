@@ -1,0 +1,215 @@
+import { get, post } from './client';
+import type {
+  ApiResponse,
+  PaginatedResponse,
+  UUID,
+  StockTransfer,
+  StockTransferStatus
+} from '../../types';
+
+// Stock-related types matching database schema
+export interface StockItem {
+  id: UUID;
+  product_id: UUID;
+  product_name: string;
+  product_sku: string;
+  branch_id: UUID;
+  branch_name: string;
+  quantity: number;
+  reserved_quantity: number;
+  expected_shrinkage: number;
+  actual_shrinkage: number;
+  last_counted_at: string | null;
+  last_counted_quantity: number | null;
+  updated_at: string;
+}
+
+export interface StockMovement {
+  id: UUID;
+  product_id: UUID;
+  product_name: string;
+  product_sku: string;
+  branch_id: UUID;
+  branch_name: string;
+  movement_type: 'SALE' | 'RETURN' | 'PURCHASE' | 'TRANSFER_OUT' | 'TRANSFER_IN' | 'ADJUSTMENT_PLUS' | 'ADJUSTMENT_MINUS' | 'SHRINKAGE' | 'INITIAL' | 'INVENTORY_COUNT';
+  quantity: number;
+  quantity_before: number;
+  quantity_after: number;
+  reference_type?: string;
+  reference_id?: UUID;
+  adjustment_reason?: string;
+  related_branch_id?: UUID;
+  performed_by?: UUID;
+  performed_by_name?: string;
+  notes?: string;
+  created_at: string;
+}
+
+export interface StockAdjustment {
+  product_id: UUID;
+  branch_id: UUID;
+  quantity: number;
+  reason: string;
+  notes?: string;
+}
+
+export const stockService = {
+  /**
+   * Get stock for a branch with filters
+   */
+  getByBranch: (branchId: UUID, params?: {
+    search?: string;
+    low_stock?: boolean;
+    page?: number;
+    limit?: number;
+  }): Promise<PaginatedResponse<StockItem>> => {
+    return get<StockItem[]>(`/stock/branch/${branchId}`, params) as Promise<PaginatedResponse<StockItem>>;
+  },
+
+  /**
+   * Get stock for a specific product across all branches
+   */
+  getByProduct: (productId: UUID): Promise<ApiResponse<StockItem[]>> => {
+    return get<StockItem[]>(`/stock/product/${productId}`);
+  },
+
+  /**
+   * Get low stock items
+   */
+  getLowStock: (branchId?: UUID): Promise<ApiResponse<StockItem[]>> => {
+    return get<StockItem[]>('/stock/low-stock', branchId ? { branch_id: branchId } : undefined);
+  },
+
+  /**
+   * Get stock movements
+   */
+  getMovements: (params: {
+    branch_id?: UUID;
+    product_id?: UUID;
+    movement_type?: string;
+    from_date?: string;
+    to_date?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<PaginatedResponse<StockMovement>> => {
+    return get<StockMovement[]>('/stock/movements', params) as Promise<PaginatedResponse<StockMovement>>;
+  },
+
+  /**
+   * Adjust stock
+   */
+  adjust: (data: StockAdjustment): Promise<ApiResponse<{ stock: any; movement: StockMovement }>> => {
+    return post('/stock/adjustment', data);
+  },
+
+  /**
+   * Record shrinkage
+   */
+  recordShrinkage: (data: {
+    product_id: UUID;
+    branch_id: UUID;
+    quantity: number;
+    reason?: string;
+    notes?: string;
+  }): Promise<ApiResponse<StockMovement>> => {
+    return post<StockMovement>('/stock/shrinkage', data);
+  },
+
+  /**
+   * Submit physical inventory count
+   */
+  submitInventoryCount: (data: {
+    branch_id: UUID;
+    entries: Array<{
+      product_id: UUID;
+      counted_quantity: number;
+    }>;
+    notes?: string;
+  }): Promise<ApiResponse<{
+    processed: number;
+    adjustments: number;
+    no_change: number;
+    details: Array<{
+      product_id: UUID;
+      previous_quantity: number;
+      counted_quantity: number;
+      variance: number;
+      action: string;
+    }>;
+  }>> => {
+    return post('/stock/inventory-count', data);
+  },
+
+  // ===== Stock Transfers =====
+
+  /**
+   * Get all transfers with filters
+   */
+  getTransfers: (params?: {
+    from_branch_id?: UUID;
+    to_branch_id?: UUID;
+    status?: StockTransferStatus;
+    page?: number;
+    limit?: number;
+  }): Promise<PaginatedResponse<StockTransfer>> => {
+    return get<StockTransfer[]>('/stock/transfers', params) as Promise<PaginatedResponse<StockTransfer>>;
+  },
+
+  /**
+   * Get transfer by ID
+   */
+  getTransferById: (transferId: UUID): Promise<ApiResponse<StockTransfer>> => {
+    return get<StockTransfer>(`/stock/transfers/${transferId}`);
+  },
+
+  /**
+   * Create new transfer
+   */
+  createTransfer: (data: {
+    from_branch_id: UUID;
+    to_branch_id: UUID;
+    notes?: string;
+    items: Array<{
+      product_id: UUID;
+      quantity: number;
+    }>;
+  }): Promise<ApiResponse<StockTransfer>> => {
+    return post<StockTransfer>('/stock/transfers', data);
+  },
+
+  /**
+   * Approve transfer (start transit)
+   */
+  approveTransfer: (
+    transferId: UUID,
+    items: Array<{
+      id: UUID;
+      shipped_quantity: number;
+    }>
+  ): Promise<ApiResponse<StockTransfer>> => {
+    return post<StockTransfer>(`/stock/transfers/${transferId}/approve`, { items });
+  },
+
+  /**
+   * Receive transfer at destination
+   */
+  receiveTransfer: (transferId: UUID, data: {
+    items: Array<{
+      item_id: UUID;
+      quantity_received: number;
+    }>;
+    notes?: string;
+  }): Promise<ApiResponse<StockTransfer>> => {
+    return post<StockTransfer>(`/stock/transfers/${transferId}/receive`, data);
+  },
+
+  /**
+   * Cancel transfer
+   */
+  cancelTransfer: (transferId: UUID, reason: string): Promise<ApiResponse<StockTransfer>> => {
+    return post<StockTransfer>(`/stock/transfers/${transferId}/cancel`, { reason });
+  },
+
+};
+
+export default stockService;

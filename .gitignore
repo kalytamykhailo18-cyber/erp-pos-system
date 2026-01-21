@@ -1,0 +1,13 @@
+node_modules/
+.claude/
+dist/
+.env
+package-lock.json
+docs/
+overview/
+*.md
+uploads/
+logs/
+pos
+pos.*
+required.*

@@ -1,0 +1,276 @@
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../../store';
+import {
+  loadProducts,
+  loadCategories,
+  loadUnits,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  setPage,
+  setLimit,
+} from '../../store/slices/productsSlice';
+import { Card, Button, Input } from '../../components/ui';
+import { ProductsTable } from './ProductsTable';
+import { ProductFormModal } from './ProductFormModal';
+import type { Product } from '../../types';
+import type { ProductFormData } from './ProductFormModal';
+import type { PaginationState } from '../../components/ui/Pagination';
+import { MdLocalOffer, MdAdd, MdSearch } from 'react-icons/md';
+
+const initialFormData: ProductFormData = {
+  name: '',
+  sku: '',
+  barcode: '',
+  description: '',
+  category_id: '',
+  unit_id: '',
+  cost_price: '',
+  sell_price: '',
+  tax_rate: '21',
+  is_tax_included: true,
+  is_active: true,
+  is_featured: false,
+  track_stock: true,
+  min_stock: '5',
+  is_weighable: false,
+  scale_plu: '',
+  export_to_scale: false,
+};
+
+const ProductsListPage: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { products, categories, units, pagination: reduxPagination } = useAppSelector((state) => state.products);
+  const loading = useAppSelector((state) => state.ui.loading);
+
+  // Map Redux pagination to PaginationState format
+  const pagination: PaginationState = useMemo(() => ({
+    page: reduxPagination.page,
+    limit: reduxPagination.limit,
+    total_items: reduxPagination.total,
+    total_pages: reduxPagination.pages,
+  }), [reduxPagination]);
+
+  // Local state
+  const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [formData, setFormData] = useState<ProductFormData>(initialFormData);
+
+  // Load categories and units on mount
+  useEffect(() => {
+    dispatch(loadCategories());
+    dispatch(loadUnits());
+  }, [dispatch]);
+
+  // Load products when pagination or filters change
+  useEffect(() => {
+    dispatch(loadProducts({
+      page: reduxPagination.page,
+      limit: reduxPagination.limit,
+      search: search || undefined,
+      category_id: selectedCategory || undefined,
+    }));
+  }, [dispatch, reduxPagination.page, reduxPagination.limit, search, selectedCategory]);
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    dispatch(setPage(page));
+  };
+
+  const handlePageSizeChange = (limit: number) => {
+    dispatch(setLimit(limit));
+  };
+
+  // Handle form changes
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+    }));
+  };
+
+  // Open create modal
+  const handleCreate = () => {
+    setEditingProduct(null);
+    setFormData(initialFormData);
+    setShowModal(true);
+  };
+
+  // Open edit modal
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product);
+    setFormData({
+      name: product.name,
+      sku: product.sku || '',
+      barcode: product.barcode || '',
+      description: product.description || '',
+      category_id: product.category_id || '',
+      unit_id: product.unit_id || '',
+      cost_price: product.cost_price?.toString() || '',
+      sell_price: product.selling_price?.toString() || '',
+      tax_rate: product.tax_rate?.toString() || '21',
+      is_tax_included: product.is_tax_included ?? true,
+      is_active: product.is_active ?? true,
+      is_featured: product.is_featured ?? false,
+      track_stock: product.track_stock ?? true,
+      min_stock: product.minimum_stock?.toString() || '5',
+      is_weighable: product.is_weighable ?? false,
+      scale_plu: product.scale_plu?.toString() || '',
+      export_to_scale: product.export_to_scale ?? false,
+    });
+    setShowModal(true);
+  };
+
+  // Submit form
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const productData = {
+      name: formData.name,
+      sku: formData.sku || undefined,
+      barcode: formData.barcode || undefined,
+      description: formData.description || undefined,
+      category_id: formData.category_id || undefined,
+      unit_id: formData.unit_id,
+      cost_price: formData.cost_price || '0',
+      selling_price: formData.sell_price || '0',
+      tax_rate: formData.tax_rate || '21',
+      is_tax_included: formData.is_tax_included,
+      is_active: formData.is_active,
+      is_featured: formData.is_featured,
+      track_stock: formData.track_stock,
+      minimum_stock: formData.min_stock || '5',
+      is_weighable: formData.is_weighable,
+      scale_plu: formData.scale_plu ? parseInt(formData.scale_plu) : undefined,
+      export_to_scale: formData.export_to_scale,
+    };
+
+    if (editingProduct) {
+      const result = await dispatch(updateProduct({
+        id: editingProduct.id,
+        data: productData,
+      }));
+      if (updateProduct.fulfilled.match(result)) {
+        setShowModal(false);
+      }
+    } else {
+      const result = await dispatch(createProduct(productData));
+      if (createProduct.fulfilled.match(result)) {
+        setShowModal(false);
+      }
+    }
+  }, [dispatch, editingProduct, formData]);
+
+  // Delete product
+  const handleDelete = useCallback(async (id: string) => {
+    if (window.confirm('¿Estás seguro de eliminar este producto?')) {
+      await dispatch(deleteProduct(id));
+    }
+  }, [dispatch]);
+
+  return (
+    <>
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-down duration-fast">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white animate-fade-right duration-normal">
+              Productos
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1 animate-fade-right duration-light-slow">
+              Gestiona el catálogo de productos
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => navigate('/products/bulk-update')}
+              className="animate-zoom-in duration-normal"
+              icon={<MdLocalOffer className="w-5 h-5" />}
+              iconPosition="left"
+            >
+              Actualización Masiva
+            </Button>
+
+            <Button
+              variant="primary"
+              onClick={handleCreate}
+              className="animate-zoom-in duration-normal"
+              icon={<MdAdd className="w-5 h-5" />}
+              iconPosition="left"
+            >
+              Nuevo Producto
+            </Button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <Card className="p-4 animate-fade-up duration-normal">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 animate-fade-left duration-fast">
+              <Input
+                placeholder="Buscar por nombre, SKU o código..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  handlePageChange(1);
+                }}
+                leftIcon={<MdSearch className="w-5 h-5" />}
+              />
+            </div>
+            <select
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                handlePageChange(1);
+              }}
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent animate-fade-right duration-fast"
+            >
+              <option value="">Todas las categorías</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </Card>
+
+        {/* Products Table */}
+        <Card className="overflow-hidden animate-fade-up duration-light-slow">
+          <ProductsTable
+            products={products}
+            loading={loading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onCreate={handleCreate}
+            pagination={pagination}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
+        </Card>
+      </div>
+
+      {/* Product Form Modal */}
+      <ProductFormModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSubmit={handleSubmit}
+        formData={formData}
+        onChange={handleFormChange}
+        editingProduct={editingProduct}
+        categories={categories}
+        units={units}
+        loading={loading}
+      />
+    </>
+  );
+};
+
+export default ProductsListPage;

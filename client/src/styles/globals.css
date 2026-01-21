@@ -1,0 +1,231 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: 59 130 246;
+    --color-success: 34 197 94;
+    --color-warning: 245 158 11;
+    --color-danger: 239 68 68;
+  }
+
+  body {
+    @apply bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Scrollbar styling - Blue compact style */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-200 dark:bg-gray-800 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-blue-500 dark:bg-blue-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-blue-600 dark:bg-blue-500;
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #3b82f6 #e5e7eb;
+  }
+
+  .dark * {
+    scrollbar-color: #2563eb #1f2937;
+  }
+}
+
+@layer components {
+  /* POS specific styles */
+  .pos-grid {
+    @apply grid gap-2;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .pos-grid-sm {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+
+  .pos-grid-lg {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  /* Product card for POS */
+  .pos-product-card {
+    @apply relative bg-white dark:bg-gray-800 rounded-sm p-3 cursor-pointer;
+    @apply border-2 border-transparent hover:border-primary-500;
+    @apply transition-all duration-200 hover:shadow-lg;
+  }
+
+  .pos-product-card.selected {
+    @apply border-primary-500 bg-primary-50 dark:bg-primary-900/20;
+  }
+
+  /* Numpad styles */
+  .numpad-button {
+    @apply w-full aspect-square flex items-center justify-center;
+    @apply text-2xl font-bold rounded-sm;
+    @apply bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600;
+    @apply active:scale-95 transition-all duration-100;
+  }
+
+  .numpad-button.action {
+    @apply bg-primary-500 text-white hover:bg-primary-600;
+  }
+
+  .numpad-button.danger {
+    @apply bg-danger-500 text-white hover:bg-danger-600;
+  }
+
+  /* Payment button */
+  .payment-button {
+    @apply flex items-center justify-between p-4 rounded-sm;
+    @apply bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600;
+    @apply border-2 border-transparent hover:border-primary-500;
+    @apply transition-all duration-200 cursor-pointer;
+  }
+
+  .payment-button.selected {
+    @apply border-primary-500 bg-primary-50 dark:bg-primary-900/20;
+  }
+
+  /* Alert badge */
+  .alert-badge {
+    @apply inline-flex items-center justify-center min-w-[20px] h-5 px-1.5;
+    @apply text-xs font-bold rounded-full;
+  }
+
+  .alert-badge.info {
+    @apply bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300;
+  }
+
+  .alert-badge.warning {
+    @apply bg-yellow-50 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300;
+  }
+
+  .alert-badge.error {
+    @apply bg-red-50 text-red-700 dark:bg-red-900/50 dark:text-red-300;
+  }
+
+  .alert-badge.critical {
+    @apply bg-red-500 text-white animate-pulse;
+  }
+}
+
+@layer utilities {
+  /* Animation durations */
+  .duration-very-fast { animation-duration: 200ms; }
+  .duration-fast { animation-duration: 400ms; }
+  .duration-normal { animation-duration: 600ms; }
+  .duration-light-slow { animation-duration: 800ms; }
+  .duration-slow { animation-duration: 1000ms; }
+  .duration-very-slow { animation-duration: 1200ms; }
+
+  /* Staggered animation utilities - NO DELAYS as per design rules */
+  /* Use these classes with inline style for animation-delay if needed */
+  .stagger-item {
+    animation-fill-mode: both;
+  }
+
+  /* Individual stagger delay utilities (use sparingly, inline styles preferred) */
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+  .stagger-6 { animation-delay: 300ms; }
+  .stagger-7 { animation-delay: 350ms; }
+  .stagger-8 { animation-delay: 400ms; }
+  .stagger-9 { animation-delay: 450ms; }
+  .stagger-10 { animation-delay: 500ms; }
+
+  /* Combined animation + stagger classes for common patterns */
+  .animate-stagger-fade-up {
+    animation: fadeUp 600ms ease-out forwards;
+  }
+
+  .animate-stagger-fade-down {
+    animation: fadeDown 600ms ease-out forwards;
+  }
+
+  .animate-stagger-fade-left {
+    animation: fadeLeft 600ms ease-out forwards;
+  }
+
+  .animate-stagger-fade-right {
+    animation: fadeRight 600ms ease-out forwards;
+  }
+
+  .animate-stagger-zoom-in {
+    animation: zoomIn 600ms ease-out forwards;
+  }
+
+  .animate-stagger-zoom-out {
+    animation: zoomOut 600ms ease-out forwards;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-md;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-500 to-primary-700;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+}
+
+/* Responsive font sizes for POS */
+@media (max-width: 768px) {
+  .pos-product-card {
+    @apply p-2;
+  }
+
+  .pos-product-card .product-name {
+    @apply text-sm;
+  }
+
+  .pos-product-card .product-price {
+    @apply text-base;
+  }
+}
+
+/* Dark mode POS theme */
+.dark .pos-bg {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
