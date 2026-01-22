@@ -46,7 +46,7 @@ module.exports = {
         can_issue_invoice_a: true,
         can_manage_expenses: true,
         can_approve_expenses: true,
-        max_discount_percent: 20,
+        max_discount_percent: 15,
         created_at: new Date(),
         updated_at: new Date()
       },

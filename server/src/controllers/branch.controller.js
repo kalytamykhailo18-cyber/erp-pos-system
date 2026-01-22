@@ -1,10 +1,11 @@
 const { Op } = require('sequelize');
 const {
-  Branch, User, CashRegister, RegisterSession, BranchStock, Product, UnitOfMeasure
+  Branch, User, CashRegister, RegisterSession, BranchStock, Product, UnitOfMeasure, AuditLog
 } = require('../database/models');
 const { success, created, paginated, notFound } = require('../utils/apiResponse');
 const { NotFoundError } = require('../middleware/errorHandler');
 const { parsePagination, getBusinessDate } = require('../utils/helpers');
+const { v4: uuidv4 } = require('uuid');
 
 /**
  * Get all branches (filtered by user access)
@@ -112,7 +113,38 @@ exports.update = async (req, res, next) => {
       throw new NotFoundError('Branch not found');
     }
 
+    // Capture old values for audit logging (specifically tracking petty_cash_amount changes)
+    const oldValues = {
+      petty_cash_amount: branch.petty_cash_amount,
+      name: branch.name,
+      code: branch.code
+    };
+
+    // Update branch
     await branch.update(req.body);
+
+    // Create audit log if petty_cash_amount was changed
+    if (req.body.petty_cash_amount !== undefined &&
+        parseFloat(req.body.petty_cash_amount) !== parseFloat(oldValues.petty_cash_amount)) {
+      await AuditLog.create({
+        id: uuidv4(),
+        user_id: req.user?.id || null,
+        user_email: req.user?.email || null,
+        branch_id: id,
+        ip_address: req.ip,
+        user_agent: req.get('user-agent'),
+        action: 'UPDATE',
+        entity_type: 'BRANCH_PETTY_CASH',
+        entity_id: id,
+        old_values: {
+          petty_cash_amount: parseFloat(oldValues.petty_cash_amount || 0)
+        },
+        new_values: {
+          petty_cash_amount: parseFloat(req.body.petty_cash_amount)
+        },
+        description: `Petty cash amount changed from $${parseFloat(oldValues.petty_cash_amount || 0).toLocaleString('es-AR')} to $${parseFloat(req.body.petty_cash_amount).toLocaleString('es-AR')} for branch ${branch.name}`
+      });
+    }
 
     return success(res, branch);
   } catch (error) {

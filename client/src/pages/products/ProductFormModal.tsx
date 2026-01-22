@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Button, Input } from '../../components/ui';
-import type { Product, Category } from '../../types';
+import type { Product, Category, Species, Variety, ProductType } from '../../types';
 import { MdStar } from 'react-icons/md';
 
 export interface ProductFormData {
@@ -14,6 +14,7 @@ export interface ProductFormData {
   sell_price: string;
   tax_rate: string;
   is_tax_included: boolean;
+  protein_percent: string; // CRITICAL: Protein % for pet food products
   is_active: boolean;
   is_featured: boolean;
   track_stock: boolean;
@@ -21,6 +22,12 @@ export interface ProductFormData {
   is_weighable: boolean;
   scale_plu: string;
   export_to_scale: boolean;
+  // PART 6: Three-level taxonomy
+  species_id: string;
+  variety_id: string;
+  product_type_id: string;
+  weight_size: string;
+  is_factory_direct: boolean;
 }
 
 export interface UnitOfMeasure {
@@ -40,6 +47,10 @@ interface ProductFormModalProps {
   categories: Category[];
   units: UnitOfMeasure[];
   loading: boolean;
+  // PART 6: Taxonomy data
+  species: Species[];
+  varieties: Variety[];
+  productTypes: ProductType[];
 }
 
 export const ProductFormModal: React.FC<ProductFormModalProps> = ({
@@ -52,7 +63,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   categories,
   units,
   loading,
+  species,
+  varieties,
+  productTypes,
 }) => {
+  // Filter varieties based on selected species
+  const filteredVarieties = formData.species_id
+    ? varieties.filter((v) => v.species_id === formData.species_id && v.is_active)
+    : [];
   return (
     <Modal
       isOpen={isOpen}
@@ -106,6 +124,111 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               ))}
             </select>
           </div>
+        </div>
+
+        {/* PART 6: Three-Level Taxonomy */}
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-4 animate-fade-up duration-normal">
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+            Taxonomía del Producto (Especie → Variedad → Tipo)
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="animate-fade-right duration-fast">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Especie
+              </label>
+              <select
+                name="species_id"
+                value={formData.species_id}
+                onChange={onChange}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="">Seleccionar especie...</option>
+                {species.filter((s) => s.is_active).map((sp) => (
+                  <option key={sp.id} value={sp.id}>
+                    {sp.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Ej: Perro, Gato, Pájaro
+              </p>
+            </div>
+            <div className="animate-fade-up duration-fast">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Variedad
+              </label>
+              <select
+                name="variety_id"
+                value={formData.variety_id}
+                onChange={onChange}
+                disabled={!formData.species_id}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50"
+              >
+                <option value="">Seleccionar variedad...</option>
+                {filteredVarieties.map((variety) => (
+                  <option key={variety.id} value={variety.id}>
+                    {variety.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Ej: Adulto, Cachorro, Senior
+              </p>
+            </div>
+            <div className="animate-fade-left duration-fast">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Tipo de Producto
+              </label>
+              <select
+                name="product_type_id"
+                value={formData.product_type_id}
+                onChange={onChange}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                <option value="">Seleccionar tipo...</option>
+                {productTypes.filter((t) => t.is_active).map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Ej: Alimento, Snack, Accesorio
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="animate-fade-right duration-normal">
+            <Input
+              label="Tamaño/Peso del Paquete"
+              name="weight_size"
+              value={formData.weight_size}
+              onChange={onChange}
+              placeholder="Ej: 20 kg, 3 kg, 500 g"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Tamaño o peso del paquete para mostrar en la etiqueta
+            </p>
+          </div>
+          <div className="flex items-center animate-fade-left duration-normal">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="is_factory_direct"
+                checked={formData.is_factory_direct}
+                onChange={onChange}
+                className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Marca Directa de Fábrica
+              </span>
+            </label>
+            <p className="text-xs text-gray-500 dark:text-gray-400 ml-6 mt-1">
+              Ayuda a recomendar alternativas económicas a marcas premium
+            </p>
+          </div>
           <div className="animate-fade-right duration-normal">
             <Input
               label="Precio de Costo"
@@ -141,6 +264,22 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             />
           </div>
           <div className="animate-fade-left duration-light-slow">
+            <Input
+              label="% Proteína"
+              name="protein_percent"
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              value={formData.protein_percent}
+              onChange={onChange}
+              placeholder="Ej: 24.5 para 24.5% proteína"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              💡 Importante para alimentos de mascotas. Ayuda a comparar marcas.
+            </p>
+          </div>
+          <div className="animate-fade-right duration-slow">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Unidad de Medida *
             </label>

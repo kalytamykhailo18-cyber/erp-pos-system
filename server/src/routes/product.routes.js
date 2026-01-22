@@ -38,6 +38,27 @@ router.get(
 );
 
 /**
+ * @route   GET /api/v1/products/search
+ * @desc    Advanced product search with protein range and taxonomy filters (PART 6)
+ * @access  Private
+ */
+router.get(
+  '/search',
+  [
+    query('species_id').optional().isUUID(4),
+    query('variety_id').optional().isUUID(4),
+    query('product_type_id').optional().isUUID(4),
+    query('protein_min').optional().isDecimal(),
+    query('protein_max').optional().isDecimal(),
+    query('is_factory_direct').optional().isBoolean(),
+    query('search').optional().isString(),
+    query('branch_id').optional().isUUID(4),
+    validate
+  ],
+  productController.advancedSearch
+);
+
+/**
  * @route   GET /api/v1/products/pos
  * @desc    Get products formatted for POS (simplified)
  * @access  Private

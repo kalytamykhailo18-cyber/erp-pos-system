@@ -7,6 +7,7 @@ export interface UpdateBranchSettingsData {
   require_customer?: boolean;
   enable_discounts?: boolean;
   max_discount_percent?: number;
+  petty_cash_amount?: number;
   tax_id?: string;
   tax_condition?: string;
   factuhoy_point_of_sale?: string;

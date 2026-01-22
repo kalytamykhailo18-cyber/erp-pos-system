@@ -135,6 +135,11 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400 animate-fade-right duration-normal">
                       SKU: {product.sku || 'N/A'}
+                      {product.protein_percent && (
+                        <span className="ml-2 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded text-xs font-semibold">
+                          {product.protein_percent}% Proteína
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>

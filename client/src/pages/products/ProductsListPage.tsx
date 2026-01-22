@@ -11,6 +11,11 @@ import {
   setPage,
   setLimit,
 } from '../../store/slices/productsSlice';
+import {
+  loadSpecies,
+  loadVarieties,
+  loadProductTypes,
+} from '../../store/slices/taxonomySlice';
 import { Card, Button, Input } from '../../components/ui';
 import { ProductsTable } from './ProductsTable';
 import { ProductFormModal } from './ProductFormModal';
@@ -30,6 +35,7 @@ const initialFormData: ProductFormData = {
   sell_price: '',
   tax_rate: '21',
   is_tax_included: true,
+  protein_percent: '', // CRITICAL: Protein % for pet food products
   is_active: true,
   is_featured: false,
   track_stock: true,
@@ -37,12 +43,19 @@ const initialFormData: ProductFormData = {
   is_weighable: false,
   scale_plu: '',
   export_to_scale: false,
+  // PART 6: Three-level taxonomy
+  species_id: '',
+  variety_id: '',
+  product_type_id: '',
+  weight_size: '',
+  is_factory_direct: false,
 };
 
 const ProductsListPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { products, categories, units, pagination: reduxPagination } = useAppSelector((state) => state.products);
+  const { species, varieties, productTypes } = useAppSelector((state) => state.taxonomy);
   const loading = useAppSelector((state) => state.ui.loading);
 
   // Map Redux pagination to PaginationState format
@@ -60,10 +73,13 @@ const ProductsListPage: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<ProductFormData>(initialFormData);
 
-  // Load categories and units on mount
+  // Load categories, units, and taxonomy on mount
   useEffect(() => {
     dispatch(loadCategories());
     dispatch(loadUnits());
+    dispatch(loadSpecies({ is_active: true }));
+    dispatch(loadVarieties({ is_active: true }));
+    dispatch(loadProductTypes({ is_active: true }));
   }, [dispatch]);
 
   // Load products when pagination or filters change
@@ -115,6 +131,7 @@ const ProductsListPage: React.FC = () => {
       sell_price: product.selling_price?.toString() || '',
       tax_rate: product.tax_rate?.toString() || '21',
       is_tax_included: product.is_tax_included ?? true,
+      protein_percent: product.protein_percent?.toString() || '',
       is_active: product.is_active ?? true,
       is_featured: product.is_featured ?? false,
       track_stock: product.track_stock ?? true,
@@ -122,6 +139,12 @@ const ProductsListPage: React.FC = () => {
       is_weighable: product.is_weighable ?? false,
       scale_plu: product.scale_plu?.toString() || '',
       export_to_scale: product.export_to_scale ?? false,
+      // PART 6: Three-level taxonomy
+      species_id: product.species_id || '',
+      variety_id: product.variety_id || '',
+      product_type_id: product.product_type_id || '',
+      weight_size: product.weight_size || '',
+      is_factory_direct: product.is_factory_direct ?? false,
     });
     setShowModal(true);
   };
@@ -141,6 +164,7 @@ const ProductsListPage: React.FC = () => {
       selling_price: formData.sell_price || '0',
       tax_rate: formData.tax_rate || '21',
       is_tax_included: formData.is_tax_included,
+      protein_percent: formData.protein_percent || undefined,
       is_active: formData.is_active,
       is_featured: formData.is_featured,
       track_stock: formData.track_stock,
@@ -148,6 +172,12 @@ const ProductsListPage: React.FC = () => {
       is_weighable: formData.is_weighable,
       scale_plu: formData.scale_plu ? parseInt(formData.scale_plu) : undefined,
       export_to_scale: formData.export_to_scale,
+      // PART 6: Three-level taxonomy
+      species_id: formData.species_id || undefined,
+      variety_id: formData.variety_id || undefined,
+      product_type_id: formData.product_type_id || undefined,
+      weight_size: formData.weight_size || undefined,
+      is_factory_direct: formData.is_factory_direct,
     };
 
     if (editingProduct) {
@@ -268,6 +298,9 @@ const ProductsListPage: React.FC = () => {
         categories={categories}
         units={units}
         loading={loading}
+        species={species}
+        varieties={varieties}
+        productTypes={productTypes}
       />
     </>
   );

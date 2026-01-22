@@ -503,15 +503,15 @@ export const completeSale = createAsyncThunk<
 
 export const voidSale = createAsyncThunk<
   Sale,
-  { sale_id: UUID; reason: string },
+  { sale_id: UUID; reason: string; manager_pin?: string },
   { rejectValue: string }
 >(
   'pos/voidSale',
-  async ({ sale_id, reason }, { dispatch, rejectWithValue }) => {
+  async ({ sale_id, reason, manager_pin }, { dispatch, rejectWithValue }) => {
     try {
       dispatch(startLoading('Anulando venta...'));
 
-      const response = await saleService.void(sale_id, reason);
+      const response = await saleService.void(sale_id, reason, manager_pin);
 
       if (!response.success) {
         throw new Error(response.error || 'Failed to void sale');

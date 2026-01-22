@@ -12,6 +12,7 @@ interface StockInventoryListProps {
   onSearchChange: (value: string) => void;
   showLowStock: boolean;
   onShowLowStockChange: (checked: boolean) => void;
+  canAdjustStock: boolean;
   onAdjust: (item: StockItem) => void;
   onShrinkage: (item: StockItem) => void;
   loading: boolean;
@@ -23,6 +24,7 @@ const StockInventoryList: React.FC<StockInventoryListProps> = ({
   onSearchChange,
   showLowStock,
   onShowLowStockChange,
+  canAdjustStock,
   onAdjust,
   onShrinkage,
   loading,
@@ -186,22 +188,28 @@ const StockInventoryList: React.FC<StockInventoryListProps> = ({
                         )}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => onAdjust(item)}
-                            className="p-2 text-gray-400 hover:text-primary-500"
-                            title="Ajustar stock"
-                          >
-                            <MdEdit className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => onShrinkage(item)}
-                            className="p-2 text-gray-400 hover:text-warning-500"
-                            title="Registrar merma"
-                          >
-                            <MdRemove className="w-5 h-5" />
-                          </button>
-                        </div>
+                        {canAdjustStock ? (
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => onAdjust(item)}
+                              className="p-2 text-gray-400 hover:text-primary-500"
+                              title="Ajustar stock"
+                            >
+                              <MdEdit className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => onShrinkage(item)}
+                              className="p-2 text-gray-400 hover:text-warning-500"
+                              title="Registrar merma"
+                            >
+                              <MdRemove className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                            Sin permisos
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}

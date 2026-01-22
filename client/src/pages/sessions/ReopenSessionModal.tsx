@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
-import { useAppDispatch } from '../../store';
-import { showToast } from '../../store/slices/uiSlice';
-import { registerService } from '../../services/api/register.service';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { reopenSession } from '../../store/slices/registersSlice';
 import type { UUID } from '../../types';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
@@ -26,9 +25,9 @@ const ReopenSessionModal: React.FC<ReopenSessionModalProps> = ({
   onSuccess
 }) => {
   const dispatch = useAppDispatch();
+  const loading = useAppSelector((state) => state.ui.loading);
   const [reason, setReason] = useState('');
   const [managerPin, setManagerPin] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleReopen = async () => {
@@ -49,44 +48,24 @@ const ReopenSessionModal: React.FC<ReopenSessionModalProps> = ({
     }
 
     setError('');
-    setLoading(true);
 
     try {
-      const response = await registerService.reopenSession(
-        sessionId,
-        reason.trim(),
-        managerPin
-      );
+      await dispatch(reopenSession({
+        session_id: sessionId,
+        reason: reason.trim(),
+        manager_pin: managerPin
+      })).unwrap();
 
-      if (response.success) {
-        dispatch(showToast({
-          type: 'success',
-          message: `Sesión ${sessionNumber} reabierta exitosamente`
-        }));
+      // Reset form
+      setReason('');
+      setManagerPin('');
 
-        // Reset form
-        setReason('');
-        setManagerPin('');
-
-        // Notify parent and close
-        onSuccess();
-        onClose();
-      } else {
-        setError(response.error || 'Error al reabrir sesión');
-        dispatch(showToast({
-          type: 'error',
-          message: response.error || 'Error al reabrir sesión'
-        }));
-      }
+      // Notify parent and close
+      onSuccess();
+      onClose();
     } catch (err: any) {
-      const errorMsg = err.response?.data?.error || err.message || 'Error al reabrir sesión';
+      const errorMsg = err || 'Error al reabrir sesión';
       setError(errorMsg);
-      dispatch(showToast({
-        type: 'error',
-        message: errorMsg
-      }));
-    } finally {
-      setLoading(false);
     }
   };
 

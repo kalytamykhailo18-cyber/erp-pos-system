@@ -99,6 +99,7 @@ router.put(
     booleanField('require_customer'),
     booleanField('enable_discounts'),
     decimalField('max_discount_percent', { min: 0, max: 100, required: false }),
+    decimalField('petty_cash_amount', { min: 0, required: false }),
     stringField('tax_id', { maxLength: 20, required: false }),
     stringField('tax_condition', { maxLength: 50, required: false }),
     // Hardware fields

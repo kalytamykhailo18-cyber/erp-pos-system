@@ -10,12 +10,43 @@ const { parsePagination, calculateMarginPercent } = require('../utils/helpers');
 exports.getAll = async (req, res, next) => {
   try {
     const { page, limit, offset, sortBy, sortOrder } = parsePagination(req.query);
-    const { category_id, is_active, is_weighable, search, branch_id } = req.query;
+    const {
+      category_id,
+      is_active,
+      is_weighable,
+      search,
+      branch_id,
+      // Three-level taxonomy filters (PART 6)
+      species_id,
+      variety_id,
+      product_type_id,
+      // Protein range filter (PART 6)
+      protein_min,
+      protein_max,
+      // Factory-direct filter (PART 6)
+      is_factory_direct
+    } = req.query;
 
     const where = {};
     if (category_id) where.category_id = category_id;
     if (is_active !== undefined) where.is_active = is_active === 'true';
     if (is_weighable !== undefined) where.is_weighable = is_weighable === 'true';
+
+    // Three-level taxonomy filters
+    if (species_id) where.species_id = species_id;
+    if (variety_id) where.variety_id = variety_id;
+    if (product_type_id) where.product_type_id = product_type_id;
+
+    // Protein range filter
+    if (protein_min || protein_max) {
+      where.protein_percent = {};
+      if (protein_min) where.protein_percent[Op.gte] = parseFloat(protein_min);
+      if (protein_max) where.protein_percent[Op.lte] = parseFloat(protein_max);
+    }
+
+    // Factory-direct filter
+    if (is_factory_direct !== undefined) where.is_factory_direct = is_factory_direct === 'true';
+
     if (search) {
       where[Op.or] = [
         { name: { [Op.iLike]: `%${search}%` } },
@@ -28,7 +59,23 @@ exports.getAll = async (req, res, next) => {
       where,
       include: [
         { model: Category, as: 'category', attributes: ['id', 'name'] },
-        { model: UnitOfMeasure, as: 'unit' }
+        { model: UnitOfMeasure, as: 'unit' },
+        // Three-level taxonomy associations
+        {
+          model: require('../database/models').Species,
+          as: 'species',
+          attributes: ['id', 'name']
+        },
+        {
+          model: require('../database/models').Variety,
+          as: 'variety',
+          attributes: ['id', 'name', 'species_id']
+        },
+        {
+          model: require('../database/models').ProductType,
+          as: 'product_type',
+          attributes: ['id', 'name']
+        }
       ],
       order: [[sortBy, sortOrder]],
       limit,
@@ -346,6 +393,117 @@ exports.getUnits = async (req, res, next) => {
       order: [['name', 'ASC']]
     });
     return success(res, units);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Advanced product search with factory-direct recommendations (PART 6)
+exports.advancedSearch = async (req, res, next) => {
+  try {
+    const {
+      species_id,
+      variety_id,
+      product_type_id,
+      protein_min,
+      protein_max,
+      is_factory_direct,
+      search,
+      branch_id
+    } = req.query;
+
+    const where = { is_active: true };
+
+    // Three-level taxonomy filters
+    if (species_id) where.species_id = species_id;
+    if (variety_id) where.variety_id = variety_id;
+    if (product_type_id) where.product_type_id = product_type_id;
+
+    // Protein range filter
+    if (protein_min || protein_max) {
+      where.protein_percent = {};
+      if (protein_min) where.protein_percent[Op.gte] = parseFloat(protein_min);
+      if (protein_max) where.protein_percent[Op.lte] = parseFloat(protein_max);
+    }
+
+    // Factory-direct filter
+    if (is_factory_direct !== undefined) where.is_factory_direct = is_factory_direct === 'true';
+
+    // Text search
+    if (search) {
+      where[Op.or] = [
+        { name: { [Op.iLike]: `%${search}%` } },
+        { sku: { [Op.iLike]: `%${search}%` } }
+      ];
+    }
+
+    const products = await Product.findAll({
+      where,
+      include: [
+        {
+          model: require('../database/models').Species,
+          as: 'species',
+          attributes: ['id', 'name']
+        },
+        {
+          model: require('../database/models').Variety,
+          as: 'variety',
+          attributes: ['id', 'name']
+        },
+        {
+          model: require('../database/models').ProductType,
+          as: 'product_type',
+          attributes: ['id', 'name']
+        },
+        { model: UnitOfMeasure, as: 'unit', attributes: ['code', 'name'] },
+        {
+          model: BranchStock,
+          as: 'branch_stocks',
+          where: branch_id ? { branch_id } : undefined,
+          required: false,
+          attributes: ['quantity']
+        }
+      ],
+      // Sort by: Factory-direct first, then by protein % desc
+      order: [
+        ['is_factory_direct', 'DESC'],
+        ['protein_percent', 'DESC'],
+        ['selling_price', 'ASC']
+      ],
+      limit: 100
+    });
+
+    // Format results with factory-direct highlighting
+    const results = products.map(p => ({
+      id: p.id,
+      sku: p.sku,
+      name: p.name,
+      short_name: p.short_name,
+      weight_size: p.weight_size,
+      protein_percent: p.protein_percent,
+      selling_price: p.selling_price,
+      cost_price: p.cost_price,
+      is_factory_direct: p.is_factory_direct,
+      is_weighable: p.is_weighable,
+      species: p.species,
+      variety: p.variety,
+      product_type: p.product_type,
+      unit: p.unit,
+      stock_quantity: p.branch_stocks?.[0]?.quantity || 0,
+      image_url: p.image_url,
+      thumbnail_url: p.thumbnail_url
+    }));
+
+    // Group by factory-direct vs premium for comparison
+    const factoryDirect = results.filter(p => p.is_factory_direct);
+    const premium = results.filter(p => !p.is_factory_direct);
+
+    return success(res, {
+      all_products: results,
+      factory_direct: factoryDirect,
+      premium: premium,
+      count: results.length
+    });
   } catch (error) {
     next(error);
   }

@@ -1,35 +1,21 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useAppSelector } from '../../store';
-import { DailyReportData, ShiftReportData } from '../../types';
-import reportService from '../../services/api/report.service';
+import React, { useState, useEffect } from 'react';
+import { MdAttachMoney, MdPerson, MdDescription } from 'react-icons/md';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { loadDailyReport } from '../../store/slices/reportsSlice';
+import { ShiftReportData, WithdrawalType } from '../../types';
 
 const DailyReport: React.FC = () => {
+  const dispatch = useAppDispatch();
   const { currentBranch } = useAppSelector((state) => state.auth);
-  const [reportData, setReportData] = useState<DailyReportData | null>(null);
+  const { dailyReport: reportData } = useAppSelector((state) => state.reports);
+  const loading = useAppSelector((state) => state.ui.loading);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [loading, setLoading] = useState(false);
-
-  const loadReport = useCallback(async () => {
-    if (!currentBranch?.id) return;
-
-    setLoading(true);
-    try {
-      const response = await reportService.getDailyReport(currentBranch.id, selectedDate);
-      if (response.success) {
-        setReportData(response.data);
-      }
-    } catch (error) {
-      console.error('Error loading daily report:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentBranch?.id, selectedDate]);
 
   useEffect(() => {
     if (currentBranch?.id) {
-      loadReport();
+      dispatch(loadDailyReport({ branch_id: currentBranch.id, date: selectedDate }));
     }
-  }, [currentBranch?.id, loadReport]);
+  }, [currentBranch?.id, selectedDate, dispatch]);
 
   const formatCurrency = (amount: number | null) => {
     if (amount === null) return '-';
@@ -48,6 +34,16 @@ const DailyReport: React.FC = () => {
       FULL_DAY: 'Día Completo'
     };
     return labels[shiftType] || shiftType;
+  };
+
+  const getWithdrawalTypeLabel = (type: WithdrawalType) => {
+    const labels: { [key in WithdrawalType]: string } = {
+      SUPPLIER_PAYMENT: 'Pago a Proveedor',
+      OPERATIONAL_EXPENSE: 'Gasto Operativo',
+      EMPLOYEE_ADVANCE: 'Adelanto a Empleado',
+      OTHER: 'Otro',
+    };
+    return labels[type] || type;
   };
 
   const renderShiftDetails = (shift: ShiftReportData) => {
@@ -167,6 +163,76 @@ const DailyReport: React.FC = () => {
               </tr>
             </tbody>
           </table>
+
+          {/* Withdrawals Section */}
+          {shift.withdrawals && shift.withdrawals.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                <MdAttachMoney className="w-5 h-5 text-orange-600" />
+                Retiros de Caja
+              </h4>
+              <div className="space-y-2">
+                {shift.withdrawals.map((withdrawal) => (
+                  <div
+                    key={withdrawal.id}
+                    className="p-3 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 rounded text-sm"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-1 bg-orange-200 dark:bg-orange-800 text-orange-900 dark:text-orange-200 rounded text-xs font-semibold">
+                          {getWithdrawalTypeLabel(withdrawal.withdrawal_type)}
+                        </span>
+                        <span className="font-bold text-orange-900 dark:text-orange-200">
+                          {formatCurrency(withdrawal.amount)}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {new Date(withdrawal.created_at).toLocaleTimeString('es-AR', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">Destinatario:</span>
+                        <span className="ml-1 text-gray-900 dark:text-white font-medium">
+                          {withdrawal.recipient_name}
+                        </span>
+                      </div>
+                      {withdrawal.receipt_number && (
+                        <div>
+                          <span className="text-gray-600 dark:text-gray-400">Comprobante:</span>
+                          <span className="ml-1 text-gray-900 dark:text-white font-medium">
+                            {withdrawal.receipt_number}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-1 text-xs">
+                      <span className="text-gray-600 dark:text-gray-400">Motivo:</span>
+                      <span className="ml-1 text-gray-900 dark:text-white">{withdrawal.reason}</span>
+                    </div>
+                    {withdrawal.creator && (
+                      <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Registrado por: {withdrawal.creator.first_name} {withdrawal.creator.last_name}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded flex justify-between items-center">
+                  <span className="text-sm font-semibold text-orange-900 dark:text-orange-200">
+                    Total Retirado:
+                  </span>
+                  <span className="text-lg font-bold text-orange-900 dark:text-orange-200">
+                    {formatCurrency(
+                      shift.withdrawals.reduce((sum, w) => sum + parseFloat(String(w.amount)), 0)
+                    )}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {shift.voided_sales_count > 0 && (
             <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/10 rounded text-sm">

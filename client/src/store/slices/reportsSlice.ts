@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import type {
   DailyReportData,
+  ConsolidatedDailyReportData,
   OwnerDashboardData,
   UUID,
   CategoryReportData,
@@ -8,7 +9,8 @@ import type {
   PaymentMethodReportData,
   ShrinkageReportData,
   HourlyReportData,
-  BranchComparisonReportData
+  BranchComparisonReportData,
+  LiveBranchShiftStatusData
 } from '../../types';
 import { reportService } from '../../services/api';
 import { startLoading, stopLoading } from './uiSlice';
@@ -17,6 +19,10 @@ interface ReportsState {
   // Daily Report
   dailyReport: DailyReportData | null;
   dailyReportDate: string | null;
+  consolidatedDailyReport: ConsolidatedDailyReportData | null;
+
+  // Live Branch Shift Status (for dashboard)
+  liveBranchShiftStatus: LiveBranchShiftStatusData | null;
 
   // Owner Dashboard
   ownerDashboard: OwnerDashboardData | null;
@@ -47,6 +53,8 @@ interface ReportsState {
 const initialState: ReportsState = {
   dailyReport: null,
   dailyReportDate: null,
+  consolidatedDailyReport: null,
+  liveBranchShiftStatus: null,
   ownerDashboard: null,
   salesReport: null,
   productReport: null,
@@ -64,6 +72,35 @@ const initialState: ReportsState = {
 };
 
 // Async Thunks
+
+/**
+ * Load live branch shift status for dashboard
+ * Shows current shift status across all branches
+ */
+export const loadLiveBranchShiftStatus = createAsyncThunk<
+  LiveBranchShiftStatusData,
+  void,
+  { rejectValue: string }
+>(
+  'reports/loadLiveBranchShiftStatus',
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      dispatch(startLoading());
+      const response = await reportService.getLiveBranchShiftStatus();
+
+      if (!response.success) {
+        throw new Error('Failed to load branch shift status');
+      }
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue('Error loading branch shift status');
+    } finally {
+      dispatch(stopLoading());
+    }
+  }
+);
+
 export const loadDailyReport = createAsyncThunk<
   DailyReportData,
   { branch_id: UUID; date?: string },
@@ -82,6 +119,30 @@ export const loadDailyReport = createAsyncThunk<
       return response.data;
     } catch (error) {
       return rejectWithValue('Error loading daily report');
+    } finally {
+      dispatch(stopLoading());
+    }
+  }
+);
+
+export const loadConsolidatedDailyReport = createAsyncThunk<
+  ConsolidatedDailyReportData,
+  string, // date
+  { rejectValue: string }
+>(
+  'reports/loadConsolidatedDailyReport',
+  async (date, { dispatch, rejectWithValue }) => {
+    try {
+      dispatch(startLoading('Cargando reporte consolidado...'));
+      const response = await reportService.getConsolidatedDailyReport(date);
+
+      if (!response.success) {
+        throw new Error('Failed to load consolidated daily report');
+      }
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue('Error loading consolidated daily report');
     } finally {
       dispatch(stopLoading());
     }
@@ -494,6 +555,21 @@ const reportsSlice = createSlice({
   },
 
   extraReducers: (builder) => {
+    // Load Live Branch Shift Status
+    builder
+      .addCase(loadLiveBranchShiftStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loadLiveBranchShiftStatus.fulfilled, (state, action) => {
+        state.liveBranchShiftStatus = action.payload;
+        state.loading = false;
+      })
+      .addCase(loadLiveBranchShiftStatus.rejected, (state, action) => {
+        state.error = action.payload || 'Error loading branch shift status';
+        state.loading = false;
+      });
+
     // Load Daily Report
     builder
       .addCase(loadDailyReport.pending, (state) => {
@@ -507,6 +583,21 @@ const reportsSlice = createSlice({
       })
       .addCase(loadDailyReport.rejected, (state, action) => {
         state.error = action.payload || 'Error loading report';
+        state.loading = false;
+      });
+
+    // Load Consolidated Daily Report
+    builder
+      .addCase(loadConsolidatedDailyReport.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loadConsolidatedDailyReport.fulfilled, (state, action) => {
+        state.consolidatedDailyReport = action.payload;
+        state.loading = false;
+      })
+      .addCase(loadConsolidatedDailyReport.rejected, (state, action) => {
+        state.error = action.payload || 'Error loading consolidated report';
         state.loading = false;
       });
 

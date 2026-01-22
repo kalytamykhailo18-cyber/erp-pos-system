@@ -5,3 +5,4 @@ export { default as Modal } from './Modal';
 export { default as Card } from './Card';
 export { default as Pagination } from './Pagination';
 export type { PaginationState } from './Pagination';
+export { ProductSelector } from './ProductSelector';

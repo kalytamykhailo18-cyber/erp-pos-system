@@ -12,6 +12,7 @@ const BranchSettings: React.FC = () => {
     require_customer: false,
     enable_discounts: true,
     max_discount_percent: 10,
+    petty_cash_amount: 100000,
     tax_id: '',
     tax_condition: '',
     factuhoy_point_of_sale: '',
@@ -27,6 +28,7 @@ const BranchSettings: React.FC = () => {
         require_customer: currentBranch.require_customer ?? false,
         enable_discounts: currentBranch.enable_discounts ?? true,
         max_discount_percent: currentBranch.max_discount_percent || 10,
+        petty_cash_amount: currentBranch.petty_cash_amount || 100000,
         tax_id: currentBranch.tax_id || '',
         tax_condition: currentBranch.tax_condition || '',
         factuhoy_point_of_sale: currentBranch.factuhoy_point_of_sale?.toString() || '',
@@ -59,6 +61,7 @@ const BranchSettings: React.FC = () => {
           require_customer: settings.require_customer,
           enable_discounts: settings.enable_discounts,
           max_discount_percent: settings.max_discount_percent,
+          petty_cash_amount: settings.petty_cash_amount,
           tax_id: settings.tax_id,
           tax_condition: settings.tax_condition,
           factuhoy_point_of_sale: settings.factuhoy_point_of_sale,
@@ -133,6 +136,41 @@ const BranchSettings: React.FC = () => {
             />
           </div>
         )}
+
+        {/* Petty Cash Section */}
+        <div className="pt-6 border-t border-gray-200 dark:border-gray-700 space-y-4 animate-fade-up duration-normal">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Fondo de Caja
+          </h3>
+
+          <div className="flex flex-col animate-fade-right duration-normal">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Monto del Fondo de Reserva (ARS):
+            </label>
+            <input
+              type="number"
+              name="petty_cash_amount"
+              value={settings.petty_cash_amount}
+              onChange={handleChange}
+              min="0"
+              step="1000"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Monto mínimo de efectivo que debe permanecer en caja. Si el efectivo al cerrar es menor a este monto, se mostrará una advertencia.
+              <br />
+              <strong>Valor por defecto:</strong> $100,000
+            </p>
+          </div>
+
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md p-3">
+            <p className="text-xs text-blue-700 dark:text-blue-400">
+              💡 <strong>¿Qué es el Fondo de Reserva?</strong><br />
+              Es el monto mínimo que debe quedar en caja para comenzar el siguiente turno.
+              Sirve para hacer cambios a los primeros clientes del día.
+            </p>
+          </div>
+        </div>
 
         {/* Facturación Electrónica Section */}
         <div className="pt-6 border-t border-gray-200 dark:border-gray-700 space-y-4 animate-fade-up duration-light-slow">

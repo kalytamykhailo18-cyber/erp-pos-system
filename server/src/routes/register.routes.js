@@ -218,6 +218,17 @@ router.get(
   registerController.getSessionSummary
 );
 
+/**
+ * @route   GET /api/v1/registers/sessions/:sessionId/unapproved-voids
+ * @desc    Get unapproved voided sales for session (for closing validation)
+ * @access  Private
+ */
+router.get(
+  '/sessions/:sessionId/unapproved-voids',
+  [uuidParam('sessionId'), validate],
+  registerController.getUnapprovedVoids
+);
+
 // ===== Cash Withdrawal Routes =====
 
 /**

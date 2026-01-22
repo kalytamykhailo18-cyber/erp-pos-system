@@ -10,6 +10,7 @@ import TopProductsList from './TopProductsList';
 import PendingInvoicesAlert from './PendingInvoicesAlert';
 import BranchShiftStatus from './BranchShiftStatus';
 import StockLevelOverview from './StockLevelOverview';
+import AlertPanel from './AlertPanel';
 
 const DashboardPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -68,6 +69,11 @@ const DashboardPage: React.FC = () => {
 
       {/* Pending Invoices Alert */}
       <PendingInvoicesAlert />
+
+      {/* Real-time Alert System */}
+      <div className="animate-fade-up duration-fast">
+        <AlertPanel />
+      </div>
 
       {/* Live Branch Shift Status - Today's shifts across all branches */}
       <div className="animate-fade-up duration-fast">

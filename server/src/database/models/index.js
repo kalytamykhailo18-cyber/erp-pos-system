@@ -27,6 +27,10 @@ const UserBranch = require('./UserBranch')(sequelize);
 const UserSession = require('./UserSession')(sequelize);
 const Category = require('./Category')(sequelize);
 const UnitOfMeasure = require('./UnitOfMeasure')(sequelize);
+// Three-level taxonomy (PART 6)
+const Species = require('./Species')(sequelize);
+const Variety = require('./Variety')(sequelize);
+const ProductType = require('./ProductType')(sequelize);
 const Product = require('./Product')(sequelize);
 const ProductPriceHistory = require('./ProductPriceHistory')(sequelize);
 const Supplier = require('./Supplier')(sequelize);
@@ -39,6 +43,9 @@ const BranchStock = require('./BranchStock')(sequelize);
 const StockMovement = require('./StockMovement')(sequelize);
 const StockTransfer = require('./StockTransfer')(sequelize);
 const StockTransferItem = require('./StockTransferItem')(sequelize);
+// Open bags and non-sales deductions (PART 6)
+const OpenBag = require('./OpenBag')(sequelize);
+const NonSalesDeduction = require('./NonSalesDeduction')(sequelize);
 const Customer = require('./Customer')(sequelize);
 const LoyaltyTransaction = require('./LoyaltyTransaction')(sequelize);
 const CreditTransaction = require('./CreditTransaction')(sequelize);
@@ -73,6 +80,10 @@ const models = {
   UserSession,
   Category,
   UnitOfMeasure,
+  // Three-level taxonomy (PART 6)
+  Species,
+  Variety,
+  ProductType,
   Product,
   ProductPriceHistory,
   Supplier,
@@ -85,6 +96,9 @@ const models = {
   StockMovement,
   StockTransfer,
   StockTransferItem,
+  // Open bags and non-sales deductions (PART 6)
+  OpenBag,
+  NonSalesDeduction,
   Customer,
   LoyaltyTransaction,
   CreditTransaction,

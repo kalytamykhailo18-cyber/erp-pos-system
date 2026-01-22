@@ -1,33 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import reportService from '../../services/api/report.service';
-import type { LiveBranchShiftStatusData, LiveBranchStatus, LiveBranchShiftSession } from '../../types';
+import React, { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { loadLiveBranchShiftStatus } from '../../store/slices/reportsSlice';
+import type { LiveBranchStatus, LiveBranchShiftSession } from '../../types';
 
 const BranchShiftStatus: React.FC = () => {
-  const [data, setData] = useState<LiveBranchShiftStatusData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const { liveBranchShiftStatus: data, error } = useAppSelector((state) => state.reports);
+  const loading = useAppSelector((state) => state.ui.loading);
 
   useEffect(() => {
-    loadData();
-    // Refresh every 30 seconds
-    const interval = setInterval(loadData, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    // Load data on mount
+    dispatch(loadLiveBranchShiftStatus());
 
-  const loadData = async () => {
-    try {
-      const response = await reportService.getLiveBranchShiftStatus();
-      if (response.success) {
-        setData(response.data);
-        setError(null);
-      }
-    } catch (err) {
-      setError('Error al cargar el estado de turnos');
-      console.error('Error loading branch shift status:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Refresh every 30 seconds
+    const interval = setInterval(() => {
+      dispatch(loadLiveBranchShiftStatus());
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [dispatch]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(amount);

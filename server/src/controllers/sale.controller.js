@@ -5,7 +5,7 @@ const {
   Sale, SaleItem, SalePayment, Branch, CashRegister, RegisterSession,
   Customer, User, Product, PaymentMethod, Invoice, InvoiceType,
   BranchStock, StockMovement, LoyaltyTransaction, CreditTransaction,
-  Alert, CreditNote, sequelize
+  Alert, CreditNote, OpenBag, sequelize
 } = require('../database/models');
 const { success, created, paginated } = require('../utils/apiResponse');
 const { NotFoundError, BusinessError } = require('../middleware/errorHandler');
@@ -591,7 +591,7 @@ exports.create = async (req, res, next) => {
           }, { transaction: t });
 
           // Check for low stock and create alert if needed
-          const product = await Product.findByPk(item.product_id, { attributes: ['name', 'sku', 'minimum_stock'] });
+          const product = await Product.findByPk(item.product_id, { attributes: ['name', 'sku', 'minimum_stock', 'is_weighable'] });
           if (product && product.minimum_stock && newQty <= product.minimum_stock) {
             await Alert.create({
               id: uuidv4(),
@@ -604,6 +604,54 @@ exports.create = async (req, res, next) => {
               reference_type: 'PRODUCT',
               reference_id: item.product_id
             }, { transaction: t });
+          }
+
+          // PART 6: Deduct from open bag for weighable products
+          if (product && product.is_weighable) {
+            const openBag = await OpenBag.findOne({
+              where: {
+                branch_id,
+                product_id: item.product_id,
+                status: 'OPEN'
+              },
+              transaction: t
+            });
+
+            if (openBag) {
+              const quantity = parseFloat(item.quantity);
+              const remainingWeight = parseFloat(openBag.remaining_weight);
+
+              // Validate sufficient weight
+              if (quantity > remainingWeight) {
+                throw new BusinessError(
+                  `Peso insuficiente en bolsa abierta. Disponible: ${remainingWeight} kg, requerido: ${quantity} kg`
+                );
+              }
+
+              // Deduct from bag
+              const newRemaining = remainingWeight - quantity;
+              await openBag.update({
+                remaining_weight: newRemaining,
+                status: newRemaining === 0 ? 'EMPTY' : 'OPEN',
+                closed_at: newRemaining === 0 ? new Date() : null,
+                closed_by: newRemaining === 0 ? req.user.id : null
+              }, { transaction: t });
+
+              // Check low stock threshold
+              if (openBag.low_stock_threshold && newRemaining > 0 && newRemaining <= parseFloat(openBag.low_stock_threshold)) {
+                await Alert.create({
+                  id: uuidv4(),
+                  alert_type: 'LOW_STOCK',
+                  severity: 'MEDIUM',
+                  branch_id,
+                  user_id: req.user.id,
+                  title: `Stock bajo en bolsa abierta: ${product.name}`,
+                  message: `Bolsa abierta de ${product.name} tiene ${newRemaining} kg restantes. Umbral: ${openBag.low_stock_threshold} kg`,
+                  reference_type: 'OPEN_BAG',
+                  reference_id: openBag.id
+                }, { transaction: t });
+              }
+            }
           }
         }
       }
@@ -623,6 +671,65 @@ exports.create = async (req, res, next) => {
         qr_provider: payment.qr_provider,
         qr_transaction_id: payment.qr_transaction_id
       }, { transaction: t });
+    }
+
+    // CRITICAL BUSINESS REQUIREMENT: Bank Transfer Alert to Owner
+    // Check if any payment is a bank transfer and create immediate alert for owner validation
+    const transferPayments = [];
+    for (const payment of payments) {
+      const paymentMethod = await PaymentMethod.findByPk(payment.payment_method_id);
+      if (paymentMethod && paymentMethod.type === 'TRANSFER') {
+        transferPayments.push({
+          amount: payment.amount,
+          reference: payment.reference_number
+        });
+      }
+    }
+
+    if (transferPayments.length > 0) {
+      const totalTransferAmount = transferPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      const referenceNumbers = transferPayments.map(p => p.reference).filter(Boolean).join(', ');
+
+      // Create BANK_TRANSFER alert for owner
+      const bankTransferAlert = await Alert.create({
+        id: uuidv4(),
+        alert_type: 'BANK_TRANSFER',
+        severity: 'HIGH',
+        branch_id,
+        user_id: req.user.id,
+        reference_type: 'SALE',
+        reference_id: sale.id,
+        title: `Transferencia Bancaria - ${branch.name}`,
+        message: `Nueva venta con transferencia bancaria por $${formatDecimal(totalTransferAmount)}. Venta: ${sale.sale_number}. Comprobante(s): ${referenceNumbers || 'N/A'}. Cajero: ${req.user.name}. Validar recepción de fondos.`,
+        metadata: {
+          sale_id: sale.id,
+          sale_number: sale.sale_number,
+          total_transfer_amount: totalTransferAmount,
+          reference_numbers: referenceNumbers,
+          branch_name: branch.name,
+          cashier_name: req.user.name,
+          timestamp: new Date().toISOString()
+        }
+      }, { transaction: t });
+
+      logger.info(`BANK_TRANSFER alert created for sale ${sale.sale_number}: $${formatDecimal(totalTransferAmount)} - Ref: ${referenceNumbers}`);
+
+      // Emit real-time alert to owner via Socket.io (after transaction commit)
+      const io = global.io;
+      if (io) {
+        io.emitToOwners(EVENTS.ALERT_CREATED, {
+          alert_id: bankTransferAlert.id,
+          alert_type: 'BANK_TRANSFER',
+          severity: 'HIGH',
+          branch_id,
+          branch_name: branch.name,
+          sale_number: sale.sale_number,
+          total_transfer_amount: totalTransferAmount,
+          reference_numbers: referenceNumbers,
+          cashier_name: req.user.name,
+          timestamp: new Date().toISOString()
+        }, branch_id);
+      }
     }
 
     // Handle loyalty points
@@ -920,11 +1027,27 @@ exports.voidSale = async (req, res, next) => {
       if (!manager_pin) {
         throw new BusinessError('Manager authorization required to void this sale', 'E106');
       }
-      // Find manager by PIN
-      const manager = await User.findOne({
-        where: { pin_code: manager_pin, is_active: true },
-        include: [{ model: require('../database/models').Role, as: 'role' }]
+
+      // CRITICAL FIX: Find manager by validating PIN with bcrypt (PINs are hashed)
+      // Get all active users with PINs
+      const Role = require('../database/models').Role;
+      const potentialManagers = await User.findAll({
+        where: {
+          is_active: true,
+          pin_code: { [Op.ne]: null }
+        },
+        include: [{ model: Role, as: 'role' }]
       });
+
+      // Find the manager by validating PIN with bcrypt
+      let manager = null;
+      for (const user of potentialManagers) {
+        const isPinValid = await user.validatePin(manager_pin);
+        if (isPinValid) {
+          manager = user;
+          break;
+        }
+      }
 
       if (!manager || !manager.role.can_void_sale) {
         throw new BusinessError('Invalid manager PIN or insufficient permissions', 'E107');
@@ -943,12 +1066,14 @@ exports.voidSale = async (req, res, next) => {
     };
 
     // Void the sale
+    // CRITICAL FIX: If manager/owner voids directly (not via PIN), they approve their own void
+    // This prevents register blocking when authorized users void sales
     await sale.update({
       status: 'VOIDED',
       voided_at: new Date(),
       voided_by: req.user.id,
       void_reason: reason,
-      void_approved_by: approvedBy
+      void_approved_by: approvedBy || (req.user.permissions.canVoidSale ? req.user.id : null)
     }, { transaction: t });
 
     // Restore stock for each item

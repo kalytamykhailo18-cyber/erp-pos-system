@@ -4,11 +4,14 @@ import { fetchSessions } from '../../store/slices/registersSlice';
 import { usePagination } from '../../hooks';
 import SessionsList from './SessionsList';
 import SessionFilters from './SessionFilters';
+import CloseSessionModal from '../pos/CloseSessionModal';
 
 const SessionsPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { sessions, totalSessions, error } = useAppSelector((state) => state.registers);
+  const { sessions, totalSessions, error, currentSession } = useAppSelector((state) => state.registers);
   const loading = useAppSelector((state) => state.ui.loading);
+
+  const [showCloseModal, setShowCloseModal] = useState(false);
 
   // Pagination hook
   const {
@@ -53,7 +56,18 @@ const SessionsPage: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-6 animate-fade-down duration-fast">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white animate-zoom-in duration-normal">Cierres de Caja</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white animate-zoom-in duration-normal">Cierres de Caja</h1>
+
+          {currentSession && (
+            <button
+              onClick={() => setShowCloseModal(true)}
+              className="px-6 py-2 bg-red-600 text-white font-semibold rounded-sm hover:bg-red-700 transition-colors"
+            >
+              Cerrar Turno Actual
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="animate-fade-right duration-normal">
@@ -80,6 +94,11 @@ const SessionsPage: React.FC = () => {
           />
         </div>
       )}
+
+      <CloseSessionModal
+        isOpen={showCloseModal}
+        onClose={() => setShowCloseModal(false)}
+      />
     </div>
   );
 };

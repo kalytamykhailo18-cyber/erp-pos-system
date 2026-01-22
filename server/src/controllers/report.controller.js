@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
 const {
   Sale, SaleItem, SalePayment, RegisterSession, DailyReport, Branch, User, Product,
-  Category, Customer, PaymentMethod, BranchStock, StockMovement, sequelize
+  Category, Customer, PaymentMethod, BranchStock, StockMovement, CashWithdrawal, sequelize
 } = require('../database/models');
 const { success } = require('../utils/apiResponse');
 const { NotFoundError } = require('../middleware/errorHandler');
@@ -51,7 +51,14 @@ exports.generateDailyReportData = async (branchId, date) => {
     },
     include: [
       { model: User, as: 'opener', attributes: ['first_name', 'last_name'] },
-      { model: User, as: 'closer', attributes: ['first_name', 'last_name'] }
+      { model: User, as: 'closer', attributes: ['first_name', 'last_name'] },
+      {
+        model: CashWithdrawal,
+        as: 'withdrawals',
+        include: [
+          { model: User, as: 'creator', attributes: ['first_name', 'last_name'] }
+        ]
+      }
     ],
     order: [['shift_type', 'ASC'], ['opened_at', 'ASC']]
   });
@@ -117,7 +124,8 @@ exports.generateDailyReportData = async (branchId, date) => {
       discrepancy_card: session.discrepancy_card ? parseFloat(session.discrepancy_card) : null,
       discrepancy_qr: session.discrepancy_qr ? parseFloat(session.discrepancy_qr) : null,
       discrepancy_transfer: session.discrepancy_transfer ? parseFloat(session.discrepancy_transfer) : null,
-      voided_sales_count: voidedSales
+      voided_sales_count: voidedSales,
+      withdrawals: session.withdrawals || []
     };
   }));
 
@@ -463,7 +471,14 @@ exports.getConsolidatedDailyReport = async (req, res, next) => {
       include: [
         { model: Branch, as: 'branch', attributes: ['name', 'code'] },
         { model: User, as: 'opener', attributes: ['first_name', 'last_name'] },
-        { model: User, as: 'closer', attributes: ['first_name', 'last_name'] }
+        { model: User, as: 'closer', attributes: ['first_name', 'last_name'] },
+        {
+          model: CashWithdrawal,
+          as: 'withdrawals',
+          include: [
+            { model: User, as: 'creator', attributes: ['first_name', 'last_name'] }
+          ]
+        }
       ],
       order: [['branch_id', 'ASC'], ['shift_type', 'ASC']]
     });

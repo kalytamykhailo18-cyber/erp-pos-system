@@ -82,6 +82,45 @@ module.exports = (sequelize) => {
       type: DataTypes.DECIMAL(5, 2),
       defaultValue: 0
     },
+    // Nutritional information (CRITICAL for pet food business)
+    protein_percent: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true
+    },
+    // Three-level taxonomy (PART 6)
+    species_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'species',
+        key: 'id'
+      }
+    },
+    variety_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'varieties',
+        key: 'id'
+      }
+    },
+    product_type_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'product_types',
+        key: 'id'
+      }
+    },
+    // Product attributes (PART 6)
+    weight_size: {
+      type: DataTypes.STRING(50),
+      allowNull: true
+    },
+    is_factory_direct: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
     // Kretz Aura scale integration
     scale_plu: {
       type: DataTypes.INTEGER,
@@ -124,11 +163,18 @@ module.exports = (sequelize) => {
   Product.associate = (models) => {
     Product.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' });
     Product.belongsTo(models.UnitOfMeasure, { foreignKey: 'unit_id', as: 'unit' });
+    // Three-level taxonomy associations (PART 6)
+    Product.belongsTo(models.Species, { foreignKey: 'species_id', as: 'species' });
+    Product.belongsTo(models.Variety, { foreignKey: 'variety_id', as: 'variety' });
+    Product.belongsTo(models.ProductType, { foreignKey: 'product_type_id', as: 'product_type' });
     Product.hasMany(models.BranchStock, { foreignKey: 'product_id', as: 'branch_stocks' });
     Product.hasMany(models.SaleItem, { foreignKey: 'product_id', as: 'sale_items' });
     Product.hasMany(models.ProductPriceHistory, { foreignKey: 'product_id', as: 'price_history' });
     Product.hasMany(models.SupplierProduct, { foreignKey: 'product_id', as: 'supplier_products' });
     Product.hasMany(models.StockMovement, { foreignKey: 'product_id', as: 'stock_movements' });
+    // Open bags and non-sales deductions (PART 6)
+    Product.hasMany(models.OpenBag, { foreignKey: 'product_id', as: 'open_bags' });
+    Product.hasMany(models.NonSalesDeduction, { foreignKey: 'product_id', as: 'non_sales_deductions' });
   };
 
   return Product;

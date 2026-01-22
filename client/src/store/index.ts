@@ -21,6 +21,9 @@ import supplierReducer from './slices/supplierSlice';
 import creditNotesReducer from './slices/creditNotesSlice';
 import shippingReducer from './slices/shippingSlice';
 import expenseReducer from './slices/expenseSlice';
+import taxonomyReducer from './slices/taxonomySlice';
+import openBagReducer from './slices/openBagSlice';
+import nonSalesDeductionReducer from './slices/nonSalesDeductionSlice';
 
 export const store = configureStore({
   reducer: {
@@ -43,6 +46,9 @@ export const store = configureStore({
     creditNotes: creditNotesReducer,
     shipping: shippingReducer,
     expense: expenseReducer,
+    taxonomy: taxonomyReducer,
+    openBag: openBagReducer,
+    nonSalesDeduction: nonSalesDeductionReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

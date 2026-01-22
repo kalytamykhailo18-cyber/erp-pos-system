@@ -1,29 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import reportService from '../../services/api/report.service';
-import type { ConsolidatedDailyReportData, ConsolidatedBranchReport } from '../../types';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { loadConsolidatedDailyReport } from '../../store/slices/reportsSlice';
+import type { ConsolidatedBranchReport } from '../../types';
 
 const ConsolidatedDailyReport: React.FC = () => {
-  const [reportData, setReportData] = useState<ConsolidatedDailyReportData | null>(null);
+  const dispatch = useAppDispatch();
+  const { consolidatedDailyReport: reportData } = useAppSelector((state) => state.reports);
+  const loading = useAppSelector((state) => state.ui.loading);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadReport();
-  }, [selectedDate]);
-
-  const loadReport = async () => {
-    setLoading(true);
-    try {
-      const response = await reportService.getConsolidatedDailyReport(selectedDate);
-      if (response.success) {
-        setReportData(response.data);
-      }
-    } catch (error) {
-      console.error('Error loading consolidated report:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    dispatch(loadConsolidatedDailyReport(selectedDate));
+  }, [selectedDate, dispatch]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(amount);
@@ -34,6 +22,16 @@ const ConsolidatedDailyReport: React.FC = () => {
     const hasCardDiscrepancy = branch.discrepancy_card !== 0;
     const hasQrDiscrepancy = branch.discrepancy_qr !== 0;
     const hasTransferDiscrepancy = branch.discrepancy_transfer !== 0;
+
+    // Calculate total withdrawals from all sessions
+    const totalWithdrawals = branch.sessions?.reduce((sum, session: any) => {
+      if (session.withdrawals && Array.isArray(session.withdrawals)) {
+        return sum + session.withdrawals.reduce((s: number, w: any) => s + parseFloat(String(w.amount)), 0);
+      }
+      return sum;
+    }, 0) || 0;
+
+    const hasWithdrawals = totalWithdrawals > 0;
 
     return (
       <div key={branch.branch_id} className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-4 animate-fade-up duration-normal">
@@ -91,6 +89,19 @@ const ConsolidatedDailyReport: React.FC = () => {
             </tr>
           </tbody>
         </table>
+
+        {hasWithdrawals && (
+          <div className="mb-2 p-2 bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 rounded">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-orange-700 dark:text-orange-300 font-medium">
+                💰 Retiros de Caja
+              </span>
+              <span className="text-orange-900 dark:text-orange-200 font-bold">
+                {formatCurrency(totalWithdrawals)}
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">

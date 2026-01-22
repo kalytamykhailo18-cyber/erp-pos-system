@@ -29,11 +29,35 @@ interface SessionSummary {
   }>;
 }
 
+interface UnapprovedVoid {
+  id: UUID;
+  sale_number: string;
+  total_amount: number;
+  void_reason: string;
+  voided_at: string;
+  voided_by: {
+    id: UUID;
+    name: string;
+    email: string;
+  } | null;
+  created_by: {
+    id: UUID;
+    name: string;
+  } | null;
+}
+
+interface UnapprovedVoidsData {
+  has_unapproved_voids: boolean;
+  count: number;
+  voids: UnapprovedVoid[];
+}
+
 interface RegistersState {
   registers: Register[];
   selectedRegister: Register | null;
   currentSession: RegisterSession | null;
   sessionSummary: SessionSummary | null;
+  unapprovedVoids: UnapprovedVoidsData | null;
   sessions: RegisterSession[];
   totalSessions: number;
   loading: boolean;
@@ -45,6 +69,7 @@ const initialState: RegistersState = {
   selectedRegister: null,
   currentSession: null,
   sessionSummary: null,
+  unapprovedVoids: null,
   sessions: [],
   totalSessions: 0,
   loading: false,
@@ -194,6 +219,34 @@ export const getSessionSummary = createAsyncThunk<
   }
 );
 
+/**
+ * CRITICAL: Check for unapproved voided sales before closing
+ * Required by business rule: Cannot close register with unapproved voids
+ */
+export const checkUnapprovedVoids = createAsyncThunk<
+  UnapprovedVoidsData,
+  UUID, // session_id
+  { rejectValue: string }
+>(
+  'registers/checkUnapprovedVoids',
+  async (sessionId, { dispatch, rejectWithValue }) => {
+    try {
+      dispatch(startLoading());
+      const response = await registerService.getUnapprovedVoids(sessionId);
+
+      if (!response.success) {
+        throw new Error('Failed to check unapproved voids');
+      }
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue('Error checking unapproved voids');
+    } finally {
+      dispatch(stopLoading());
+    }
+  }
+);
+
 export const getActiveSession = createAsyncThunk<
   RegisterSession | null,
   UUID, // register_id
@@ -295,6 +348,33 @@ export const forceCloseSession = createAsyncThunk<
   }
 );
 
+export const reopenSession = createAsyncThunk<
+  RegisterSession,
+  { session_id: UUID; reason: string; manager_pin: string },
+  { rejectValue: string }
+>(
+  'registers/reopenSession',
+  async ({ session_id, reason, manager_pin }, { dispatch, rejectWithValue }) => {
+    try {
+      dispatch(startLoading('Reabriendo sesión...'));
+      const response = await registerService.reopenSession(session_id, reason, manager_pin);
+
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to reopen session');
+      }
+
+      dispatch(showToast({ type: 'success', message: 'Sesión reabierta exitosamente' }));
+      return response.data;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error al reabrir sesión';
+      dispatch(showToast({ type: 'error', message }));
+      return rejectWithValue(message);
+    } finally {
+      dispatch(stopLoading());
+    }
+  }
+);
+
 const registersSlice = createSlice({
   name: 'registers',
   initialState,
@@ -357,6 +437,11 @@ const registersSlice = createSlice({
     // Get Session Summary
     builder.addCase(getSessionSummary.fulfilled, (state, action) => {
       state.sessionSummary = action.payload;
+    });
+
+    // Check Unapproved Voids (CRITICAL for closing validation)
+    builder.addCase(checkUnapprovedVoids.fulfilled, (state, action) => {
+      state.unapprovedVoids = action.payload;
     });
 
     // Get Active Session

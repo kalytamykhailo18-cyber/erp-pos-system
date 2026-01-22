@@ -85,6 +85,12 @@ module.exports = {
         type: Sequelize.DECIMAL(5, 2),
         defaultValue: 0
       },
+      // Nutritional information (CRITICAL for pet food business)
+      protein_percent: {
+        type: Sequelize.DECIMAL(5, 2),
+        allowNull: true,
+        comment: 'Protein percentage for pet food products (e.g., 24.5 for 24.5% protein)'
+      },
       scale_plu: {
         type: Sequelize.INTEGER,
         allowNull: true

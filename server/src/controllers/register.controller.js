@@ -374,6 +374,23 @@ exports.closeSession = async (req, res, next) => {
       throw new BusinessError('Session is not open', 'E402');
     }
 
+    // CRITICAL: Block closing if there are unapproved voided sales
+    const unapprovedVoids = await Sale.findAll({
+      where: {
+        session_id: sessionId,
+        status: 'VOIDED',
+        void_approved_by: null
+      },
+      attributes: ['id', 'sale_number', 'total_amount', 'void_reason']
+    });
+
+    if (unapprovedVoids.length > 0) {
+      throw new BusinessError(
+        `No se puede cerrar la caja. Hay ${unapprovedVoids.length} venta(s) anulada(s) pendiente(s) de aprobación por gerente/dueño. Números de venta: ${unapprovedVoids.map(v => v.sale_number).join(', ')}`,
+        'E405'
+      );
+    }
+
     // Validate closing denomination breakdown matches declared cash
     if (closing_denominations) {
       const denominationTotal = calculateDenominationTotal(closing_denominations);
@@ -1051,6 +1068,68 @@ exports.getSessionSummary = async (req, res, next) => {
   }
 };
 
+/**
+ * Get unapproved voided sales for session
+ * GET /api/v1/registers/sessions/:sessionId/unapproved-voids
+ * CRITICAL: Used to block register closing if voided sales need approval
+ */
+exports.getUnapprovedVoids = async (req, res, next) => {
+  try {
+    const { sessionId } = req.params;
+
+    // Verify session exists
+    const session = await RegisterSession.findByPk(sessionId);
+    if (!session) {
+      throw new NotFoundError('Session not found');
+    }
+
+    // Find all voided sales without manager approval
+    const unapprovedVoids = await Sale.findAll({
+      where: {
+        session_id: sessionId,
+        status: 'VOIDED',
+        void_approved_by: null  // CRITICAL: No approval yet
+      },
+      include: [
+        {
+          model: User,
+          as: 'voider',
+          attributes: ['id', 'first_name', 'last_name', 'email']
+        },
+        {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'first_name', 'last_name']
+        }
+      ],
+      order: [['voided_at', 'DESC']]
+    });
+
+    return success(res, {
+      has_unapproved_voids: unapprovedVoids.length > 0,
+      count: unapprovedVoids.length,
+      voids: unapprovedVoids.map(sale => ({
+        id: sale.id,
+        sale_number: sale.sale_number,
+        total_amount: sale.total_amount,
+        void_reason: sale.void_reason,
+        voided_at: sale.voided_at,
+        voided_by: sale.voider ? {
+          id: sale.voider.id,
+          name: `${sale.voider.first_name} ${sale.voider.last_name}`,
+          email: sale.voider.email
+        } : null,
+        created_by: sale.creator ? {
+          id: sale.creator.id,
+          name: `${sale.creator.first_name} ${sale.creator.last_name}`
+        } : null
+      }))
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ===== Daily Report Controllers =====
 
 /**
@@ -1109,7 +1188,14 @@ exports.getDailyReportByDate = async (req, res, next) => {
       include: [
         { model: CashRegister, as: 'register' },
         { model: User, as: 'opener', attributes: ['first_name', 'last_name'] },
-        { model: User, as: 'closer', attributes: ['first_name', 'last_name'] }
+        { model: User, as: 'closer', attributes: ['first_name', 'last_name'] },
+        {
+          model: CashWithdrawal,
+          as: 'withdrawals',
+          include: [
+            { model: User, as: 'creator', attributes: ['first_name', 'last_name'] }
+          ]
+        }
       ],
       order: [['opened_at', 'ASC']]
     });

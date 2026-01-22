@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import reportService from '../../services/api/report.service';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { loadInventoryReport } from '../../store/slices/reportsSlice';
 import { MdCheck } from 'react-icons/md';
 
 interface StockSummary {
@@ -20,44 +21,39 @@ interface LowStockItem {
 
 const StockLevelOverview: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { inventoryReport, error: reportError } = useAppSelector((state) => state.reports);
+  const loading = useAppSelector((state) => state.ui.loading);
+
   const [summary, setSummary] = useState<StockSummary | null>(null);
   const [criticalItems, setCriticalItems] = useState<LowStockItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadStockData();
+    dispatch(loadInventoryReport({ low_stock_only: true }));
     // Refresh every 5 minutes
-    const interval = setInterval(loadStockData, 300000);
+    const interval = setInterval(() => {
+      dispatch(loadInventoryReport({ low_stock_only: true }));
+    }, 300000);
     return () => clearInterval(interval);
-  }, []);
+  }, [dispatch]);
 
-  const loadStockData = async () => {
-    try {
-      const response = await reportService.getInventoryReport({ low_stock_only: true });
-      if (response.success) {
-        setSummary(response.data.summary);
-        // Get top 5 most critical items (lowest quantity relative to minimum)
-        const sortedItems = response.data.inventory
-          .map(item => ({
-            product: item.product,
-            sku: item.sku,
-            branch: item.branch,
-            quantity: item.quantity,
-            min_stock: item.min_stock
-          }))
-          .sort((a, b) => (a.quantity / a.min_stock) - (b.quantity / b.min_stock))
-          .slice(0, 5);
-        setCriticalItems(sortedItems);
-        setError(null);
-      }
-    } catch (err) {
-      setError('Error al cargar datos de stock');
-      console.error('Error loading stock data:', err);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (inventoryReport) {
+      setSummary(inventoryReport.summary);
+      // Get top 5 most critical items (lowest quantity relative to minimum)
+      const sortedItems = inventoryReport.inventory
+        .map(item => ({
+          product: item.product,
+          sku: item.sku,
+          branch: item.branch,
+          quantity: item.quantity,
+          min_stock: item.min_stock
+        }))
+        .sort((a, b) => (a.quantity / a.min_stock) - (b.quantity / b.min_stock))
+        .slice(0, 5);
+      setCriticalItems(sortedItems);
     }
-  };
+  }, [inventoryReport]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(amount);
@@ -71,10 +67,10 @@ const StockLevelOverview: React.FC = () => {
     return 'text-gray-900 dark:text-white';
   };
 
-  if (error) {
+  if (reportError) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-6 animate-fade-right duration-normal">
-        <div className="text-center text-red-600 dark:text-red-400">{error}</div>
+        <div className="text-center text-red-600 dark:text-red-400">{reportError}</div>
       </div>
     );
   }

@@ -95,6 +95,14 @@ export const registerService = {
   },
 
   /**
+   * CRITICAL: Get unapproved voided sales for session
+   * Used to validate closing - register cannot close with unapproved voids
+   */
+  getUnapprovedVoids: (sessionId: UUID): Promise<ApiResponse<any>> => {
+    return get<any>(`/registers/sessions/${sessionId}/unapproved-voids`);
+  },
+
+  /**
    * Get session by ID
    */
   getSessionById: (sessionId: UUID): Promise<ApiResponse<RegisterSession>> => {

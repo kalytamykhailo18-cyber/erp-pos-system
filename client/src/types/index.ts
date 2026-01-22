@@ -199,6 +199,19 @@ export interface Product {
   is_weighable: boolean;
   shrinkage_percent: Decimal;
 
+  // Nutritional information (CRITICAL for pet food business)
+  protein_percent?: Decimal;
+
+  // Three-level taxonomy (PART 6)
+  species_id?: UUID;
+  species?: Species;
+  variety_id?: UUID;
+  variety?: Variety;
+  product_type_id?: UUID;
+  product_type?: ProductType;
+  weight_size?: string;
+  is_factory_direct: boolean;
+
   // Scale integration
   scale_plu?: number;
   export_to_scale: boolean;
@@ -213,6 +226,88 @@ export interface Product {
 
   // Temporary/calculated fields
   stock_quantity?: number;
+}
+
+// Three-Level Taxonomy Types (PART 6)
+export interface Species {
+  id: UUID;
+  name: string;
+  description?: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: ISODateString;
+  updated_at: ISODateString;
+  varieties?: Variety[];
+}
+
+export interface Variety {
+  id: UUID;
+  species_id: UUID;
+  species?: Species;
+  name: string;
+  description?: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: ISODateString;
+  updated_at: ISODateString;
+}
+
+export interface ProductType {
+  id: UUID;
+  name: string;
+  description?: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: ISODateString;
+  updated_at: ISODateString;
+}
+
+// Open Bag Types (PART 6)
+export interface OpenBag {
+  id: UUID;
+  branch_id: UUID;
+  branch?: Branch;
+  product_id: UUID;
+  product?: Product;
+  original_weight: Decimal;
+  remaining_weight: Decimal;
+  low_stock_threshold?: Decimal;
+  status: 'OPEN' | 'EMPTY';
+  opened_at: ISODateString;
+  opened_by?: UUID;
+  opener?: User;
+  closed_at?: ISODateString;
+  closed_by?: UUID;
+  closer?: User;
+  notes?: string;
+  created_at: ISODateString;
+  updated_at: ISODateString;
+}
+
+// Non-Sales Deduction Types (PART 6)
+export type DeductionType = 'FREE_SAMPLE' | 'DONATION';
+export type DeductionApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface NonSalesDeduction {
+  id: UUID;
+  branch_id: UUID;
+  branch?: Branch;
+  product_id: UUID;
+  product?: Product;
+  quantity: Decimal;
+  deduction_type: DeductionType;
+  reason?: string;
+  recipient?: string;
+  requested_by: UUID;
+  requester?: User;
+  approved_by?: UUID;
+  approver?: User;
+  approval_status: DeductionApprovalStatus;
+  approved_at?: ISODateString;
+  rejection_reason?: string;
+  stock_movement_id?: UUID;
+  created_at: ISODateString;
+  updated_at: ISODateString;
 }
 
 export interface UnitOfMeasure {
@@ -674,6 +769,7 @@ export interface ShiftReportData {
   discrepancy_qr: number | null;
   discrepancy_transfer: number | null;
   voided_sales_count: number;
+  withdrawals?: CashWithdrawal[];
 }
 
 export interface DailyReportData {
@@ -776,6 +872,7 @@ export interface ConsolidatedBranchReport {
     status: SessionStatus;
     opened_by: string | null;
     closed_by: string | null;
+    withdrawals?: CashWithdrawal[];
   }>;
 }
 

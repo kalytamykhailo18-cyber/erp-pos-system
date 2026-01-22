@@ -32,11 +32,14 @@ type StockTab = 'inventory' | 'movements' | 'shrinkage' | 'transfers';
 
 const StockPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { currentBranch, availableBranches } = useAppSelector((state) => state.auth);
+  const { currentBranch, availableBranches, user } = useAppSelector((state) => state.auth);
   const { items: stock, movements } = useAppSelector((state) => state.stock);
   const { transfers } = useAppSelector((state) => state.transfer);
   const { products } = useAppSelector((state) => state.products);
   const loading = useAppSelector((state) => state.ui.loading);
+
+  // CRITICAL: Permission check for stock adjustments
+  const canAdjustStock = user?.role?.can_adjust_stock || false;
 
   // Local state
   const [activeTab, setActiveTab] = useState<StockTab>('inventory');
@@ -246,21 +249,25 @@ const StockPage: React.FC = () => {
           </div>
 
           <div className="flex gap-3 animate-fade-left duration-normal">
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setSelectedItem(null);
-                setShowShrinkageModal(true);
-              }}
-            >
-              Registrar Merma
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => setShowInventoryCountModal(true)}
-            >
-              Conteo Físico
-            </Button>
+            {canAdjustStock && (
+              <>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setSelectedItem(null);
+                    setShowShrinkageModal(true);
+                  }}
+                >
+                  Registrar Merma
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowInventoryCountModal(true)}
+                >
+                  Conteo Físico
+                </Button>
+              </>
+            )}
             <Button
               variant="primary"
               onClick={loadStock}
@@ -298,6 +305,7 @@ const StockPage: React.FC = () => {
             onSearchChange={setSearch}
             showLowStock={showLowStock}
             onShowLowStockChange={setShowLowStock}
+            canAdjustStock={canAdjustStock}
             onAdjust={(item) => {
               setSelectedItem(item);
               setShowAdjustModal(true);
@@ -331,13 +339,19 @@ const StockPage: React.FC = () => {
               <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto animate-fade-up duration-light-slow">
                 Registra las mermas de productos (especialmente alimentos para mascotas) causadas por polvo, porcionado o pérdidas de peso.
               </p>
-              <Button
-                variant="primary"
-                onClick={() => setShowShrinkageModal(true)}
-                className="animate-fade-up duration-slow"
-              >
-                Registrar Merma Rápida
-              </Button>
+              {canAdjustStock ? (
+                <Button
+                  variant="primary"
+                  onClick={() => setShowShrinkageModal(true)}
+                  className="animate-fade-up duration-slow"
+                >
+                  Registrar Merma Rápida
+                </Button>
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400 animate-fade-up duration-slow">
+                  No tienes permisos para registrar mermas
+                </p>
+              )}
             </div>
           </Card>
         )}
@@ -350,12 +364,14 @@ const StockPage: React.FC = () => {
                 <h2 className="text-lg font-medium">Transferencias entre Sucursales</h2>
                 <p className="text-sm text-gray-500">Gestiona los traslados de mercadería</p>
               </div>
-              <Button
-                variant="primary"
-                onClick={() => setShowCreateTransferModal(true)}
-              >
-                Nueva Transferencia
-              </Button>
+              {canAdjustStock && (
+                <Button
+                  variant="primary"
+                  onClick={() => setShowCreateTransferModal(true)}
+                >
+                  Nueva Transferencia
+                </Button>
+              )}
             </div>
             <TransfersList
               transfers={transfers}
