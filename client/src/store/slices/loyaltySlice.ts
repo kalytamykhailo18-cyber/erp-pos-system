@@ -170,10 +170,9 @@ export const createAccount = createAsyncThunk<
 export const earnPoints = createAsyncThunk<
   PointsTransaction,
   {
-    loyalty_account_id: UUID;
+    customer_id: UUID;
     sale_id: UUID;
     sale_total: number;
-    branch_id: UUID;
   },
   { rejectValue: string }
 >(
@@ -196,10 +195,9 @@ export const earnPoints = createAsyncThunk<
 export const redeemPoints = createAsyncThunk<
   { transaction: PointsTransaction; discount_amount: number },
   {
-    loyalty_account_id: UUID;
+    customer_id: UUID;
     points: number;
     sale_id?: UUID;
-    branch_id: UUID;
   },
   { rejectValue: string }
 >(
@@ -230,7 +228,7 @@ export const redeemPoints = createAsyncThunk<
 export const adjustPoints = createAsyncThunk<
   PointsTransaction,
   {
-    loyalty_account_id: UUID;
+    customer_id: UUID;
     points: number;
     reason: string;
   },
@@ -260,10 +258,9 @@ export const adjustPoints = createAsyncThunk<
 export const giveCredit = createAsyncThunk<
   CreditTransaction,
   {
-    loyalty_account_id: UUID;
+    customer_id: UUID;
     amount: number;
     sale_id?: UUID;
-    branch_id: UUID;
     reason?: string;
   },
   { rejectValue: string }
@@ -292,10 +289,9 @@ export const giveCredit = createAsyncThunk<
 export const useCredit = createAsyncThunk<
   CreditTransaction,
   {
-    loyalty_account_id: UUID;
+    customer_id: UUID;
     amount: number;
     sale_id?: UUID;
-    branch_id: UUID;
   },
   { rejectValue: string }
 >(
@@ -326,7 +322,7 @@ export const useCredit = createAsyncThunk<
 export const adjustCredit = createAsyncThunk<
   CreditTransaction,
   {
-    loyalty_account_id: UUID;
+    customer_id: UUID;
     amount: number;
     reason: string;
   },
@@ -356,9 +352,8 @@ export const adjustCredit = createAsyncThunk<
 export const loadPointsTransactions = createAsyncThunk<
   { transactions: PointsTransaction[]; pagination: { page: number; limit: number; total_items: number; total_pages: number } },
   {
-    loyalty_account_id?: UUID;
+    customer_id?: UUID;
     transaction_type?: string;
-    branch_id?: UUID;
     start_date?: string;
     end_date?: string;
     page?: number;
@@ -396,9 +391,8 @@ export const loadPointsTransactions = createAsyncThunk<
 export const loadCreditTransactions = createAsyncThunk<
   { transactions: CreditTransaction[]; pagination: { page: number; limit: number; total_items: number; total_pages: number } },
   {
-    loyalty_account_id?: UUID;
+    customer_id?: UUID;
     transaction_type?: string;
-    branch_id?: UUID;
     start_date?: string;
     end_date?: string;
     page?: number;
@@ -594,7 +588,7 @@ const loyaltySlice = createSlice({
       state.pointsTransactions.unshift(action.payload);
 
       // Update account balance
-      if (state.currentAccount?.id === action.payload.loyalty_account_id) {
+      if (state.currentAccount?.id === action.payload.customer_id) {
         state.currentAccount.loyalty_points = action.payload.balance_after;
       }
     });
@@ -604,7 +598,7 @@ const loyaltySlice = createSlice({
       state.pointsTransactions.unshift(action.payload.transaction);
 
       // Update account balance
-      if (state.currentAccount?.id === action.payload.transaction.loyalty_account_id) {
+      if (state.currentAccount?.id === action.payload.transaction.customer_id) {
         state.currentAccount.loyalty_points = action.payload.transaction.balance_after;
       }
     });
@@ -614,7 +608,7 @@ const loyaltySlice = createSlice({
       state.pointsTransactions.unshift(action.payload);
 
       // Update account balance
-      if (state.currentAccount?.id === action.payload.loyalty_account_id) {
+      if (state.currentAccount?.id === action.payload.customer_id) {
         state.currentAccount.loyalty_points = action.payload.balance_after;
       }
     });
@@ -624,7 +618,7 @@ const loyaltySlice = createSlice({
       state.creditTransactions.unshift(action.payload);
 
       // Update account balance
-      if (state.currentAccount?.id === action.payload.loyalty_account_id) {
+      if (state.currentAccount?.id === action.payload.customer_id) {
         state.currentAccount.credit_balance = action.payload.balance_after;
       }
     });
@@ -634,7 +628,7 @@ const loyaltySlice = createSlice({
       state.creditTransactions.unshift(action.payload);
 
       // Update account balance
-      if (state.currentAccount?.id === action.payload.loyalty_account_id) {
+      if (state.currentAccount?.id === action.payload.customer_id) {
         state.currentAccount.credit_balance = action.payload.balance_after;
       }
     });
@@ -644,7 +638,7 @@ const loyaltySlice = createSlice({
       state.creditTransactions.unshift(action.payload);
 
       // Update account balance
-      if (state.currentAccount?.id === action.payload.loyalty_account_id) {
+      if (state.currentAccount?.id === action.payload.customer_id) {
         state.currentAccount.credit_balance = action.payload.balance_after;
       }
     });

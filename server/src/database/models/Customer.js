@@ -58,6 +58,11 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(255),
       allowNull: true
     },
+    doorbell_apt: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Doorbell number or apartment number for delivery'
+    },
     neighborhood: {
       type: DataTypes.STRING(100),
       allowNull: true

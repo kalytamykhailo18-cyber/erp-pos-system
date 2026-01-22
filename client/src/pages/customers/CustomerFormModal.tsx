@@ -12,8 +12,13 @@ export interface CustomerFormData {
   tax_condition: string;
   company_name: string;
   address: string;
+  doorbell_apt: string;
+  neighborhood: string;
   city: string;
   postal_code: string;
+  is_wholesale: boolean;
+  wholesale_discount_percent: string;
+  assigned_vendor_id: string;
   notes: string;
 }
 
@@ -67,10 +72,11 @@ export const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
             onChange={onChange}
           />
           <Input
-            label="Teléfono"
+            label="Teléfono *"
             name="phone"
             value={formData.phone}
             onChange={onChange}
+            required
           />
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -124,12 +130,28 @@ export const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <Input
-                label="Dirección"
+                label="Dirección *"
                 name="address"
                 value={formData.address}
                 onChange={onChange}
+                required
               />
             </div>
+            <Input
+              label="Timbre/Departamento *"
+              name="doorbell_apt"
+              value={formData.doorbell_apt}
+              onChange={onChange}
+              placeholder="Ej: Timbre 5, Depto 3B"
+              required
+            />
+            <Input
+              label="Barrio *"
+              name="neighborhood"
+              value={formData.neighborhood}
+              onChange={onChange}
+              required
+            />
             <Input
               label="Ciudad"
               name="city"
@@ -142,6 +164,59 @@ export const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               value={formData.postal_code}
               onChange={onChange}
             />
+          </div>
+        </div>
+
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <h3 className="font-medium text-gray-900 dark:text-white mb-4">Cliente Mayorista</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  name="is_wholesale"
+                  checked={formData.is_wholesale}
+                  onChange={(e) => onChange({
+                    target: {
+                      name: 'is_wholesale',
+                      value: e.target.checked
+                    }
+                  } as any)}
+                  className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Es cliente mayorista
+                </span>
+              </label>
+            </div>
+            {formData.is_wholesale && (
+              <>
+                <Input
+                  label="Descuento Mayorista %"
+                  name="wholesale_discount_percent"
+                  type="number"
+                  value={formData.wholesale_discount_percent}
+                  onChange={onChange}
+                  min="0"
+                  max="100"
+                  placeholder="Ej: 15"
+                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Vendedor Asignado
+                  </label>
+                  <select
+                    name="assigned_vendor_id"
+                    value={formData.assigned_vendor_id}
+                    onChange={onChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="">Seleccionar vendedor...</option>
+                    {/* TODO: Load vendors from API */}
+                  </select>
+                </div>
+              </>
+            )}
           </div>
         </div>
 

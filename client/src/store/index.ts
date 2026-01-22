@@ -24,6 +24,7 @@ import expenseReducer from './slices/expenseSlice';
 import taxonomyReducer from './slices/taxonomySlice';
 import openBagReducer from './slices/openBagSlice';
 import nonSalesDeductionReducer from './slices/nonSalesDeductionSlice';
+import chatReducer from './slices/chatSlice';
 
 export const store = configureStore({
   reducer: {
@@ -49,6 +50,7 @@ export const store = configureStore({
     taxonomy: taxonomyReducer,
     openBag: openBagReducer,
     nonSalesDeduction: nonSalesDeductionReducer,
+    chat: chatReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

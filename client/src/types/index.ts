@@ -371,6 +371,7 @@ export interface Customer {
   phone?: string;
   email?: string;
   address?: string;
+  doorbell_apt?: string;
   neighborhood?: string;
   city?: string;
   postal_code?: string;
@@ -1701,4 +1702,81 @@ export interface ExpenseCategoryFormData {
   color_hex?: string;
   is_system?: boolean;
   is_active?: boolean;
+}
+
+
+// Stock Transfer Request Types
+export interface CreateTransferRequest {
+  from_branch_id: UUID;
+  to_branch_id: UUID;
+  items: {
+    product_id: UUID;
+    quantity: number;
+  }[];
+  notes?: string;
+}
+
+export interface ApproveTransferRequest {
+  items: {
+    id: UUID;
+    shipped_quantity: number;
+  }[];
+}
+
+export interface ReceiveTransferRequest {
+  items: {
+    item_id: UUID;
+    quantity_received: number;
+    notes?: string;
+  }[];
+}
+
+// Chat Types
+export interface ChatConversation {
+  id: UUID;
+  conversation_type: 'DIRECT' | 'BRANCH' | 'GROUP';
+  branch_a_id?: UUID;
+  branch_b_id?: UUID;
+  title?: string;
+  created_at: ISODateString;
+  updated_at: ISODateString;
+  branchA?: Branch;
+  branchB?: Branch;
+  participants?: ChatParticipant[];
+  messages?: ChatMessage[];
+  unread_count?: number;
+}
+
+export interface ChatParticipant {
+  id: UUID;
+  conversation_id: UUID;
+  user_id: UUID;
+  joined_at: ISODateString;
+  left_at?: ISODateString;
+  last_read_at?: ISODateString;
+  user?: User;
+}
+
+export interface ChatMessage {
+  id: UUID;
+  conversation_id: UUID;
+  sender_id: UUID;
+  message_type: 'TEXT' | 'IMAGE' | 'TRANSFER_REQUEST';
+  content: string;
+  transfer_id?: UUID;
+  is_deleted: boolean;
+  created_at: ISODateString;
+  sender?: User;
+  transfer?: StockTransfer;
+}
+
+export interface SendMessageRequest {
+  content: string;
+  message_type?: 'TEXT' | 'IMAGE' | 'TRANSFER_REQUEST';
+  transfer_id?: UUID;
+}
+
+export interface CreateConversationRequest {
+  branch_a_id: UUID;
+  branch_b_id: UUID;
 }

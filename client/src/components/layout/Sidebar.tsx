@@ -23,6 +23,7 @@ import {
   MdLogout,
   MdClose,
   MdStore,
+  MdChat,
 } from 'react-icons/md';
 
 interface SidebarProps {
@@ -103,6 +104,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       name: 'Inventario',
       path: '/stock',
       icon: <MdWarehouse className="w-5 h-5" />,
+    },
+    {
+      name: 'Chat entre Sucursales',
+      path: '/chat',
+      icon: <MdChat className="w-5 h-5" />,
     },
     {
       name: 'Importar Precios',

@@ -32,6 +32,7 @@ const SuppliersPage = React.lazy(() => import('./pages/suppliers'));
 const ShippingPage = React.lazy(() => import('./pages/shipping'));
 const ExpensesPage = React.lazy(() => import('./pages/expenses'));
 const AlertSettingsPage = React.lazy(() => import('./pages/settings/AlertSettings'));
+const ChatPage = React.lazy(() => import('./pages/chat'));
 
 // Loading fallback
 const PageLoader = () => (
@@ -198,6 +199,7 @@ const AppRouter: React.FC = () => {
                   <Route path="/invoices/*" element={<InvoicesPage />} />
                   <Route path="/shipping/*" element={<ShippingPage />} />
                   <Route path="/expenses/*" element={<ExpensesPage />} />
+                  <Route path="/chat/*" element={<ChatPage />} />
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Route>

@@ -18,7 +18,7 @@ export interface LoyaltyAccount {
 
 export interface PointsTransaction {
   id: UUID;
-  loyalty_account_id: UUID;
+  customer_id: UUID;
   customer_name: string;
   transaction_type: 'EARN' | 'REDEEM' | 'ADJUSTMENT' | 'EXPIRY';
   points: number;
@@ -35,7 +35,7 @@ export interface PointsTransaction {
 
 export interface CreditTransaction {
   id: UUID;
-  loyalty_account_id: UUID;
+  customer_id: UUID;
   customer_name: string;
   transaction_type: 'CREDIT_GIVEN' | 'CREDIT_USED' | 'ADJUSTMENT' | 'EXPIRY';
   amount: number;
@@ -118,10 +118,9 @@ export const loyaltyService = {
    * Earn points from sale
    */
   earnPoints: (data: {
-    loyalty_account_id: UUID;
+    customer_id: UUID;
     sale_id: UUID;
     sale_total: number;
-    branch_id: UUID;
   }): Promise<ApiResponse<PointsTransaction>> => {
     return post<PointsTransaction>('/loyalty/points/earn', data);
   },
@@ -130,10 +129,9 @@ export const loyaltyService = {
    * Redeem points
    */
   redeemPoints: (data: {
-    loyalty_account_id: UUID;
+    customer_id: UUID;
     points: number;
     sale_id?: UUID;
-    branch_id: UUID;
   }): Promise<ApiResponse<{
     transaction: PointsTransaction;
     discount_amount: number;
@@ -145,7 +143,7 @@ export const loyaltyService = {
    * Adjust points (manual adjustment)
    */
   adjustPoints: (data: {
-    loyalty_account_id: UUID;
+    customer_id: UUID;
     points: number;
     reason: string;
   }): Promise<ApiResponse<PointsTransaction>> => {
@@ -156,9 +154,8 @@ export const loyaltyService = {
    * Get points transactions
    */
   getPointsTransactions: (params?: {
-    loyalty_account_id?: UUID;
+    customer_id?: UUID;
     transaction_type?: string;
-    branch_id?: UUID;
     start_date?: string;
     end_date?: string;
     page?: number;
@@ -171,10 +168,9 @@ export const loyaltyService = {
    * Give credit (change as credit)
    */
   giveCredit: (data: {
-    loyalty_account_id: UUID;
+    customer_id: UUID;
     amount: number;
     sale_id?: UUID;
-    branch_id: UUID;
     reason?: string;
   }): Promise<ApiResponse<CreditTransaction>> => {
     return post<CreditTransaction>('/loyalty/credit/give', data);
@@ -184,10 +180,9 @@ export const loyaltyService = {
    * Use credit
    */
   useCredit: (data: {
-    loyalty_account_id: UUID;
+    customer_id: UUID;
     amount: number;
     sale_id?: UUID;
-    branch_id: UUID;
   }): Promise<ApiResponse<CreditTransaction>> => {
     return post<CreditTransaction>('/loyalty/credit/use', data);
   },
@@ -196,7 +191,7 @@ export const loyaltyService = {
    * Adjust credit (manual adjustment)
    */
   adjustCredit: (data: {
-    loyalty_account_id: UUID;
+    customer_id: UUID;
     amount: number;
     reason: string;
   }): Promise<ApiResponse<CreditTransaction>> => {
@@ -207,9 +202,8 @@ export const loyaltyService = {
    * Get credit transactions
    */
   getCreditTransactions: (params?: {
-    loyalty_account_id?: UUID;
+    customer_id?: UUID;
     transaction_type?: string;
-    branch_id?: UUID;
     start_date?: string;
     end_date?: string;
     page?: number;

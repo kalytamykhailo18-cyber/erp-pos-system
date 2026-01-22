@@ -76,7 +76,7 @@ const LoyaltyPage: React.FC = () => {
     try {
       const points = parseInt(adjustmentData.points);
       await dispatch(adjustPoints({
-        loyalty_account_id: selectedCustomer.id,
+        customer_id: selectedCustomer.id,
         points: adjustmentData.type === 'add' ? points : -points,
         reason: adjustmentData.reason,
       })).unwrap();
@@ -96,7 +96,7 @@ const LoyaltyPage: React.FC = () => {
     try {
       const amount = parseFloat(creditData.amount);
       await dispatch(adjustCredit({
-        loyalty_account_id: selectedCustomer.id,
+        customer_id: selectedCustomer.id,
         amount: creditData.type === 'add' ? amount : -amount,
         reason: creditData.reason,
       })).unwrap();

@@ -43,12 +43,17 @@ const BranchStock = require('./BranchStock')(sequelize);
 const StockMovement = require('./StockMovement')(sequelize);
 const StockTransfer = require('./StockTransfer')(sequelize);
 const StockTransferItem = require('./StockTransferItem')(sequelize);
+// Chat system (PART 9)
+const ChatConversation = require('./ChatConversation')(sequelize);
+const ChatMessage = require('./ChatMessage')(sequelize);
+const ChatParticipant = require('./ChatParticipant')(sequelize);
 // Open bags and non-sales deductions (PART 6)
 const OpenBag = require('./OpenBag')(sequelize);
 const NonSalesDeduction = require('./NonSalesDeduction')(sequelize);
 const Customer = require('./Customer')(sequelize);
 const LoyaltyTransaction = require('./LoyaltyTransaction')(sequelize);
 const CreditTransaction = require('./CreditTransaction')(sequelize);
+const LoyaltyConfig = require('./LoyaltyConfig')(sequelize);
 const CashRegister = require('./CashRegister')(sequelize);
 const RegisterSession = require('./RegisterSession')(sequelize);
 const CashWithdrawal = require('./CashWithdrawal')(sequelize);
@@ -96,12 +101,17 @@ const models = {
   StockMovement,
   StockTransfer,
   StockTransferItem,
+  // Chat system (PART 9)
+  ChatConversation,
+  ChatMessage,
+  ChatParticipant,
   // Open bags and non-sales deductions (PART 6)
   OpenBag,
   NonSalesDeduction,
   Customer,
   LoyaltyTransaction,
   CreditTransaction,
+  LoyaltyConfig,
   CashRegister,
   RegisterSession,
   CashWithdrawal,

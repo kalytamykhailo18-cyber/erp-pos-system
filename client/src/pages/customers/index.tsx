@@ -27,8 +27,13 @@ const initialFormData: CustomerFormData = {
   tax_condition: 'CONSUMIDOR_FINAL',
   company_name: '',
   address: '',
+  doorbell_apt: '',
+  neighborhood: '',
   city: '',
   postal_code: '',
+  is_wholesale: false,
+  wholesale_discount_percent: '',
+  assigned_vendor_id: '',
   notes: '',
 };
 
@@ -100,8 +105,13 @@ const CustomersPage: React.FC = () => {
       tax_condition: customer.tax_condition || 'CONSUMIDOR_FINAL',
       company_name: customer.company_name || '',
       address: customer.address || '',
+      doorbell_apt: customer.doorbell_apt || '',
+      neighborhood: customer.neighborhood || '',
       city: customer.city || '',
       postal_code: customer.postal_code || '',
+      is_wholesale: customer.is_wholesale || false,
+      wholesale_discount_percent: customer.wholesale_discount_percent ? String(customer.wholesale_discount_percent) : '',
+      assigned_vendor_id: customer.assigned_vendor_id || '',
       notes: customer.notes || '',
     });
     setShowModal(true);
@@ -121,8 +131,13 @@ const CustomersPage: React.FC = () => {
       tax_condition: formData.tax_condition,
       company_name: formData.company_name || undefined,
       address: formData.address || undefined,
+      doorbell_apt: formData.doorbell_apt || undefined,
+      neighborhood: formData.neighborhood || undefined,
       city: formData.city || undefined,
       postal_code: formData.postal_code || undefined,
+      is_wholesale: formData.is_wholesale,
+      wholesale_discount_percent: formData.wholesale_discount_percent ? parseFloat(formData.wholesale_discount_percent) : undefined,
+      assigned_vendor_id: formData.assigned_vendor_id || undefined,
       notes: formData.notes || undefined,
     };
 

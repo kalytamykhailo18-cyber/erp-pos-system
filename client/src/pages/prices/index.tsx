@@ -8,6 +8,7 @@ import {
   selectAllItems,
   matchItem,
   setCurrentBatch,
+  loadSuppliers,
 } from '../../store/slices/priceSlice';
 import { Card } from '../../components/ui';
 import { FileUploadSection } from './FileUploadSection';
@@ -16,7 +17,7 @@ import { ConfirmModal } from './ConfirmModal';
 
 const PriceImportPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { currentBatch, batchItems } = useAppSelector((state) => state.price);
+  const { currentBatch, batchItems, suppliers } = useAppSelector((state) => state.price);
   const loading = useAppSelector((state) => state.ui.loading);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -26,6 +27,11 @@ const PriceImportPage: React.FC = () => {
   const [marginPercent, setMarginPercent] = useState('30');
   const [roundingRule, setRoundingRule] = useState('NEAREST');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  // Load suppliers on mount
+  useEffect(() => {
+    dispatch(loadSuppliers({ is_active: true }));
+  }, [dispatch]);
 
   // Load batch items when currentBatch changes
   useEffect(() => {
@@ -42,16 +48,38 @@ const PriceImportPage: React.FC = () => {
     }
   };
 
+  // Parse rounding rule from combined format to separate rule and value
+  const parseRoundingRule = (value: string): { rule: 'NONE' | 'UP' | 'DOWN' | 'NEAREST', value: number } => {
+    if (value === 'none' || !value) {
+      return { rule: 'NONE', value: 0 };
+    }
+
+    // Format: "nearest_10", "up_50", "down_100"
+    const parts = value.split('_');
+    const ruleStr = parts[0];
+    const roundValue = parseInt(parts[1]) || 0;
+
+    let rule: 'NEAREST' | 'UP' | 'DOWN' = 'NEAREST';
+    if (ruleStr === 'up') rule = 'UP';
+    else if (ruleStr === 'down') rule = 'DOWN';
+    else rule = 'NEAREST';
+
+    return { rule, value: roundValue };
+  };
+
   // Process file with OCR/extraction
   const handleProcessFile = async () => {
     if (!selectedFile) return;
+
+    const { rule, value } = parseRoundingRule(roundingRule);
 
     try {
       await dispatch(uploadPriceFile({
         file: selectedFile,
         supplier_id: selectedSupplier || undefined,
         margin_percentage: parseFloat(marginPercent),
-        rounding_rule: roundingRule as 'NONE' | 'UP' | 'DOWN' | 'NEAREST',
+        rounding_rule: rule,
+        rounding_value: value,
       })).unwrap();
     } catch (error) {
       // Error handled in slice
@@ -103,6 +131,7 @@ const PriceImportPage: React.FC = () => {
             roundingRule={roundingRule}
             loading={loading}
             fileInputRef={fileInputRef}
+            suppliers={suppliers}
             onFileSelect={handleFileSelect}
             onSupplierChange={setSelectedSupplier}
             onMarginChange={setMarginPercent}

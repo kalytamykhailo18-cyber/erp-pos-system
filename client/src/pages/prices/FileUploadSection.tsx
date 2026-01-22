@@ -1,6 +1,13 @@
 import React from 'react';
 import { Button, Input } from '../../components/ui';
 import { MdDescription, MdCloudUpload } from 'react-icons/md';
+import type { UUID } from '../../types';
+
+interface Supplier {
+  id: UUID;
+  name: string;
+  code: string;
+}
 
 interface FileUploadSectionProps {
   selectedFile: File | null;
@@ -9,6 +16,7 @@ interface FileUploadSectionProps {
   roundingRule: string;
   loading: boolean;
   fileInputRef: React.RefObject<HTMLInputElement>;
+  suppliers: Supplier[];
   onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSupplierChange: (value: string) => void;
   onMarginChange: (value: string) => void;
@@ -23,6 +31,7 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
   roundingRule,
   loading,
   fileInputRef,
+  suppliers,
   onFileSelect,
   onSupplierChange,
   onMarginChange,
@@ -87,11 +96,14 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
           <select
             value={selectedSupplier}
             onChange={(e) => onSupplierChange(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="">Detectar automáticamente</option>
-            <option value="sup1">Proveedor 1</option>
-            <option value="sup2">Proveedor 2</option>
+            {suppliers.map((supplier) => (
+              <option key={supplier.id} value={supplier.id}>
+                {supplier.name} {supplier.code && `(${supplier.code})`}
+              </option>
+            ))}
           </select>
         </div>
 

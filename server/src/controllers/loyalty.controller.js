@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 const {
   Customer, LoyaltyTransaction, CreditTransaction,
-  Branch, User, sequelize
+  LoyaltyConfig, Branch, User, sequelize
 } = require('../database/models');
 const { success, created, paginated } = require('../utils/apiResponse');
 const { NotFoundError, BusinessError } = require('../middleware/errorHandler');
@@ -14,31 +14,41 @@ const generateQRCode = () => {
   return `LOYALTY-${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
 };
 
-// Hardcoded loyalty configuration
-const LOYALTY_CONFIG = {
-  points_per_peso: 1,
-  peso_per_point_redemption: 0.1,
-  minimum_points_to_redeem: 100,
-  points_expiry_days: 365,
-  credit_expiry_days: 180,
-  min_change_for_credit: 10,
-  tier_thresholds: { SILVER: 1000, GOLD: 3000, PLATINUM: 20000 },
-  tier_multipliers: { STANDARD: 1, SILVER: 1.25, GOLD: 1.5, PLATINUM: 2 }
+// Helper to get active loyalty configuration
+const getActiveConfig = async () => {
+  const config = await LoyaltyConfig.findOne({
+    where: { is_active: true },
+    order: [['created_at', 'DESC']]
+  });
+
+  if (!config) {
+    // Return default config if none exists
+    return {
+      points_per_peso: 1,
+      peso_per_point_redemption: 0.1,
+      minimum_points_to_redeem: 100,
+      points_expiry_days: 365,
+      credit_expiry_days: 180,
+      min_change_for_credit: 10,
+      tier_thresholds: { SILVER: 1000, GOLD: 3000, PLATINUM: 20000 },
+      tier_multipliers: { STANDARD: 1, SILVER: 1.25, GOLD: 1.5, PLATINUM: 2 }
+    };
+  }
+
+  return config;
 };
 
 // Get tier based on lifetime points
-const getTier = (lifetimePoints) => {
-  const thresholds = LOYALTY_CONFIG.tier_thresholds;
-  if (lifetimePoints >= thresholds.PLATINUM) return 'PLATINUM';
-  if (lifetimePoints >= thresholds.GOLD) return 'GOLD';
-  if (lifetimePoints >= thresholds.SILVER) return 'SILVER';
+const getTier = (lifetimePoints, tierThresholds) => {
+  if (lifetimePoints >= tierThresholds.PLATINUM) return 'PLATINUM';
+  if (lifetimePoints >= tierThresholds.GOLD) return 'GOLD';
+  if (lifetimePoints >= tierThresholds.SILVER) return 'SILVER';
   return 'STANDARD';
 };
 
 // Get tier multiplier
-const getTierMultiplier = (tier) => {
-  const multipliers = LOYALTY_CONFIG.tier_multipliers;
-  return multipliers[tier] || 1;
+const getTierMultiplier = (tier, tierMultipliers) => {
+  return tierMultipliers[tier] || 1;
 };
 
 exports.getAccounts = async (req, res, next) => {
@@ -149,16 +159,18 @@ exports.earnPoints = async (req, res, next) => {
     if (!customer) throw new NotFoundError('Customer not found');
     if (!customer.is_active) throw new BusinessError('Customer account is inactive');
 
-    const pointsPerPeso = LOYALTY_CONFIG.points_per_peso;
+    // Get active loyalty config from database
+    const config = await getActiveConfig();
+    const pointsPerPeso = config.points_per_peso;
 
     // Calculate points with tier multiplier
-    const multiplier = getTierMultiplier(customer.loyalty_tier);
+    const multiplier = getTierMultiplier(customer.loyalty_tier, config.tier_multipliers);
     const earnedPoints = Math.floor(sale_total * pointsPerPeso * multiplier);
 
     const newBalance = (customer.loyalty_points || 0) + earnedPoints;
 
     // Check for tier upgrade
-    const newTier = getTier(newBalance);
+    const newTier = getTier(newBalance, config.tier_thresholds);
 
     await customer.update({
       loyalty_points: newBalance,
@@ -193,8 +205,10 @@ exports.redeemPoints = async (req, res, next) => {
     if (!customer) throw new NotFoundError('Customer not found');
     if (!customer.is_active) throw new BusinessError('Customer account is inactive');
 
-    const minPoints = LOYALTY_CONFIG.minimum_points_to_redeem;
-    const pesoPerPoint = LOYALTY_CONFIG.peso_per_point_redemption;
+    // Get active loyalty config from database
+    const config = await getActiveConfig();
+    const minPoints = config.minimum_points_to_redeem;
+    const pesoPerPoint = config.peso_per_point_redemption;
 
     if (points < minPoints) {
       throw new BusinessError(`Minimum ${minPoints} points required to redeem`);
@@ -440,8 +454,8 @@ exports.getCreditTransactions = async (req, res, next) => {
 
 exports.getConfig = async (req, res, next) => {
   try {
-    // Return hardcoded config
-    return success(res, LOYALTY_CONFIG);
+    const config = await getActiveConfig();
+    return success(res, config);
   } catch (error) {
     next(error);
   }
@@ -449,9 +463,25 @@ exports.getConfig = async (req, res, next) => {
 
 exports.updateConfig = async (req, res, next) => {
   try {
-    // Config is hardcoded, so this would need to be changed in code
-    // For now, return the current config
-    return success(res, { message: 'Config is hardcoded. To update, modify LOYALTY_CONFIG in the controller.', current_config: LOYALTY_CONFIG });
+    // Get current active config
+    let config = await LoyaltyConfig.findOne({
+      where: { is_active: true },
+      order: [['created_at', 'DESC']]
+    });
+
+    if (!config) {
+      // Create new config if none exists
+      config = await LoyaltyConfig.create({
+        id: uuidv4(),
+        ...req.body,
+        is_active: true
+      });
+    } else {
+      // Update existing config
+      await config.update(req.body);
+    }
+
+    return success(res, config);
   } catch (error) {
     next(error);
   }
@@ -537,8 +567,10 @@ exports.calculatePoints = async (req, res, next) => {
   try {
     const { amount, tier } = req.query;
 
-    const pointsPerPeso = LOYALTY_CONFIG.points_per_peso;
-    const multiplier = getTierMultiplier(tier || 'STANDARD');
+    // Get active loyalty config from database
+    const config = await getActiveConfig();
+    const pointsPerPeso = config.points_per_peso;
+    const multiplier = getTierMultiplier(tier || 'STANDARD', config.tier_multipliers);
 
     const pointsToEarn = Math.floor(parseFloat(amount) * pointsPerPeso * multiplier);
 
@@ -552,7 +584,9 @@ exports.calculateRedemptionValue = async (req, res, next) => {
   try {
     const { points } = req.query;
 
-    const pesoPerPoint = LOYALTY_CONFIG.peso_per_point_redemption;
+    // Get active loyalty config from database
+    const config = await getActiveConfig();
+    const pesoPerPoint = config.peso_per_point_redemption;
 
     const discountAmount = parseInt(points) * pesoPerPoint;
 
