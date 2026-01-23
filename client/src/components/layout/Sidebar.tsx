@@ -267,6 +267,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               <button
                 key={item.path}
                 onClick={() => {
+                  console.log('=== SIDEBAR NAVIGATION ===', { path: item.path, name: item.name });
                   goTo(item.path);
                   onClose();
                 }}

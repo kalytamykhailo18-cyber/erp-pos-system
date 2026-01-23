@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { openSession } from '../../store/slices/registersSlice';
 import { loadRegisters } from '../../store/slices/registersSlice';
 import { loadDenominations } from '../../store/slices/denominationSlice';
+import { logout } from '../../store/slices/authSlice';
 
 interface OpenRegisterModalProps {
   isOpen: boolean;
@@ -11,6 +13,7 @@ interface OpenRegisterModalProps {
 
 const OpenRegisterModal: React.FC<OpenRegisterModalProps> = ({ isOpen, onClose }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
   const { registers } = useAppSelector((state) => state.registers);
   const { denominations } = useAppSelector((state) => state.denomination);
@@ -57,6 +60,19 @@ const OpenRegisterModal: React.FC<OpenRegisterModalProps> = ({ isOpen, onClose }
     }
   }, [registers, selectedRegisterId]);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('=== OpenRegisterModal Debug ===');
+    console.log('Modal isOpen:', isOpen);
+    console.log('User:', user);
+    console.log('User primary_branch_id:', user?.primary_branch_id);
+    console.log('Registers loaded:', registers);
+    console.log('Registers count:', registers.length);
+    console.log('Active denominations:', activeDenominations);
+    console.log('Selected register ID:', selectedRegisterId);
+    console.log('Loading state:', loading);
+  }, [isOpen, user, registers, activeDenominations, selectedRegisterId, loading]);
+
   // PART 16: Calculate total opening cash from dynamic denominations
   const calculateTotal = (): number => {
     let total = 0;
@@ -69,7 +85,7 @@ const OpenRegisterModal: React.FC<OpenRegisterModalProps> = ({ isOpen, onClose }
   };
 
   const openingCash = calculateTotal();
-  const pettyCashAmount = user?.primary_branch?.petty_cash_amount || 100000;
+  const pettyCashAmount = Number(user?.primary_branch?.petty_cash_amount) || 100000;
   const isAbovePettyCash = openingCash >= pettyCashAmount;
 
   const handleBillCountChange = (denomination: number, value: string) => {
@@ -120,6 +136,11 @@ const OpenRegisterModal: React.FC<OpenRegisterModalProps> = ({ isOpen, onClose }
     }
   };
 
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/auth/login');
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -140,19 +161,33 @@ const OpenRegisterModal: React.FC<OpenRegisterModalProps> = ({ isOpen, onClose }
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Caja Registradora <span className="text-red-600">*</span>
             </label>
-            <select
-              value={selectedRegisterId}
-              onChange={(e) => setSelectedRegisterId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
-              disabled={loading}
-            >
-              <option value="">Seleccione caja...</option>
-              {registers.map((register) => (
-                <option key={register.id} value={register.id}>
-                  Caja #{register.register_number} {register.name && `- ${register.name}`}
-                </option>
-              ))}
-            </select>
+            {registers.length === 0 && !loading ? (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-sm">
+                <p className="text-red-700 dark:text-red-300 font-medium">
+                  ⚠️ No hay cajas registradoras disponibles
+                </p>
+                <p className="text-sm text-red-600 dark:text-red-400 mt-2">
+                  Sucursal: {user?.primary_branch?.name || 'No asignada'}
+                </p>
+                <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                  Por favor contacte al administrador para configurar cajas registradoras en su sucursal.
+                </p>
+              </div>
+            ) : (
+              <select
+                value={selectedRegisterId}
+                onChange={(e) => setSelectedRegisterId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                disabled={loading}
+              >
+                <option value="">Seleccione caja...</option>
+                {registers.map((register) => (
+                  <option key={register.id} value={register.id}>
+                    Caja #{register.register_number} {register.name && `- ${register.name}`}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Shift Type */}
@@ -306,21 +341,37 @@ const OpenRegisterModal: React.FC<OpenRegisterModalProps> = ({ isOpen, onClose }
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex gap-3">
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="flex-1 px-4 py-3 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 text-gray-700 dark:text-gray-200 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleOpenSession}
-            disabled={!selectedRegisterId || loading}
-            className="flex-1 px-4 py-3 bg-primary-600 text-white font-semibold rounded-sm hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? 'Abriendo...' : 'Abrir Caja'}
-          </button>
+        <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+          {registers.length === 0 && !loading ? (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-center text-gray-600 dark:text-gray-400">
+                No puede abrir caja sin cajas registradoras disponibles.
+              </p>
+              <button
+                onClick={handleLogout}
+                className="w-full px-4 py-3 bg-red-600 text-white font-semibold rounded-sm hover:bg-red-700 transition-colors"
+              >
+                ← Cerrar Sesión
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-3">
+              <button
+                onClick={onClose}
+                disabled={loading}
+                className="flex-1 px-4 py-3 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 text-gray-700 dark:text-gray-200 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-500 disabled:opacity-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleOpenSession}
+                disabled={!selectedRegisterId || loading}
+                className="flex-1 px-4 py-3 bg-primary-600 text-white font-semibold rounded-sm hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading ? 'Abriendo...' : 'Abrir Caja'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
