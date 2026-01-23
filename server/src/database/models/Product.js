@@ -121,14 +121,21 @@ module.exports = (sequelize) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false
     },
-    // Kretz Aura scale integration
+    // Kretz Aura scale integration (PART 13)
     scale_plu: {
       type: DataTypes.INTEGER,
-      allowNull: true
+      allowNull: true,
+      comment: 'PLU code for Kretz Aura scale (1-99999)'
     },
     export_to_scale: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false
+      defaultValue: false,
+      comment: 'Whether to include this product in scale price list export'
+    },
+    tare_weight: {
+      type: DataTypes.DECIMAL(8, 3),
+      allowNull: true,
+      comment: 'Tare weight in kg (bag/packaging weight to deduct from scale reading)'
     },
     // Status
     is_active: {

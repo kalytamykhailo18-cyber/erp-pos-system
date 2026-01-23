@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
 const {
   Sale, SaleItem, SalePayment, RegisterSession, DailyReport, Branch, User, Product,
-  Category, Customer, PaymentMethod, BranchStock, StockMovement, CashWithdrawal, sequelize
+  Category, Customer, PaymentMethod, BranchStock, StockMovement, CashWithdrawal, Alert, sequelize
 } = require('../database/models');
 const { success } = require('../utils/apiResponse');
 const { NotFoundError } = require('../middleware/errorHandler');
@@ -143,7 +143,11 @@ exports.generateDailyReportData = async (branchId, date) => {
       [sequelize.fn('SUM', sequelize.col('total_amount')), 'total_revenue'],
       [sequelize.fn('SUM', sequelize.col('tax_amount')), 'total_tax'],
       [sequelize.fn('SUM', sequelize.col('discount_amount')), 'total_discounts'],
-      [sequelize.fn('AVG', sequelize.col('total_amount')), 'average_ticket']
+      [sequelize.fn('AVG', sequelize.col('total_amount')), 'average_ticket'],
+      [sequelize.fn('SUM', sequelize.col('points_earned')), 'total_points_earned'],
+      [sequelize.fn('SUM', sequelize.col('points_redeemed')), 'total_points_redeemed'],
+      [sequelize.fn('SUM', sequelize.col('credit_used')), 'total_credit_used'],
+      [sequelize.fn('SUM', sequelize.col('change_as_credit')), 'total_credit_issued']
     ]
   });
 
@@ -271,7 +275,11 @@ exports.generateDailyReportData = async (branchId, date) => {
       total_discounts: parseFloat(salesData?.toJSON()?.total_discounts) || 0,
       average_ticket: parseFloat(salesData?.toJSON()?.average_ticket) || 0,
       voided_count: parseInt(voidedData?.toJSON()?.voided_count) || 0,
-      voided_amount: parseFloat(voidedData?.toJSON()?.voided_amount) || 0
+      voided_amount: parseFloat(voidedData?.toJSON()?.voided_amount) || 0,
+      total_points_earned: parseInt(salesData?.toJSON()?.total_points_earned) || 0,
+      total_points_redeemed: parseInt(salesData?.toJSON()?.total_points_redeemed) || 0,
+      total_credit_used: parseFloat(salesData?.toJSON()?.total_credit_used) || 0,
+      total_credit_issued: parseFloat(salesData?.toJSON()?.total_credit_issued) || 0
     },
     payments: paymentBreakdown.map((p) => ({
       method: p.payment_method?.name,
@@ -590,10 +598,74 @@ exports.getConsolidatedDailyReport = async (req, res, next) => {
       total_revenue: 0
     });
 
+    // Top products for the day across all branches
+    const topProducts = await SaleItem.findAll({
+      attributes: [
+        'product_id',
+        [sequelize.fn('SUM', sequelize.col('quantity')), 'total_quantity'],
+        [sequelize.fn('SUM', sequelize.col('SaleItem.line_total')), 'total_revenue']
+      ],
+      include: [
+        {
+          model: Sale,
+          as: 'sale',
+          where: {
+            status: 'COMPLETED',
+            business_date: dateString
+          },
+          attributes: []
+        },
+        {
+          model: Product,
+          as: 'product',
+          attributes: ['name', 'sku']
+        }
+      ],
+      group: ['product_id', 'product.id', 'product.name', 'product.sku'],
+      order: [[sequelize.fn('SUM', sequelize.col('SaleItem.line_total')), 'DESC']],
+      limit: 10
+    });
+
+    // Alerts summary for the day
+    const alertsSummary = await Alert.findAll({
+      where: {
+        created_at: {
+          [Op.gte]: new Date(dateString + 'T00:00:00'),
+          [Op.lt]: new Date(new Date(dateString).getTime() + 24 * 60 * 60 * 1000)
+        }
+      },
+      attributes: [
+        'severity',
+        'alert_type',
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+      ],
+      group: ['severity', 'alert_type'],
+      order: [['severity', 'DESC']]
+    });
+
     return success(res, {
       date: dateString,
       branches: branchReports,
-      consolidated: consolidatedTotals
+      consolidated: consolidatedTotals,
+      top_products: topProducts.map(p => ({
+        product_name: p.product?.name,
+        sku: p.product?.sku,
+        total_quantity: parseFloat(p.toJSON()?.total_quantity) || 0,
+        total_revenue: parseFloat(p.toJSON()?.total_revenue) || 0
+      })),
+      alerts_summary: {
+        total_alerts: alertsSummary.reduce((sum, a) => sum + parseInt(a.toJSON()?.count || 0), 0),
+        by_severity: alertsSummary.reduce((acc, a) => {
+          const sev = a.severity;
+          acc[sev] = (acc[sev] || 0) + parseInt(a.toJSON()?.count || 0);
+          return acc;
+        }, {}),
+        by_type: alertsSummary.map(a => ({
+          alert_type: a.alert_type,
+          severity: a.severity,
+          count: parseInt(a.toJSON()?.count || 0)
+        }))
+      }
     });
   } catch (error) {
     next(error);

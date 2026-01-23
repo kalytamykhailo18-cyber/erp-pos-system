@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
+import OfflineIndicator from '../OfflineIndicator';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -36,6 +37,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         {/* Footer */}
         <Footer />
       </div>
+
+      {/* Offline Indicator - PART 12: OFFLINE MODE */}
+      <OfflineIndicator />
     </div>
   );
 };

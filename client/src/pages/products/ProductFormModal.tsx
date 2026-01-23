@@ -22,6 +22,7 @@ export interface ProductFormData {
   is_weighable: boolean;
   scale_plu: string;
   export_to_scale: boolean;
+  tare_weight: string; // PART 13: Tare weight in kg
   // PART 6: Three-level taxonomy
   species_id: string;
   variety_id: string;
@@ -401,7 +402,24 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   Código único para identificar el producto en la balanza Kretz Aura
                 </p>
               </div>
-              <div className="flex items-center animate-fade-left duration-fast">
+              <div className="animate-fade-down duration-fast">
+                <Input
+                  label="Peso de Tara (kg)"
+                  name="tare_weight"
+                  type="number"
+                  min="0"
+                  max="10"
+                  step="0.001"
+                  value={formData.tare_weight || ''}
+                  onChange={onChange}
+                  placeholder="0.100"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Peso del envase/bolsa a descontar (ej: 0.100 kg = 100g)
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center animate-fade-left duration-fast mt-4">
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"

@@ -33,6 +33,7 @@ const ShippingPage = React.lazy(() => import('./pages/shipping'));
 const ExpensesPage = React.lazy(() => import('./pages/expenses'));
 const AlertSettingsPage = React.lazy(() => import('./pages/settings/AlertSettings'));
 const ChatPage = React.lazy(() => import('./pages/chat'));
+const SyncStatusPage = React.lazy(() => import('./pages/sync/SyncStatus'));
 
 // Loading fallback
 const PageLoader = () => (
@@ -200,6 +201,7 @@ const AppRouter: React.FC = () => {
                   <Route path="/shipping/*" element={<ShippingPage />} />
                   <Route path="/expenses/*" element={<ExpensesPage />} />
                   <Route path="/chat/*" element={<ChatPage />} />
+                  <Route path="/sync-status" element={<SyncStatusPage />} />
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Route>

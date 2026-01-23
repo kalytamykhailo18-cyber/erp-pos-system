@@ -98,7 +98,7 @@ export const fetchUnreadCount = createAsyncThunk<
 export const getUnreadCount = fetchUnreadCount;
 
 export const markAlertAsRead = createAsyncThunk<
-  Alert,
+  Alert[],
   UUID,
   { rejectValue: string }
 >(
@@ -111,7 +111,8 @@ export const markAlertAsRead = createAsyncThunk<
         throw new Error('Failed to mark alert as read');
       }
 
-      return response.data;
+      // Backend returns an array of updated alerts
+      return Array.isArray(response.data) ? response.data : [response.data];
     } catch (error) {
       return rejectWithValue('Error marking alert as read');
     }
@@ -241,21 +242,25 @@ const alertsSlice = createSlice({
 
     // Mark as Read
     builder.addCase(markAlertAsRead.fulfilled, (state, action) => {
-      const alertIndex = state.alerts.findIndex((a) => a.id === action.payload.id);
-      if (alertIndex >= 0) {
-        const oldAlert = state.alerts[alertIndex];
+      // Handle array of updated alerts
+      const updatedAlerts = action.payload;
+      updatedAlerts.forEach((updatedAlert) => {
+        const alertIndex = state.alerts.findIndex((a) => a.id === updatedAlert.id);
+        if (alertIndex >= 0) {
+          const oldAlert = state.alerts[alertIndex];
 
-        // Update unread counts
-        if (!oldAlert.is_read && state.unreadCount) {
-          state.unreadCount.total = Math.max(0, state.unreadCount.total - 1);
-          const severity = oldAlert.severity as keyof typeof state.unreadBySeverity;
-          if (severity in state.unreadBySeverity) {
-            state.unreadBySeverity[severity] = Math.max(0, state.unreadBySeverity[severity] - 1);
+          // Update unread counts
+          if (!oldAlert.is_read && state.unreadCount) {
+            state.unreadCount.total = Math.max(0, state.unreadCount.total - 1);
+            const severity = oldAlert.severity as keyof typeof state.unreadBySeverity;
+            if (severity in state.unreadBySeverity) {
+              state.unreadBySeverity[severity] = Math.max(0, state.unreadBySeverity[severity] - 1);
+            }
           }
-        }
 
-        state.alerts[alertIndex] = action.payload;
-      }
+          state.alerts[alertIndex] = updatedAlert;
+        }
+      });
     });
 
     // Mark All as Read

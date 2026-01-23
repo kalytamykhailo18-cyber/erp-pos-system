@@ -37,6 +37,7 @@ const AlertFilters: React.FC<AlertFiltersProps> = ({ filters, onFilterChange }) 
             <option value="FAILED_INVOICE">Error de Factura</option>
             <option value="LARGE_DISCOUNT">Descuento Grande</option>
             <option value="HIGH_VALUE_SALE">Venta de Alto Valor</option>
+            <option value="BANK_TRANSFER">Transferencia Bancaria</option>
             <option value="SYNC_ERROR">Error de Sincronización</option>
             <option value="LOGIN_FAILED">Error de Login</option>
             <option value="PRICE_CHANGE">Cambio de Precio</option>

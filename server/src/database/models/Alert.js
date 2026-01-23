@@ -21,7 +21,8 @@ module.exports = (sequelize) => {
         'HIGH_VALUE_SALE',
         'SYNC_ERROR',
         'LOGIN_FAILED',
-        'PRICE_CHANGE'
+        'PRICE_CHANGE',
+        'BANK_TRANSFER'
       ),
       allowNull: false
     },
@@ -101,6 +102,11 @@ module.exports = (sequelize) => {
     resolution_notes: {
       type: DataTypes.TEXT,
       allowNull: true
+    },
+    metadata: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      comment: 'Additional structured data for the alert (branch_name, amounts, references, etc.)'
     }
   }, {
     tableName: 'alerts',

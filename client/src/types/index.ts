@@ -212,9 +212,10 @@ export interface Product {
   weight_size?: string;
   is_factory_direct: boolean;
 
-  // Scale integration
+  // Scale integration (PART 13: KRETZ SCALE)
   scale_plu?: number;
   export_to_scale: boolean;
+  tare_weight?: Decimal; // Tare weight in kg (bag/packaging weight to deduct)
 
   // Status
   is_active: boolean;
@@ -644,6 +645,7 @@ export interface OpenSessionData {
   shift_type: ShiftType;
   opening_notes?: string;
   opening_denominations?: DenominationBreakdown;
+  local_id?: string; // For offline sync tracking
 }
 
 export interface OpenSessionResponse extends RegisterSession {
@@ -716,7 +718,8 @@ export type AlertType =
   | 'HIGH_VALUE_SALE'
   | 'SYNC_ERROR'
   | 'LOGIN_FAILED'
-  | 'PRICE_CHANGE';
+  | 'PRICE_CHANGE'
+  | 'BANK_TRANSFER';
 
 // Severity levels - Must match backend validation
 export type AlertSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
@@ -742,6 +745,7 @@ export interface Alert {
   resolver?: User;
   resolved_at?: ISODateString;
   resolution_notes?: string;
+  metadata?: any;
   created_at: ISODateString;
 }
 
@@ -802,6 +806,10 @@ export interface DailyReportData {
     average_ticket: number;
     voided_count: number;
     voided_amount: number;
+    total_points_earned: number;
+    total_points_redeemed: number;
+    total_credit_used: number;
+    total_credit_issued: number;
   };
   payments: Array<{
     method: string;
@@ -891,6 +899,23 @@ export interface ConsolidatedDailyReportData {
     total_discrepancy_transfer: number;
     total_sales: number;
     total_revenue: number;
+  };
+  top_products: Array<{
+    product_name: string;
+    sku: string;
+    total_quantity: number;
+    total_revenue: number;
+  }>;
+  alerts_summary: {
+    total_alerts: number;
+    by_severity: {
+      [key: string]: number;
+    };
+    by_type: Array<{
+      alert_type: string;
+      severity: string;
+      count: number;
+    }>;
   };
 }
 

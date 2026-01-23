@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 // Lazy load subpages
 const ProductsListPage = React.lazy(() => import('./ProductsListPage'));
 const BulkPriceUpdate = React.lazy(() => import('./BulkPriceUpdate'));
+const AdvancedSearchPage = React.lazy(() => import('./AdvancedSearchPage')); // PART 14
 
 const ProductsPage: React.FC = () => {
   return (
@@ -15,6 +16,7 @@ const ProductsPage: React.FC = () => {
       <Routes>
         <Route index element={<ProductsListPage />} />
         <Route path="bulk-update" element={<BulkPriceUpdate />} />
+        <Route path="search" element={<AdvancedSearchPage />} /> {/* PART 14: Advanced Search */}
         <Route path="*" element={<Navigate to="/products" replace />} />
       </Routes>
     </React.Suspense>

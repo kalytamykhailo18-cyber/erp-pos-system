@@ -1,22 +1,26 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store';
-import { fetchUnreadCount, markAlertAsRead } from '../../store/slices/alertsSlice';
+import { fetchAlerts, fetchUnreadCount } from '../../store/slices/alertsSlice';
+import AlertDetailModal from '../../components/alerts/AlertDetailModal';
 import type { Alert } from '../../types';
 
 const AlertPanel: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { unreadCount } = useAppSelector((state) => state.alerts);
+  const { alerts, unreadCount } = useAppSelector((state) => state.alerts);
   const loading = useAppSelector((state) => state.ui.loading);
+  const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
 
   useEffect(() => {
-    // Load unread count on mount
-    dispatch(fetchUnreadCount());
+    // Load recent unread alerts (top 5) and unread count
+    dispatch(fetchAlerts({ is_read: 'false', page: 1, limit: 5 }));
+    dispatch(fetchUnreadCount({}));
 
     // Refresh every 30 seconds
     const interval = setInterval(() => {
-      dispatch(fetchUnreadCount());
+      dispatch(fetchAlerts({ is_read: 'false', page: 1, limit: 5 }));
+      dispatch(fetchUnreadCount({}));
     }, 30000);
 
     return () => clearInterval(interval);
@@ -40,13 +44,13 @@ const AlertPanel: React.FC = () => {
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case 'CRITICAL':
-        return '🚨';
+        return '🔴';
       case 'HIGH':
-        return '⚠️';
+        return '🔴';
       case 'MEDIUM':
-        return '⚡';
+        return '🟡';
       case 'LOW':
-        return 'ℹ️';
+        return '🟡';
       default:
         return '📢';
     }
@@ -67,11 +71,43 @@ const AlertPanel: React.FC = () => {
       SYNC_ERROR: 'Error de Sincronización',
       LOGIN_FAILED: 'Login Fallido',
       PRICE_CHANGE: 'Cambio de Precio',
+      BANK_TRANSFER: 'Transferencia Bancaria',
     };
     return labels[alertType] || alertType;
   };
 
-  if (!unreadCount || unreadCount.total === 0) {
+  const getTimeAgo = (dateStr: string) => {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 1) return 'Hace un momento';
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
+  };
+
+  const hasAlerts = unreadCount && unreadCount.total > 0;
+  const recentAlerts = alerts && alerts.length > 0 ? alerts.slice(0, 5) : [];
+
+  const handleViewAlert = (alert: Alert) => {
+    setSelectedAlert(alert);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedAlert(null);
+  };
+
+  const handleAlertResolved = () => {
+    // Refresh alerts and counts
+    dispatch(fetchAlerts({ is_read: 'false', page: 1, limit: 5 }));
+    dispatch(fetchUnreadCount({}));
+  };
+
+  if (!hasAlerts) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-6 animate-fade-up duration-normal">
         <div className="flex items-center justify-between mb-4">
@@ -114,11 +150,8 @@ const AlertPanel: React.FC = () => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            Alertas del Sistema
+            Alertas ({unreadCount?.total || 0})
           </h3>
-          <span className="inline-flex items-center justify-center px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 text-sm font-bold rounded-full">
-            {unreadCount.total}
-          </span>
         </div>
         <button
           onClick={() => navigate('/alerts')}
@@ -128,61 +161,69 @@ const AlertPanel: React.FC = () => {
         </button>
       </div>
 
-      {/* Alert Count by Severity */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        {unreadCount.by_severity.map((item) => (
+      {/* Recent Alerts List */}
+      <div className="space-y-3">
+        {recentAlerts.map((alert: any, index: number) => (
           <div
-            key={item.severity}
-            className={`p-3 rounded border ${getSeverityColor(item.severity)}`}
+            key={alert.id}
+            className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{getSeverityIcon(item.severity)}</span>
-                <span className="text-xs font-semibold">{item.severity}</span>
+            <span className="text-xl flex-shrink-0 mt-0.5">{getSeverityIcon(alert.severity)}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1">
+                  {alert.title}
+                </p>
+                <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                  {getTimeAgo(alert.created_at)}
+                </span>
               </div>
-              <span className="text-2xl font-bold">{item.count}</span>
+              <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-2">
+                {alert.message}
+              </p>
+              {alert.branch && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {alert.branch.name}
+                </span>
+              )}
             </div>
+            <button
+              onClick={() => handleViewAlert(alert)}
+              className="flex-shrink-0 px-3 py-1 text-xs bg-primary-500 text-white rounded hover:bg-primary-600 transition-colors font-medium"
+            >
+              Ver
+            </button>
           </div>
         ))}
       </div>
 
-      {/* Alert Count by Type (Top 5) */}
-      {unreadCount.by_type && unreadCount.by_type.length > 0 && (
-        <div>
-          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Por Tipo de Alerta
-          </h4>
-          <div className="space-y-2">
-            {unreadCount.by_type.slice(0, 5).map((item) => (
-              <div
-                key={item.alert_type}
-                className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded text-sm"
-              >
-                <span className="text-gray-900 dark:text-white font-medium">
-                  {getAlertTypeLabel(item.alert_type)}
-                </span>
-                <span className="px-2 py-0.5 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded font-semibold">
-                  {item.count}
-                </span>
-              </div>
-            ))}
-          </div>
+      {/* Alert Detail Modal */}
+      {selectedAlert && (
+        <AlertDetailModal
+          alert={selectedAlert}
+          onClose={handleCloseModal}
+          onResolved={handleAlertResolved}
+        />
+      )}
 
-          {unreadCount.by_type.length > 5 && (
-            <button
-              onClick={() => navigate('/alerts')}
-              className="mt-3 w-full text-center text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
-            >
-              Ver {unreadCount.by_type.length - 5} más →
-            </button>
-          )}
+      {recentAlerts.length === 0 && (
+        <div className="text-center py-4 text-sm text-gray-500 dark:text-gray-400">
+          No hay alertas recientes
         </div>
       )}
 
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
           Actualización automática cada 30 segundos
         </p>
+        {unreadCount && unreadCount.total > 5 && (
+          <button
+            onClick={() => navigate('/alerts')}
+            className="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
+          >
+            +{unreadCount.total - 5} más
+          </button>
+        )}
       </div>
     </div>
   );

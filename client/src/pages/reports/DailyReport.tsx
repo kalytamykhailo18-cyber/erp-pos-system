@@ -343,6 +343,50 @@ const DailyReport: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Loyalty Points & Customer Credits Summary */}
+          <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-6 animate-fade-up duration-slow">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Puntos de Lealtad y Créditos</h3>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Puntos Ganados</p>
+                <p className="text-xl font-bold text-green-700 dark:text-green-300">
+                  {reportData.sales.total_points_earned || 0} pts
+                </p>
+              </div>
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Puntos Canjeados</p>
+                <p className="text-xl font-bold text-blue-700 dark:text-blue-300">
+                  {reportData.sales.total_points_redeemed || 0} pts
+                </p>
+              </div>
+              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Crédito Emitido (Vueltos)</p>
+                <p className="text-xl font-bold text-purple-700 dark:text-purple-300">
+                  {formatCurrency(reportData.sales.total_credit_issued || 0)}
+                </p>
+              </div>
+              <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Crédito Utilizado</p>
+                <p className="text-xl font-bold text-indigo-700 dark:text-indigo-300">
+                  {formatCurrency(reportData.sales.total_credit_used || 0)}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Balance Neto de Crédito</span>
+                <span className={`text-lg font-semibold ${(reportData.sales.total_credit_issued || 0) > (reportData.sales.total_credit_used || 0) ? 'text-purple-700 dark:text-purple-300' : 'text-indigo-700 dark:text-indigo-300'}`}>
+                  {formatCurrency((reportData.sales.total_credit_issued || 0) - (reportData.sales.total_credit_used || 0))}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Crédito emitido menos crédito utilizado durante el día
+              </p>
+            </div>
+          </div>
         </>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-8 text-center">

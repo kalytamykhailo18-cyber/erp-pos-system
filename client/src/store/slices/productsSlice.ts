@@ -16,6 +16,14 @@ interface ProductsState {
   products: Product[];
   posProducts: POSProduct[];
 
+  // Advanced search results (PART 14)
+  searchResults: {
+    all_products: Product[];
+    factory_direct: Product[];
+    premium: Product[];
+    count: number;
+  } | null;
+
   // Pagination
   pagination: {
     page: number;
@@ -50,6 +58,7 @@ interface ProductsState {
 const initialState: ProductsState = {
   products: [],
   posProducts: [],
+  searchResults: null, // PART 14: Advanced search results
   pagination: {
     page: 1,
     limit: 20,
@@ -336,6 +345,47 @@ export const deleteProduct = createAsyncThunk<
   }
 );
 
+// Advanced product search (PART 14: Product Search & Recommendations)
+export const advancedProductSearch = createAsyncThunk<
+  {
+    all_products: Product[];
+    factory_direct: Product[];
+    premium: Product[];
+    count: number;
+  },
+  {
+    species_id?: UUID;
+    variety_id?: UUID;
+    product_type_id?: UUID;
+    protein_min?: number;
+    protein_max?: number;
+    is_factory_direct?: boolean;
+    search?: string;
+    branch_id?: UUID;
+  },
+  { rejectValue: string }
+>(
+  'products/advancedSearch',
+  async (params, { dispatch, rejectWithValue }) => {
+    try {
+      dispatch(startLoading());
+      const response = await productService.advancedSearch(params);
+
+      if (!response.success) {
+        throw new Error('Failed to search products');
+      }
+
+      return response.data;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error searching products';
+      dispatch(showToast({ type: 'error', message }));
+      return rejectWithValue(message);
+    } finally {
+      dispatch(stopLoading());
+    }
+  }
+);
+
 const productsSlice = createSlice({
   name: 'products',
   initialState,
@@ -374,6 +424,10 @@ const productsSlice = createSlice({
       state.products = [];
       state.posProducts = [];
       state.pagination = { page: 1, limit: 20, total: 0, pages: 0 };
+    },
+
+    clearSearchResults: (state) => {
+      state.searchResults = null;
     },
 
     clearError: (state) => {
@@ -455,6 +509,22 @@ const productsSlice = createSlice({
       state.pagination.total -= 1;
       state.pagination.pages = Math.ceil(state.pagination.total / state.pagination.limit);
     });
+
+    // Advanced Search (PART 14)
+    builder
+      .addCase(advancedProductSearch.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(advancedProductSearch.fulfilled, (state, action) => {
+        state.searchResults = action.payload;
+        state.loading = false;
+      })
+      .addCase(advancedProductSearch.rejected, (state, action) => {
+        state.error = action.payload || 'Error searching products';
+        state.loading = false;
+        state.searchResults = null;
+      });
   },
 });
 
@@ -466,6 +536,7 @@ export const {
   setLimit,
   setPagination,
   clearProducts,
+  clearSearchResults,
   clearError,
 } = productsSlice.actions;
 

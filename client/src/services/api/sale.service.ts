@@ -30,6 +30,8 @@ interface CreateSalePayload {
   }>;
   discount_type?: 'PERCENT' | 'FIXED';
   discount_value?: number;
+  discount_reason?: string;
+  discount_approved_by_pin?: string;
   notes?: string;
   local_id?: string; // For offline sync
   // Invoice override parameters (for Type A invoices)
@@ -39,6 +41,10 @@ interface CreateSalePayload {
     customer_tax_condition?: string;
     customer_address?: string;
   };
+  // Loyalty parameters
+  points_redeemed?: number;
+  credit_used?: number;
+  change_as_credit?: boolean | number;
 }
 
 interface SaleReceipt {

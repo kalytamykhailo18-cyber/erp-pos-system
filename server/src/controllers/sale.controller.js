@@ -1219,16 +1219,31 @@ exports.voidSale = async (req, res, next) => {
     }
 
     // Create Alert record for owner (CRITICAL: Must persist in database)
+    // Determine severity based on void amount
+    const voidAmount = parseFloat(sale.total_amount);
+    const isLargeVoid = voidAmount > 2000;
+    const alertSeverity = isLargeVoid ? 'CRITICAL' : 'HIGH';
+    const alertTitle = isLargeVoid
+      ? `Venta de alto valor cancelada en ${sale.branch.name}`
+      : `Venta cancelada en ${sale.branch.name}`;
+
     const alert = await Alert.create({
       id: uuidv4(),
       alert_type: 'VOIDED_SALE',
-      severity: 'HIGH',
+      severity: alertSeverity,
       branch_id: sale.branch_id,
       user_id: req.user.id,
-      title: `Venta cancelada en ${sale.branch.name}`,
+      title: alertTitle,
       message: `Venta ${sale.sale_number} por $${formatDecimal(sale.total_amount)} fue cancelada por ${req.user.first_name} ${req.user.last_name}. Motivo: ${reason}`,
       reference_type: 'SALE',
-      reference_id: sale.id
+      reference_id: sale.id,
+      metadata: {
+        sale_number: sale.sale_number,
+        void_amount: voidAmount,
+        is_large_void: isLargeVoid,
+        voided_by_name: `${req.user.first_name} ${req.user.last_name}`,
+        void_reason: reason
+      }
     }, { transaction: t });
 
     // Create audit log entry for void operation
@@ -1270,12 +1285,14 @@ exports.voidSale = async (req, res, next) => {
       io.emitToOwners(EVENTS.ALERT_CREATED, {
         alert_id: alert.id,
         alert_type: 'VOIDED_SALE',
-        severity: 'HIGH',
+        severity: alert.severity,
         branch_id: sale.branch_id,
         title: alert.title,
         message: alert.message,
         reference_type: 'SALE',
-        reference_id: sale.id
+        reference_id: sale.id,
+        void_amount: voidAmount,
+        is_large_void: isLargeVoid
       }, sale.branch_id);
     }
 

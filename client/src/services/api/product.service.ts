@@ -161,6 +161,27 @@ export const productService = {
   }>> => {
     return post('/products/bulk-update-supplier', data);
   },
+
+  /**
+   * Advanced product search with taxonomy and protein filters (PART 14)
+   */
+  advancedSearch: (params: {
+    species_id?: UUID;
+    variety_id?: UUID;
+    product_type_id?: UUID;
+    protein_min?: number;
+    protein_max?: number;
+    is_factory_direct?: boolean;
+    search?: string;
+    branch_id?: UUID;
+  }): Promise<ApiResponse<{
+    all_products: Product[];
+    factory_direct: Product[];
+    premium: Product[];
+    count: number;
+  }>> => {
+    return get('/products/search', params);
+  },
 };
 
 export default productService;

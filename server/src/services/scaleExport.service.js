@@ -67,7 +67,11 @@ class ScaleExportService {
       const description = this.sanitizeDescription(product.name);
       const price = this.formatPrice(product.selling_price);
       const unit = product.is_weighable ? 'KG' : 'UN';
-      const tare = '0'; // Tare weight (usually 0 for pet food)
+      // Tare weight: bag/packaging weight to deduct (in grams for most scales)
+      // Convert from kg to grams and format as integer
+      const tare = product.tare_weight
+        ? Math.round(product.tare_weight * 1000).toString()
+        : '0';
 
       csv += `${plu},${description},${price},${unit},${tare}\r\n`;
     }

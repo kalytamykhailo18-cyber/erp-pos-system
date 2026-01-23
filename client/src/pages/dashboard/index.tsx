@@ -9,8 +9,10 @@ import ShrinkageSummary from './ShrinkageSummary';
 import TopProductsList from './TopProductsList';
 import PendingInvoicesAlert from './PendingInvoicesAlert';
 import BranchShiftStatus from './BranchShiftStatus';
+import BranchStatusTable from './BranchStatusTable';
 import StockLevelOverview from './StockLevelOverview';
 import AlertPanel from './AlertPanel';
+import QuickActions from './QuickActions';
 
 const DashboardPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -70,13 +72,23 @@ const DashboardPage: React.FC = () => {
       {/* Pending Invoices Alert */}
       <PendingInvoicesAlert />
 
-      {/* Real-time Alert System */}
+      {/* Branch Status Table - Real-time overview per branch */}
       <div className="animate-fade-up duration-fast">
+        <BranchStatusTable />
+      </div>
+
+      {/* Real-time Alert System */}
+      <div className="animate-fade-up duration-normal">
         <AlertPanel />
       </div>
 
-      {/* Live Branch Shift Status - Today's shifts across all branches */}
-      <div className="animate-fade-up duration-fast">
+      {/* Quick Actions Panel */}
+      <div className="animate-fade-up duration-normal">
+        <QuickActions />
+      </div>
+
+      {/* Live Branch Shift Status - Detailed shift information */}
+      <div className="animate-fade-up duration-light-slow">
         <BranchShiftStatus />
       </div>
 

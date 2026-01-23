@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
+import AlertDetailModal from '../../components/alerts/AlertDetailModal';
+import type { Alert as AlertType } from '../../types';
 
 interface Alert {
   id: string;
@@ -29,6 +31,7 @@ interface AlertsListProps {
 }
 
 const AlertsList: React.FC<AlertsListProps> = ({ alerts, onMarkAsRead, pagination, onPageChange }) => {
+  const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleString('es-AR', {
       day: '2-digit',
@@ -83,18 +86,38 @@ const AlertsList: React.FC<AlertsListProps> = ({ alerts, onMarkAsRead, paginatio
                       </span>
                     )}
                   </div>
-                  {!alert.is_read && (
+                  <div className="flex gap-2 mt-4">
                     <button
-                      onClick={() => onMarkAsRead(alert.id)}
-                      className="mt-4 px-4 py-2 bg-primary-500 text-white rounded-sm hover:bg-primary-600 transition-colors text-sm font-medium"
+                      onClick={() => setSelectedAlert(alert)}
+                      className="px-4 py-2 bg-primary-500 text-white rounded-sm hover:bg-primary-600 transition-colors text-sm font-medium"
                     >
-                      Marcar como Leída
+                      Ver Detalles
                     </button>
-                  )}
+                    {!alert.is_read && (
+                      <button
+                        onClick={() => onMarkAsRead(alert.id)}
+                        className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-sm hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors text-sm font-medium"
+                      >
+                        Marcar como Leída
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );
           })}
+
+          {/* Alert Detail Modal */}
+          {selectedAlert && (
+            <AlertDetailModal
+              alert={selectedAlert as any}
+              onClose={() => setSelectedAlert(null)}
+              onResolved={() => {
+                setSelectedAlert(null);
+                // Parent component will refresh the list
+              }}
+            />
+          )}
 
           {pagination && pagination.total_pages > 1 && (
             <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-4">

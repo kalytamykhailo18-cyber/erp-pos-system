@@ -126,6 +126,7 @@ router.post(
     decimalField('shrinkage_percent', { min: 0, max: 100, required: false }),
     integerField('scale_plu', { min: 1, required: false }),
     booleanField('export_to_scale'),
+    decimalField('tare_weight', { min: 0, max: 10, required: false }), // PART 13: Tare weight in kg
     booleanField('is_featured'),
     stringField('image_url', { maxLength: 500, required: false }),
     stringField('thumbnail_url', { maxLength: 500, required: false }),
@@ -162,6 +163,7 @@ router.put(
     decimalField('shrinkage_percent', { min: 0, max: 100, required: false }),
     integerField('scale_plu', { min: 1, required: false }),
     booleanField('export_to_scale'),
+    decimalField('tare_weight', { min: 0, max: 10, required: false }), // PART 13: Tare weight in kg
     booleanField('is_active'),
     booleanField('is_featured'),
     stringField('image_url', { maxLength: 500, required: false }),

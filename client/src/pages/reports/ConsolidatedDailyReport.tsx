@@ -217,6 +217,89 @@ const ConsolidatedDailyReport: React.FC = () => {
               {reportData.branches.map(renderBranchSummary)}
             </div>
           </div>
+
+          {/* Top Selling Products */}
+          {reportData.top_products && reportData.top_products.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-6 animate-fade-up duration-light-slow">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top 10 Productos del Día</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">#</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Producto</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">SKU</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Cantidad</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Ingresos</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {reportData.top_products.map((product, index) => (
+                      <tr key={product.sku} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{index + 1}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{product.product_name}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{product.sku}</td>
+                        <td className="px-4 py-3 text-sm text-right text-gray-900 dark:text-white">{product.total_quantity}</td>
+                        <td className="px-4 py-3 text-sm text-right font-semibold text-primary-600 dark:text-primary-400">{formatCurrency(product.total_revenue)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Alerts Summary */}
+          {reportData.alerts_summary && reportData.alerts_summary.total_alerts > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-6 animate-fade-up duration-slow">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Resumen de Alertas del Día</h3>
+
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Total de Alertas</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{reportData.alerts_summary.total_alerts}</p>
+                </div>
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Críticas</p>
+                  <p className="text-2xl font-bold text-red-700 dark:text-red-300">{reportData.alerts_summary.by_severity.CRITICAL || 0}</p>
+                </div>
+                <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Altas</p>
+                  <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{reportData.alerts_summary.by_severity.HIGH || 0}</p>
+                </div>
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Medias</p>
+                  <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{reportData.alerts_summary.by_severity.MEDIUM || 0}</p>
+                </div>
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Bajas</p>
+                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{reportData.alerts_summary.by_severity.LOW || 0}</p>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Por Tipo de Alerta</h4>
+                <div className="space-y-2">
+                  {reportData.alerts_summary.by_type.map((alert, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 text-xs rounded ${
+                          alert.severity === 'CRITICAL' ? 'bg-red-200 dark:bg-red-900/40 text-red-800 dark:text-red-200' :
+                          alert.severity === 'HIGH' ? 'bg-orange-200 dark:bg-orange-900/40 text-orange-800 dark:text-orange-200' :
+                          alert.severity === 'MEDIUM' ? 'bg-yellow-200 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200' :
+                          'bg-blue-200 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200'
+                        }`}>
+                          {alert.severity}
+                        </span>
+                        <span className="text-sm text-gray-900 dark:text-white">{alert.alert_type.replace(/_/g, ' ')}</span>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white">{alert.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-8 text-center">

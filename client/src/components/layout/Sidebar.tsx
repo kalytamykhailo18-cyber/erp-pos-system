@@ -24,6 +24,8 @@ import {
   MdClose,
   MdStore,
   MdChat,
+  MdSearch,
+  MdLocalShipping,
 } from 'react-icons/md';
 
 interface SidebarProps {
@@ -86,9 +88,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       icon: <MdInventory className="w-5 h-5" />,
     },
     {
+      name: 'Búsqueda Avanzada',
+      path: '/products/search',
+      icon: <MdSearch className="w-5 h-5" />,
+    },
+    {
       name: 'Clientes',
       path: '/customers',
       icon: <MdPeople className="w-5 h-5" />,
+    },
+    {
+      name: 'Zonas de Envío',
+      path: '/shipping',
+      icon: <MdLocalShipping className="w-5 h-5" />,
     },
     {
       name: 'Sesiones de Caja',

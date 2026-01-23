@@ -43,6 +43,7 @@ const initialFormData: ProductFormData = {
   is_weighable: false,
   scale_plu: '',
   export_to_scale: false,
+  tare_weight: '', // PART 13: Tare weight in kg
   // PART 6: Three-level taxonomy
   species_id: '',
   variety_id: '',
@@ -139,6 +140,7 @@ const ProductsListPage: React.FC = () => {
       is_weighable: product.is_weighable ?? false,
       scale_plu: product.scale_plu?.toString() || '',
       export_to_scale: product.export_to_scale ?? false,
+      tare_weight: product.tare_weight?.toString() || '', // PART 13: Tare weight
       // PART 6: Three-level taxonomy
       species_id: product.species_id || '',
       variety_id: product.variety_id || '',
@@ -172,6 +174,7 @@ const ProductsListPage: React.FC = () => {
       is_weighable: formData.is_weighable,
       scale_plu: formData.scale_plu ? parseInt(formData.scale_plu) : undefined,
       export_to_scale: formData.export_to_scale,
+      tare_weight: formData.tare_weight ? parseFloat(formData.tare_weight) : undefined, // PART 13
       // PART 6: Three-level taxonomy
       species_id: formData.species_id || undefined,
       variety_id: formData.variety_id || undefined,
