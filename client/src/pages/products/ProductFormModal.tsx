@@ -433,7 +433,6 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   </span>
                 </label>
               </div>
-            </div>
           </div>
         )}
 
