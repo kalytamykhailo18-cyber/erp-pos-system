@@ -619,6 +619,24 @@ export interface DenominationBreakdown {
   coins: number;
 }
 
+// PART 16: Denomination configuration (manages which bills are active/inactive)
+export interface DenominationConfig {
+  id: UUID;
+  value: Decimal;
+  label: string;
+  is_active: boolean;
+  display_order: number;
+  created_at: ISODateString;
+  updated_at: ISODateString;
+}
+
+export interface DenominationConfigFormData {
+  value: number;
+  label: string;
+  is_active: boolean;
+  display_order: number;
+}
+
 export interface PettyCashWarning {
   type: 'PETTY_CASH_LOW';
   message: string;

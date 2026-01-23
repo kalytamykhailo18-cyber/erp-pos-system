@@ -22,3 +22,4 @@ export { default as syncService } from './sync.service';
 export { withdrawalService } from './withdrawal.service';
 export { default as shippingService } from './shipping.service';
 export { default as expenseService } from './expense.service';
+export { default as denominationService } from './denomination.service';
