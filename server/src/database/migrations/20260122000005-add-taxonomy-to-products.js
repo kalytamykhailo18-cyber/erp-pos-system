@@ -58,7 +58,6 @@ module.exports = {
     await queryInterface.addIndex('products', ['variety_id']);
     await queryInterface.addIndex('products', ['product_type_id']);
     await queryInterface.addIndex('products', ['is_factory_direct']);
-    await queryInterface.addIndex('products', ['protein_percent']);
   },
 
   async down(queryInterface) {
