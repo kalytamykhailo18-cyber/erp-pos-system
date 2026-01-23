@@ -20,6 +20,20 @@ const {
 router.use(authenticate);
 
 /**
+ * @route   GET /api/v1/sales/search
+ * @desc    Search sale by sale number
+ * @access  Private
+ */
+router.get(
+  '/search',
+  [
+    query('sale_number').notEmpty().withMessage('Sale number is required'),
+    validate
+  ],
+  saleController.searchBySaleNumber
+);
+
+/**
  * @route   GET /api/v1/sales
  * @desc    Get all sales with filters
  * @access  Private

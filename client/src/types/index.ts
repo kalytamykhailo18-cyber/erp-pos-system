@@ -109,7 +109,7 @@ export interface LoginCredentials {
 
 export interface PINLoginCredentials {
   user_id: UUID;
-  pin: string;
+  pin_code: string;
   branch_id: UUID;
 }
 

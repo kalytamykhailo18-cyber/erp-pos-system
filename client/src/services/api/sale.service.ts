@@ -106,7 +106,14 @@ export const saleService = {
   },
 
   /**
-   * Get sale by sale number
+   * Search sale by sale number
+   */
+  searchBySaleNumber: (saleNumber: string): Promise<ApiResponse<Sale>> => {
+    return get<Sale>(`/sales/search?sale_number=${encodeURIComponent(saleNumber)}`);
+  },
+
+  /**
+   * Get sale by sale number (legacy)
    */
   getBySaleNumber: (saleNumber: string): Promise<ApiResponse<Sale>> => {
     return get<Sale>(`/sales/number/${saleNumber}`);

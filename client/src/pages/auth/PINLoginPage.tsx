@@ -165,7 +165,7 @@ const PINLoginPageNew: React.FC = () => {
 
     await dispatch(loginWithPIN({
       user_id: selectedUser.id,
-      pin: pinCode,
+      pin_code: pinCode,
       branch_id: selectedBranch.id,
     }));
   };

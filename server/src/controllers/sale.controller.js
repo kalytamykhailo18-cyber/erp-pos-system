@@ -5,7 +5,7 @@ const {
   Sale, SaleItem, SalePayment, Branch, CashRegister, RegisterSession,
   Customer, User, Product, PaymentMethod, Invoice, InvoiceType,
   BranchStock, StockMovement, LoyaltyTransaction, CreditTransaction,
-  Alert, CreditNote, OpenBag, sequelize
+  Alert, CreditNote, OpenBag, LoyaltyConfig, sequelize
 } = require('../database/models');
 const { success, created, paginated } = require('../utils/apiResponse');
 const { NotFoundError, BusinessError } = require('../middleware/errorHandler');
@@ -301,6 +301,60 @@ exports.getById = async (req, res, next) => {
 };
 
 /**
+ * Search sale by sale number
+ * GET /api/v1/sales/search?sale_number=XXX
+ */
+exports.searchBySaleNumber = async (req, res, next) => {
+  try {
+    const { sale_number } = req.query;
+
+    if (!sale_number) {
+      throw new BusinessError('Sale number is required', 'E414');
+    }
+
+    const sale = await Sale.findOne({
+      where: { sale_number: sale_number.toString() },
+      include: [
+        { model: Branch, as: 'branch', attributes: ['id', 'name', 'code'] },
+        { model: Customer, as: 'customer', attributes: ['id', 'first_name', 'last_name', 'company_name', 'customer_type'] },
+        {
+          model: SaleItem,
+          as: 'items',
+          include: [
+            {
+              model: Product,
+              as: 'product',
+              attributes: ['id', 'name', 'sku', 'barcode', 'is_weighable']
+            }
+          ]
+        },
+        {
+          model: SalePayment,
+          as: 'payments',
+          include: [
+            {
+              model: PaymentMethod,
+              as: 'payment_method',
+              attributes: ['id', 'name', 'code', 'type']
+            }
+          ]
+        },
+        { model: User, as: 'creator', attributes: ['id', 'first_name', 'last_name'] },
+        { model: User, as: 'voider', attributes: ['id', 'first_name', 'last_name'] }
+      ]
+    });
+
+    if (!sale) {
+      throw new NotFoundError(`Sale with number ${sale_number} not found`);
+    }
+
+    return success(res, sale);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Create new sale
  * POST /api/v1/sales
  */
@@ -473,8 +527,15 @@ exports.create = async (req, res, next) => {
     // Add wholesale discount to total sale discount AFTER permission validation
     saleDiscount += wholesaleDiscount;
 
-    // Calculate points redemption value (10 points = 1 peso, so 0.1 peso per point)
-    const pointsValue = points_redeemed ? points_redeemed * 0.1 : 0;
+    // Calculate points redemption value using LoyaltyConfig
+    let pointsValue = 0;
+    if (points_redeemed > 0) {
+      const loyaltyConfig = await LoyaltyConfig.findOne();
+      if (!loyaltyConfig) {
+        throw new BusinessError('Loyalty configuration not found', 'E413');
+      }
+      pointsValue = points_redeemed * parseFloat(loyaltyConfig.peso_per_point_redemption);
+    }
 
     // Calculate total
     const totalAmount = subtotal - saleDiscount - pointsValue - (credit_used || 0);
@@ -527,6 +588,12 @@ exports.create = async (req, res, next) => {
       throw new BusinessError('Payment amount is less than total', 'E407');
     }
 
+    // Calculate actual change amount if customer wants change as credit
+    let changeAsCreditAmount = 0;
+    if (change_as_credit && totalPaid > totalAmount && customer_id) {
+      changeAsCreditAmount = totalPaid - totalAmount;
+    }
+
     // Create sale
     const sale = await Sale.create({
       id: uuidv4(),
@@ -548,7 +615,7 @@ exports.create = async (req, res, next) => {
       points_redeemed: points_redeemed || 0,
       points_redemption_value: pointsValue,
       credit_used: credit_used || 0,
-      change_as_credit: change_as_credit || 0,
+      change_as_credit: changeAsCreditAmount,
       status: 'COMPLETED',
       created_by: req.user.id,
       invoice_override: invoice_override || null,
@@ -804,15 +871,15 @@ exports.create = async (req, res, next) => {
         }, { transaction: t });
       }
 
-      if (change_as_credit > 0) {
-        const newCreditBalance = parseFloat(customer.credit_balance) + change_as_credit;
+      if (changeAsCreditAmount > 0) {
+        const newCreditBalance = parseFloat(customer.credit_balance) + changeAsCreditAmount;
         await customer.update({ credit_balance: newCreditBalance }, { transaction: t });
 
         await CreditTransaction.create({
           id: uuidv4(),
           customer_id,
           transaction_type: 'CREDIT',
-          amount: change_as_credit,
+          amount: changeAsCreditAmount,
           balance_after: newCreditBalance,
           sale_id: sale.id,
           description: `Vuelto como crédito de venta ${sale.sale_number}`,

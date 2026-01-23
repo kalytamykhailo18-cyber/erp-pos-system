@@ -113,9 +113,9 @@ const PaymentPanel: React.FC = () => {
     const method = paymentMethods.find((m) => m.id === selectedMethodId);
     if (!method) return;
 
-    // CRITICAL: Bank Transfer REQUIRES reference number
-    if (method.type === 'TRANSFER' && !referenceNumber.trim()) {
-      alert('El número de comprobante es obligatorio para transferencias');
+    // CRITICAL: Validate reference number if required by payment method
+    if (method.requires_reference && !referenceNumber.trim()) {
+      alert(`${method.name} requiere un número de comprobante`);
       return;
     }
 
@@ -123,7 +123,7 @@ const PaymentPanel: React.FC = () => {
       payment_method_id: selectedMethodId,
       payment_method: method,
       amount: String(amount),
-      reference_number: method.type === 'TRANSFER' ? referenceNumber : undefined,
+      reference_number: referenceNumber || undefined,
     };
 
     dispatch(addPayment(payment));

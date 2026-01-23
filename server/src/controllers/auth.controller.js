@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const { User, Role, Branch, UserSession } = require('../database/models');
+const { User, Role, Branch, UserSession, RegisterSession } = require('../database/models');
 const { success, created, unauthorized, notFound } = require('../utils/apiResponse');
 const { UnauthorizedError, NotFoundError, BusinessError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
@@ -230,16 +230,29 @@ exports.pinLogin = async (req, res, next) => {
       maxDiscountPercent: user.role.max_discount_percent ? parseFloat(user.role.max_discount_percent) : 0
     };
 
+    // Find active register session for this user and branch
+    const registerSession = await RegisterSession.findOne({
+      where: {
+        opened_by: user.id,
+        branch_id: branch_id,
+        status: 'OPEN'
+      },
+      order: [['opened_at', 'DESC']]
+    });
+
     return success(res, {
       user: {
         id: user.id,
         first_name: user.first_name,
         last_name: user.last_name,
         role_name: user.role.name,
-        permissions
+        permissions,
+        primary_branch_id: user.primary_branch?.id,
+        primary_branch: user.primary_branch
       },
       token,
-      expires_at: expiresAt
+      expires_at: expiresAt,
+      session: registerSession || null
     });
   } catch (error) {
     next(error);
