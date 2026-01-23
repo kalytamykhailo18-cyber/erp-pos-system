@@ -75,6 +75,7 @@ const NeighborhoodMapping = require('./NeighborhoodMapping')(sequelize);
 const SaleShipping = require('./SaleShipping')(sequelize);
 const ExpenseCategory = require('./ExpenseCategory')(sequelize);
 const Expense = require('./Expense')(sequelize);
+const DenominationConfig = require('./DenominationConfig')(sequelize);
 
 // Create models object
 const models = {
@@ -132,7 +133,8 @@ const models = {
   NeighborhoodMapping,
   SaleShipping,
   ExpenseCategory,
-  Expense
+  Expense,
+  DenominationConfig
 };
 
 // Set up associations

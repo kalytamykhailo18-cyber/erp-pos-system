@@ -110,7 +110,7 @@ router.post('/mark-all-read', alertController.markAllAsRead);
 router.get(
   '/config',
   requirePermission('canViewReports'),
-  alertController.getConfigById
+  alertController.getConfigs
 );
 
 /**

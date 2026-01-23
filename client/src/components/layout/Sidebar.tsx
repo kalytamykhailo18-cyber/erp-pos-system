@@ -163,7 +163,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   };
 
   const isActive = (path: string) => {
-    return currentPath === path || currentPath.startsWith(`${path}/`);
+    // Exact match
+    if (currentPath === path) return true;
+
+    // Check if current path starts with this path
+    if (currentPath.startsWith(path + '/')) {
+      // Don't highlight parent if we're on a more specific defined route
+      // Look for navigation items that are longer/more specific than current path
+      const moreSpecificRoute = navigation.some(
+        item => item.path !== path &&
+                item.path.startsWith(path) &&
+                currentPath.startsWith(item.path)
+      );
+      return !moreSpecificRoute;
+    }
+
+    return false;
   };
 
   return (
