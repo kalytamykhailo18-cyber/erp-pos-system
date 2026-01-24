@@ -29,7 +29,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
     if (!lastMessage) return 'Sin mensajes';
 
     if (lastMessage.message_type === 'TRANSFER_REQUEST') {
-      return '📦 Solicitud de traslado';
+      return 'Solicitud de traslado';
     }
 
     if (lastMessage.is_deleted) {

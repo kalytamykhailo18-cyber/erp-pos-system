@@ -13,6 +13,10 @@ import { loadConfig } from '../../store/slices/loyaltySlice';
 import { loadZones, loadNeighborhoods, calculateShipping, clearCalculation, createSaleShipping } from '../../store/slices/shippingSlice';
 import type { SalePayment } from '../../types';
 import DiscountModal from './DiscountModal';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import CloseIcon from '@mui/icons-material/Close';
 import RedeemPointsModal from './RedeemPointsModal';
 import OfferCreditModal from './OfferCreditModal';
 
@@ -344,9 +348,7 @@ const PaymentPanel: React.FC = () => {
             disabled={cart.items.length === 0 || loading}
             className="w-full py-3 bg-green-600 text-white font-semibold rounded-sm hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-            </svg>
+            <LocalOfferIcon sx={{ fontSize: 20 }} />
             Aplicar Descuento
           </button>
 
@@ -360,9 +362,7 @@ const PaymentPanel: React.FC = () => {
                   disabled={cart.items.length === 0 || loading || loyaltyPointsToRedeem > 0}
                   className="w-full py-3 bg-purple-600 text-white font-semibold rounded-sm hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <AttachMoneyIcon sx={{ fontSize: 20 }} />
                   {loyaltyPointsToRedeem > 0 ?
                     `${loyaltyPointsToRedeem} Puntos Canjeados` :
                     `Canjear Puntos (${cart.customer.loyalty_points})`
@@ -377,9 +377,7 @@ const PaymentPanel: React.FC = () => {
                   disabled={cart.items.length === 0 || loading}
                   className="w-full py-3 bg-pink-600 text-white font-semibold rounded-sm hover:bg-pink-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                  </svg>
+                  <CreditCardIcon sx={{ fontSize: 20 }} />
                   Usar Crédito (${Number(cart.customer.credit_balance).toLocaleString('es-AR')})
                 </button>
               )}
@@ -672,9 +670,7 @@ const PaymentPanel: React.FC = () => {
                       onClick={() => handleRemovePayment(index)}
                       className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      <CloseIcon sx={{ fontSize: 16 }} />
                     </button>
                   </div>
                 </div>

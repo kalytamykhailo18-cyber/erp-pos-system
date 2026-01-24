@@ -6,6 +6,7 @@ import { loadDenominations } from '../../store/slices/denominationSlice';
 import WarningIcon from '@mui/icons-material/Warning';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import InfoIcon from '@mui/icons-material/Info';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 interface CloseSessionModalProps {
   isOpen: boolean;
@@ -176,9 +177,7 @@ const CloseSessionModal: React.FC<CloseSessionModalProps> = ({ isOpen, onClose }
             <div className="p-6 space-y-6">
               <div className="p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 rounded">
                 <div className="flex items-start gap-3">
-                  <svg className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
+                  <WarningIcon sx={{ fontSize: 24 }} className="text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <p className="font-bold text-red-800 dark:text-red-300 mb-2">
                       REQUERIMIENTO CRÍTICO DEL NEGOCIO
@@ -572,9 +571,7 @@ const CloseSessionModal: React.FC<CloseSessionModalProps> = ({ isOpen, onClose }
                 {closingResult.petty_cash_warning && (
                   <div className="p-4 border-2 border-red-500 dark:border-red-600 bg-red-50 dark:bg-red-900/30 rounded-sm">
                     <div className="flex items-start gap-3">
-                      <svg className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
+                      <WarningIcon sx={{ fontSize: 24 }} className="text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <h4 className="text-lg font-bold text-red-800 dark:text-red-300 mb-2">
                           ALERTA: FONDO DE RESERVA INSUFICIENTE
@@ -615,12 +612,10 @@ const CloseSessionModal: React.FC<CloseSessionModalProps> = ({ isOpen, onClose }
                 {closingResult.after_hours_warning && (
                   <div className="p-4 border-2 border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/30 rounded-sm">
                     <div className="flex items-start gap-3">
-                      <svg className="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                      <AccessTimeIcon sx={{ fontSize: 24 }} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <h4 className="text-lg font-bold text-amber-800 dark:text-amber-300 mb-2">
-                          ⏰ Cierre Fuera de Horario
+                          Cierre Fuera de Horario
                         </h4>
                         <p className="text-sm text-amber-700 dark:text-amber-400">
                           {closingResult.after_hours_warning.message}

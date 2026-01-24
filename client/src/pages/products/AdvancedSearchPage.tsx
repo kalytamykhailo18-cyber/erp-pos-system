@@ -145,7 +145,7 @@ const AdvancedSearchPage: React.FC = () => {
       `${p.protein_percent || '-'}%`,
       p.weight_size || '',
       `$${p.selling_price.toLocaleString('es-AR')}`,
-      p.is_factory_direct ? '⭐ Fábrica' : 'Premium',
+      p.is_factory_direct ? 'Fábrica' : 'Premium',
     ]);
 
     doc.autoTable({

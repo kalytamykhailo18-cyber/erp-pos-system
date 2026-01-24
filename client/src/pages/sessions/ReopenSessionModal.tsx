@@ -93,7 +93,7 @@ const ReopenSessionModal: React.FC<ReopenSessionModalProps> = ({
             <WarningAmberIcon className="text-orange-600 dark:text-orange-400 mr-3 mt-0.5 flex-shrink-0" />
             <div>
               <h3 className="text-sm font-medium text-orange-800 dark:text-orange-300">
-                ⚠️ Acción de Alta Criticidad
+                Acción de Alta Criticidad
               </h3>
               <p className="text-sm text-orange-700 dark:text-orange-400 mt-1">
                 Reabrir una sesión cerrada es una operación excepcional que quedará registrada en el sistema de auditoría.
@@ -172,7 +172,7 @@ const ReopenSessionModal: React.FC<ReopenSessionModalProps> = ({
         {/* Audit Notice */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md p-3">
           <p className="text-xs text-blue-700 dark:text-blue-400">
-            📝 Esta reapertura será registrada en el log de auditoría con: fecha/hora, usuario solicitante,
+            Esta reapertura será registrada en el log de auditoría con: fecha/hora, usuario solicitante,
             supervisor autorizante, motivo, y se generará una alerta de alta prioridad para el propietario.
           </p>
         </div>

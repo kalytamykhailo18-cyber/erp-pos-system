@@ -173,19 +173,19 @@ const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
             <div className="space-y-1 text-sm">
               {transfer.approved_at && (
                 <p className="text-gray-600 dark:text-gray-400">
-                  ✓ Aprobado: {formatDateTime(transfer.approved_at)}
+                  Aprobado: {formatDateTime(transfer.approved_at)}
                   {transfer.approver && ` por ${transfer.approver.first_name} ${transfer.approver.last_name}`}
                 </p>
               )}
               {transfer.shipped_at && (
                 <p className="text-gray-600 dark:text-gray-400">
-                  ✓ Enviado: {formatDateTime(transfer.shipped_at)}
+                  Enviado: {formatDateTime(transfer.shipped_at)}
                   {transfer.shipper && ` por ${transfer.shipper.first_name} ${transfer.shipper.last_name}`}
                 </p>
               )}
               {transfer.received_at && (
                 <p className="text-gray-600 dark:text-gray-400">
-                  ✓ Recibido: {formatDateTime(transfer.received_at)}
+                  Recibido: {formatDateTime(transfer.received_at)}
                   {transfer.receiver && ` por ${transfer.receiver.first_name} ${transfer.receiver.last_name}`}
                 </p>
               )}
