@@ -14,6 +14,7 @@ import { useNetworkStatusWithCallbacks } from './hooks/useNetworkStatus';
 import muiTheme, { darkMuiTheme } from './theme/muiTheme';
 
 // Lazy load pages
+const LandingPage = React.lazy(() => import('./pages/LandingPage'));
 const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));
 const PINLoginPage = React.lazy(() => import('./pages/auth/PINLoginPage'));
 const DashboardPage = React.lazy(() => import('./pages/dashboard'));
@@ -175,6 +176,7 @@ const AppRouter: React.FC = () => {
           <React.Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public routes */}
+              <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/pin-login" element={<PINLoginPage />} />
 
@@ -202,7 +204,7 @@ const AppRouter: React.FC = () => {
                   <Route path="/expenses/*" element={<ExpensesPage />} />
                   <Route path="/chat/*" element={<ChatPage />} />
                   <Route path="/sync-status" element={<SyncStatusPage />} />
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/dashboard" element={<DashboardPage />} />
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Route>
               </Route>

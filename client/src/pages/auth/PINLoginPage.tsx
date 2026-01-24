@@ -6,6 +6,8 @@ import { Button, Card } from '../../components/ui';
 import { userService } from '../../services/api';
 import type { User, Branch } from '../../types';
 import { MdQrCode2, MdArrowBack, MdBackspace, MdAlternateEmail } from 'react-icons/md';
+import PublicHeader from '../../components/layout/PublicHeader';
+import PublicFooter from '../../components/layout/PublicFooter';
 
 const PIN_LENGTH = 4;
 
@@ -198,8 +200,10 @@ const PINLoginPageNew: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-700 p-4">
-      <div className="w-full max-w-md animate-fade-up duration-normal">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      <PublicHeader />
+      <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-primary-500 to-primary-700">
+        <div className="w-full max-w-md animate-fade-up duration-normal">
         <Card className="p-8">
           {/* Header */}
           <div className="text-center mb-8 animate-zoom-in duration-fast">
@@ -461,6 +465,8 @@ const PINLoginPageNew: React.FC = () => {
           )}
         </Card>
       </div>
+      </div>
+      <PublicFooter />
     </div>
   );
 };

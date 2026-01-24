@@ -4,6 +4,8 @@ import { login, clearError } from '../../store/slices/authSlice';
 import { useNavigation } from '../../hooks';
 import { Button, Input, Card } from '../../components/ui';
 import { MdStore, MdAlternateEmail, MdLock, MdVisibility, MdVisibilityOff, MdQrCode2 } from 'react-icons/md';
+import PublicHeader from '../../components/layout/PublicHeader';
+import PublicFooter from '../../components/layout/PublicFooter';
 
 const LoginPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -47,8 +49,10 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-700 p-4">
-      <div className="w-full max-w-md animate-fade-up duration-normal">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      <PublicHeader />
+      <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-primary-500 to-primary-700">
+        <div className="w-full max-w-md animate-fade-up duration-normal">
         <Card className="p-8">
           {/* Logo and Title */}
           <div className="text-center mb-8 animate-zoom-in duration-fast">
@@ -151,6 +155,8 @@ const LoginPage: React.FC = () => {
           </p>
         </Card>
       </div>
+      </div>
+      <PublicFooter />
     </div>
   );
 };
