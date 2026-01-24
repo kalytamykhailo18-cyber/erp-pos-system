@@ -93,11 +93,12 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </div>
           <div className="animate-fade-left duration-very-fast">
             <Input
-              label="SKU"
+              label="SKU *"
               name="sku"
               value={formData.sku}
               onChange={onChange}
               placeholder="Código interno"
+              required
             />
           </div>
           <div className="animate-fade-right duration-fast">

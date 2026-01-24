@@ -138,6 +138,7 @@ const ProductsListPage: React.FC = () => {
       is_featured: product.is_featured ?? false,
       track_stock: product.track_stock ?? true,
       min_stock: product.minimum_stock?.toString() || '5',
+      initial_stock: '0', // Not used when editing
       is_weighable: product.is_weighable ?? false,
       scale_plu: product.scale_plu?.toString() || '',
       export_to_scale: product.export_to_scale ?? false,
@@ -172,6 +173,7 @@ const ProductsListPage: React.FC = () => {
       is_featured: formData.is_featured,
       track_stock: formData.track_stock,
       minimum_stock: formData.min_stock || '5',
+      initial_stock: formData.initial_stock || '0',
       is_weighable: formData.is_weighable,
       scale_plu: formData.scale_plu ? parseInt(formData.scale_plu) : undefined,
       export_to_scale: formData.export_to_scale,
