@@ -490,7 +490,7 @@ const PaymentPanel: React.FC = () => {
                     className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500"
                   />
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    ⚡ Entrega Express
+                    Entrega Express
                   </span>
                 </label>
 
@@ -510,7 +510,7 @@ const PaymentPanel: React.FC = () => {
                       </div>
                       {calculation.free_shipping_applied && (
                         <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                          ✓ Envío gratis por compra mayor a ${Number(calculation.free_shipping_threshold).toLocaleString('es-AR')}
+                          Envío gratis por compra mayor a ${Number(calculation.free_shipping_threshold).toLocaleString('es-AR')}
                         </div>
                       )}
                     </div>
@@ -520,7 +520,7 @@ const PaymentPanel: React.FC = () => {
                 {/* Error if neighborhood not found */}
                 {deliveryNeighborhood && !calculation && cart.items.length > 0 && (
                   <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
-                    ⚠️ No se encontró zona de envío para este barrio. Verifique el nombre.
+                    No se encontró zona de envío para este barrio. Verifique el nombre.
                   </div>
                 )}
               </div>
@@ -629,7 +629,7 @@ const PaymentPanel: React.FC = () => {
                 required
               />
               <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
-                ⚠️ Obligatorio para transferencias
+                Obligatorio para transferencias
               </p>
             </div>
           )}

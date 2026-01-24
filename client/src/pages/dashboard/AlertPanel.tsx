@@ -4,6 +4,9 @@ import { useAppDispatch, useAppSelector } from '../../store';
 import { fetchAlerts, fetchUnreadCount } from '../../store/slices/alertsSlice';
 import AlertDetailModal from '../../components/alerts/AlertDetailModal';
 import type { Alert } from '../../types';
+import ErrorIcon from '@mui/icons-material/Error';
+import WarningIcon from '@mui/icons-material/Warning';
+import CampaignIcon from '@mui/icons-material/Campaign';
 
 const AlertPanel: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -44,15 +47,15 @@ const AlertPanel: React.FC = () => {
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case 'CRITICAL':
-        return '🔴';
+        return <ErrorIcon sx={{ fontSize: 20 }} className="text-red-600" />;
       case 'HIGH':
-        return '🔴';
+        return <ErrorIcon sx={{ fontSize: 20 }} className="text-red-500" />;
       case 'MEDIUM':
-        return '🟡';
+        return <WarningIcon sx={{ fontSize: 20 }} className="text-amber-500" />;
       case 'LOW':
-        return '🟡';
+        return <WarningIcon sx={{ fontSize: 20 }} className="text-yellow-500" />;
       default:
-        return '📢';
+        return <CampaignIcon sx={{ fontSize: 20 }} />;
     }
   };
 

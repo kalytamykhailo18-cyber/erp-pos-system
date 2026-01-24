@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { closeSession, getSessionSummary, checkUnapprovedVoids } from '../../store/slices/registersSlice';
 import { loadDenominations } from '../../store/slices/denominationSlice';
+import WarningIcon from '@mui/icons-material/Warning';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import InfoIcon from '@mui/icons-material/Info';
 
 interface CloseSessionModalProps {
   isOpen: boolean;
@@ -264,7 +267,7 @@ const CloseSessionModal: React.FC<CloseSessionModalProps> = ({ isOpen, onClose }
               </p>
               <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded">
                 <p className="text-xs text-amber-800 dark:text-amber-300 font-semibold">
-                  ⚠️ IMPORTANTE: No puede ver los montos esperados hasta después de declarar
+                  IMPORTANTE: No puede ver los montos esperados hasta después de declarar
                 </p>
               </div>
             </div>
@@ -549,18 +552,18 @@ const CloseSessionModal: React.FC<CloseSessionModalProps> = ({ isOpen, onClose }
                         : 'text-blue-600 dark:text-blue-400'
                     }`}>
                       {Number(closingResult.total_discrepancy) === 0
-                        ? 'CUADRADO ✓'
+                        ? 'CUADRADO'
                         : (Number(closingResult.total_discrepancy) > 0 ? '+' : '') + `$${Number(closingResult.total_discrepancy).toLocaleString('es-AR')}`}
                     </span>
                   </div>
                   {Number(closingResult.total_discrepancy) < 0 && (
                     <p className="mt-2 text-sm text-red-700 dark:text-red-300">
-                      ⚠️ FALTANTE detectado
+                      FALTANTE detectado
                     </p>
                   )}
                   {Number(closingResult.total_discrepancy) > 0 && (
                     <p className="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                      ℹ️ SOBRANTE detectado
+                      SOBRANTE detectado
                     </p>
                   )}
                 </div>
@@ -574,7 +577,7 @@ const CloseSessionModal: React.FC<CloseSessionModalProps> = ({ isOpen, onClose }
                       </svg>
                       <div className="flex-1">
                         <h4 className="text-lg font-bold text-red-800 dark:text-red-300 mb-2">
-                          ⚠️ ALERTA: FONDO DE RESERVA INSUFICIENTE
+                          ALERTA: FONDO DE RESERVA INSUFICIENTE
                         </h4>
                         <p className="text-sm text-red-700 dark:text-red-400 mb-3">
                           {closingResult.petty_cash_warning.message}

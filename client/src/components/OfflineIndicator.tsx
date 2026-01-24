@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
+import SyncIcon from '@mui/icons-material/Sync';
+import CloudOffIcon from '@mui/icons-material/CloudOff';
 
 /**
  * Offline Indicator Component
@@ -73,35 +75,9 @@ const OfflineIndicator: React.FC = () => {
       {/* Status Icon */}
       <div className="relative">
         {isOnline ? (
-          // Cloud with sync icon (pending operations)
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            />
-          </svg>
+          <SyncIcon sx={{ fontSize: 24 }} />
         ) : (
-          // Cloud with X (offline)
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
-            />
-          </svg>
+          <CloudOffIcon sx={{ fontSize: 24 }} />
         )}
 
         {/* Pending count badge */}

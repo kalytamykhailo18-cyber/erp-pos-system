@@ -237,7 +237,7 @@ const DailyReport: React.FC = () => {
           {shift.voided_sales_count > 0 && (
             <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/10 rounded text-sm">
               <span className="text-yellow-800 dark:text-yellow-300">
-                ⚠️ {shift.voided_sales_count} venta(s) anulada(s) en este turno
+                {shift.voided_sales_count} venta(s) anulada(s) en este turno
               </span>
             </div>
           )}

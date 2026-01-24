@@ -374,7 +374,7 @@ const SyncStatus: React.FC = () => {
       {/* No Pending Operations */}
       {pendingSales.length === 0 && syncStats.pending === 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-12 text-center">
-          <div className="text-6xl mb-4">✅</div>
+          <div className="text-6xl mb-4"></div>
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             Todo Sincronizado
           </h3>
