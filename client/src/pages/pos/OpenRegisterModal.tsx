@@ -15,7 +15,7 @@ interface OpenRegisterModalProps {
 const OpenRegisterModal: React.FC<OpenRegisterModalProps> = ({ isOpen, onClose }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, currentSession } = useAppSelector((state) => state.auth);
   const { registers } = useAppSelector((state) => state.registers);
   const { denominations } = useAppSelector((state) => state.denomination);
   const loading = useAppSelector((state) => state.ui.loading);
