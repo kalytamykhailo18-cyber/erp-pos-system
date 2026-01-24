@@ -19,10 +19,27 @@ const lateClosingCheckJob = require('./jobs/late-closing-check.job');
 const app = express();
 const httpServer = createServer(app);
 
+// Parse CORS origins from environment variable
+const corsOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+  : ['*'];
+
+// CORS origin checker function
+const corsOriginChecker = (origin, callback) => {
+  // Allow requests with no origin (like mobile apps or curl requests)
+  if (!origin) return callback(null, true);
+
+  if (corsOrigins.includes('*') || corsOrigins.includes(origin)) {
+    callback(null, true);
+  } else {
+    callback(new Error('Not allowed by CORS'));
+  }
+};
+
 // Socket.IO setup
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: corsOriginChecker,
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -35,7 +52,7 @@ app.set('models', models);
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: corsOriginChecker,
   credentials: true
 }));
 app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) } }));
