@@ -19,6 +19,7 @@ export interface ProductFormData {
   is_featured: boolean;
   track_stock: boolean;
   min_stock: string;
+  initial_stock: string; // Initial stock quantity when creating product
   is_weighable: boolean;
   scale_plu: string;
   export_to_scale: boolean;
@@ -308,7 +309,26 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               value={formData.min_stock}
               onChange={onChange}
             />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Cantidad para alerta de stock bajo
+            </p>
           </div>
+          {!editingProduct && formData.track_stock && (
+            <div className="animate-fade-left duration-slow">
+              <Input
+                label="Stock Inicial"
+                name="initial_stock"
+                type="number"
+                min="0"
+                value={formData.initial_stock}
+                onChange={onChange}
+                placeholder="0"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Cantidad inicial en inventario (solo al crear)
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="animate-fade-up duration-slow">

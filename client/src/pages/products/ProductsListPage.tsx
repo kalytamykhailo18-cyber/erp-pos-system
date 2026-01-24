@@ -40,6 +40,7 @@ const initialFormData: ProductFormData = {
   is_featured: false,
   track_stock: true,
   min_stock: '5',
+  initial_stock: '0',
   is_weighable: false,
   scale_plu: '',
   export_to_scale: false,

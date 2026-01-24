@@ -174,8 +174,10 @@ exports.getById = async (req, res, next) => {
 };
 
 exports.create = async (req, res, next) => {
+  const t = await sequelize.transaction();
   try {
-    const productData = { ...req.body, id: uuidv4() };
+    const { initial_stock, ...productFields } = req.body;
+    const productData = { ...productFields, id: uuidv4() };
 
     // Calculate margin if cost and selling price provided
     if (productData.cost_price && productData.selling_price) {
@@ -185,9 +187,38 @@ exports.create = async (req, res, next) => {
       );
     }
 
-    const product = await Product.create(productData);
+    const product = await Product.create(productData, { transaction: t });
+
+    // Create initial stock if provided and track_stock is enabled
+    if (initial_stock && parseFloat(initial_stock) > 0 && productData.track_stock && req.user?.branch_id) {
+      const StockMovement = require('../database/models').StockMovement;
+
+      // Create stock entry for current branch
+      await BranchStock.create({
+        id: uuidv4(),
+        product_id: product.id,
+        branch_id: req.user.branch_id,
+        quantity: parseFloat(initial_stock),
+        min_stock: productData.min_stock || 0
+      }, { transaction: t });
+
+      // Create stock movement record
+      await StockMovement.create({
+        id: uuidv4(),
+        product_id: product.id,
+        branch_id: req.user.branch_id,
+        type: 'adjustment',
+        quantity: parseFloat(initial_stock),
+        reason: 'Stock inicial al crear producto',
+        reference: `PRODUCT_CREATE_${product.id}`,
+        created_by: req.user.id
+      }, { transaction: t });
+    }
+
+    await t.commit();
     return created(res, product);
   } catch (error) {
+    await t.rollback();
     next(error);
   }
 };
