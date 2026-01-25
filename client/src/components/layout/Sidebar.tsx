@@ -163,19 +163,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   };
 
   const isActive = (path: string) => {
-    // Exact match
+    // Exact match - highest priority
     if (currentPath === path) return true;
 
-    // Check if current path starts with this path
+    // For sub-routes (e.g., /products/search when checking /products)
+    // Only highlight parent if NO exact match exists in navigation
     if (currentPath.startsWith(path + '/')) {
-      // Don't highlight parent if we're on a more specific defined route
-      // Look for navigation items that are longer/more specific than current path
-      const moreSpecificRoute = navigation.some(
-        item => item.path !== path &&
-                item.path.startsWith(path) &&
-                currentPath.startsWith(item.path)
-      );
-      return !moreSpecificRoute;
+      // Check if there's an exact match for currentPath in navigation
+      const hasExactMatch = navigation.some(item => item.path === currentPath);
+
+      // If there's an exact match, don't highlight parent routes
+      if (hasExactMatch) return false;
+
+      // Otherwise, highlight the parent (e.g., /products when on /products/some-unknown-route)
+      return true;
     }
 
     return false;
