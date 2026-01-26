@@ -279,7 +279,7 @@ export const createProduct = createAsyncThunk<
         // Handle validation errors with specific field messages
         if (response.errors && response.errors.length > 0) {
           const errorMessages = response.errors.map(err => `${err.field}: ${err.message}`).join(', ');
-          dispatch(showToast({ type: 'error', message: errorMessages }));
+          dispatch(showToast({ type: 'error', message: errorMessages, duration: 8000 }));
           throw new Error(errorMessages);
         }
         throw new Error(response.error || 'Failed to create product');
@@ -315,7 +315,7 @@ export const updateProduct = createAsyncThunk<
         // Handle validation errors with specific field messages
         if (response.errors && response.errors.length > 0) {
           const errorMessages = response.errors.map(err => `${err.field}: ${err.message}`).join(', ');
-          dispatch(showToast({ type: 'error', message: errorMessages }));
+          dispatch(showToast({ type: 'error', message: errorMessages, duration: 8000 }));
           throw new Error(errorMessages);
         }
         throw new Error(response.error || 'Failed to update product');

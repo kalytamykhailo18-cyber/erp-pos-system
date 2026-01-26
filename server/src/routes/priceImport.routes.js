@@ -30,7 +30,7 @@ router.post(
     stringField('file_name', { required: true, maxLength: 255 }),
     enumField('file_type', ['PDF', 'EXCEL', 'CSV'], { required: true }),
     body('file_size_bytes').isInt({ min: 0 }),
-    body('supplier_id').optional().isUUID(4),
+    body('supplier_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     body('margin_percentage').optional().isFloat({ min: 0, max: 500 }),
     body('rounding_rule').optional().isIn(['NONE', 'UP', 'DOWN', 'NEAREST']),
     body('rounding_value').optional().isInt({ min: 0 }),
@@ -77,7 +77,7 @@ router.get(
   [
     ...paginationQuery,
     query('status').optional().isIn(['PENDING', 'PROCESSING', 'READY', 'APPLIED', 'CANCELLED', 'REVERTED']),
-    query('supplier_id').optional().isUUID(4),
+    query('supplier_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('start_date').optional().isISO8601(),
     query('end_date').optional().isISO8601(),
     validate
@@ -209,8 +209,8 @@ router.get(
   '/history',
   [
     ...paginationQuery,
-    query('product_id').optional().isUUID(4),
-    query('import_batch_id').optional().isUUID(4),
+    query('product_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+    query('import_batch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('start_date').optional().isISO8601(),
     query('end_date').optional().isISO8601(),
     validate

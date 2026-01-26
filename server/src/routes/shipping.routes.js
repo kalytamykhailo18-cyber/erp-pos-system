@@ -108,7 +108,7 @@ router.delete(
 router.get(
   '/neighborhoods',
   [
-    query('zone_id').optional().isUUID(4),
+    query('zone_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     validate
   ],
   shippingController.getAllNeighborhoods
@@ -260,8 +260,8 @@ router.get(
   '/',
   [
     query('status').optional().isString(),
-    query('zone_id').optional().isUUID(4),
-    query('customer_id').optional().isUUID(4),
+    query('zone_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+    query('customer_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('from_date').optional().isISO8601(),
     query('to_date').optional().isISO8601(),
     validate

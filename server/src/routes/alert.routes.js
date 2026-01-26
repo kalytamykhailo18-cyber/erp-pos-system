@@ -31,7 +31,7 @@ router.get(
       'SYNC_ERROR', 'LOGIN_FAILED', 'PRICE_CHANGE'
     ]),
     query('severity').optional().isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('is_read').optional().isBoolean(),
     query('is_resolved').optional().isBoolean(),
     query('from_date').optional().isISO8601(),

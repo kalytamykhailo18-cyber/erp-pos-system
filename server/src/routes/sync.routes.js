@@ -63,7 +63,7 @@ router.post(
 router.get(
   '/status',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     validate
   ],
   syncController.getSyncStatus
@@ -78,8 +78,8 @@ router.get(
   '/queue',
   [
     ...paginationQuery,
-    query('branch_id').optional().isUUID(4),
-    query('register_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+    query('register_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('entity_type').optional().isString(),
     query('status').optional().isIn(['PENDING', 'PROCESSING', 'SYNCED', 'FAILED', 'CONFLICT']),
     validate
@@ -95,7 +95,7 @@ router.get(
 router.get(
   '/conflicts',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     validate
   ],
   syncController.getConflicts
@@ -141,7 +141,7 @@ router.get(
   [
     ...paginationQuery,
     query('table_name').optional().isString(),
-    query('record_id').optional().isUUID(4),
+    query('record_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('action').optional().isIn(['INSERT', 'UPDATE', 'DELETE']),
     query('from_date').optional().isISO8601(),
     query('to_date').optional().isISO8601(),

@@ -207,7 +207,7 @@ router.get(
   requirePermission('canImportPrices'),
   [
     ...paginationQuery,
-    query('supplier_id').optional().isUUID(4),
+    query('supplier_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('status').optional().isIn(['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED']),
     validate
   ],
@@ -280,8 +280,8 @@ router.get(
   '/purchase-orders',
   [
     ...paginationQuery,
-    query('supplier_id').optional().isUUID(4),
-    query('branch_id').optional().isUUID(4),
+    query('supplier_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('status').optional().isIn(['DRAFT', 'SUBMITTED', 'APPROVED', 'PARTIALLY_RECEIVED', 'RECEIVED', 'CANCELLED']),
     validate
   ],

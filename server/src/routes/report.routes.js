@@ -59,7 +59,7 @@ router.get(
 router.get(
   '/daily-report',
   [
-    query('branch_id').isUUID(4).withMessage('branch_id is required'),
+    query('branch_id').matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('branch_id is required'),
     query('date').optional().isISO8601(),
     validate
   ],
@@ -74,7 +74,7 @@ router.get(
 router.get(
   '/sales',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('from_date').isISO8601().withMessage('from_date is required'),
     query('to_date').isISO8601().withMessage('to_date is required'),
     query('group_by').optional().isIn(['day', 'week', 'month']),
@@ -91,7 +91,7 @@ router.get(
 router.get(
   '/products',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('from_date').isISO8601().withMessage('from_date is required'),
     query('to_date').isISO8601().withMessage('to_date is required'),
     query('limit').optional().isInt({ min: 1, max: 100 }),
@@ -108,7 +108,7 @@ router.get(
 router.get(
   '/categories',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('from_date').isISO8601().withMessage('from_date is required'),
     query('to_date').isISO8601().withMessage('to_date is required'),
     validate
@@ -124,7 +124,7 @@ router.get(
 router.get(
   '/cashiers',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('from_date').isISO8601().withMessage('from_date is required'),
     query('to_date').isISO8601().withMessage('to_date is required'),
     validate
@@ -140,7 +140,7 @@ router.get(
 router.get(
   '/discrepancies',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('from_date').isISO8601().withMessage('from_date is required'),
     query('to_date').isISO8601().withMessage('to_date is required'),
     validate
@@ -156,7 +156,7 @@ router.get(
 router.get(
   '/payments',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('from_date').isISO8601().withMessage('from_date is required'),
     query('to_date').isISO8601().withMessage('to_date is required'),
     validate
@@ -172,7 +172,7 @@ router.get(
 router.get(
   '/inventory',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     validate
   ],
   reportController.getInventoryReport
@@ -186,7 +186,7 @@ router.get(
 router.get(
   '/shrinkage',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('from_date').isISO8601().withMessage('from_date is required'),
     query('to_date').isISO8601().withMessage('to_date is required'),
     validate
@@ -202,7 +202,7 @@ router.get(
 router.get(
   '/hourly',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('from_date').isISO8601().withMessage('from_date is required'),
     query('to_date').isISO8601().withMessage('to_date is required'),
     validate

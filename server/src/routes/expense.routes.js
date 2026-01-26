@@ -30,8 +30,8 @@ router.get(
   [
     query('from_date').optional().isDate(),
     query('to_date').optional().isDate(),
-    query('category_id').optional().isUUID(),
-    query('branch_id').optional().isUUID(),
+    query('category_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('status').optional().isIn(['PENDING', 'APPROVED', 'PAID', 'REJECTED', 'CANCELLED']),
     query('search').optional().isString(),
     validate
@@ -49,7 +49,7 @@ router.get(
   [
     query('from_date').optional().isDate(),
     query('to_date').optional().isDate(),
-    query('branch_id').optional().isUUID(),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     validate
   ],
   expenseController.getExpenseStats

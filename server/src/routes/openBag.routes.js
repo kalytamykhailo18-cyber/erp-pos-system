@@ -24,8 +24,8 @@ router.get(
   '/',
   [
     ...paginationQuery,
-    query('branch_id').optional().isUUID(4),
-    query('product_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+    query('product_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('status').optional().isIn(['OPEN', 'EMPTY']),
     validate
   ],
@@ -50,7 +50,7 @@ router.get(
  */
 router.get(
   '/low-stock',
-  [query('branch_id').optional().isUUID(4), validate],
+  [query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i), validate],
   openBagController.getLowStockBags
 );
 

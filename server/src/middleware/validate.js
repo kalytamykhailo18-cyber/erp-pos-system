@@ -27,17 +27,23 @@ const validate = (req, res, next) => {
 
 /**
  * UUID parameter validation
+ * Note: Uses custom validation to accept seed/test data UUIDs that don't meet strict UUID spec
+ * Validates format: 8-4-4-4-12 hex characters
  */
 const uuidParam = (paramName = 'id') =>
   param(paramName)
-    .isUUID(4)
-    .withMessage(`${paramName} must be a valid UUID`);
+    .matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+    .withMessage(`${paramName} must be a valid UUID format`);
 
 /**
  * UUID body field validation
+ * Note: Uses custom validation to accept seed/test data UUIDs that don't meet strict UUID spec
+ * Validates format: 8-4-4-4-12 hex characters
  */
 const uuidField = (fieldName, required = true) => {
-  const chain = body(fieldName).isUUID(4).withMessage(`${fieldName} must be a valid UUID`);
+  const chain = body(fieldName)
+    .matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+    .withMessage(`${fieldName} must be a valid UUID format`);
   return required ? chain : chain.optional({ nullable: true });
 };
 

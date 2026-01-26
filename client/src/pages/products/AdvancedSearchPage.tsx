@@ -16,14 +16,7 @@ import { MdSearch, MdClear, MdFileDownload } from 'react-icons/md';
 import type { UUID } from '../../types';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-
-// Extend jsPDF type to include autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-  }
-}
+import autoTable from 'jspdf-autotable';
 
 const AdvancedSearchPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -148,7 +141,7 @@ const AdvancedSearchPage: React.FC = () => {
       p.is_factory_direct ? 'Fábrica' : 'Premium',
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [['SKU', 'Producto', 'Proteína', 'Tamaño', 'Precio', 'Tipo']],
       body: tableData,
       startY: 28,

@@ -25,7 +25,7 @@ router.get(
   '/',
   [
     ...paginationQuery,
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('approval_status').optional().isIn(['PENDING', 'APPROVED', 'REJECTED']),
     query('deduction_type').optional().isIn(['FREE_SAMPLE', 'DONATION']),
     validate
@@ -42,7 +42,7 @@ router.get(
   '/pending',
   [
     requireRole(['MANAGER', 'OWNER']),
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     validate
   ],
   nonSalesDeductionController.getPending

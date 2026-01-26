@@ -27,8 +27,8 @@ router.get(
   '/',
   [
     ...paginationQuery,
-    query('branch_id').optional().isUUID(4),
-    query('product_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+    query('product_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('below_minimum').optional().isBoolean(),
     query('has_stock').optional().isBoolean(),
     query('search').optional().isString(),
@@ -97,7 +97,7 @@ router.post(
   [
     uuidField('branch_id'),
     arrayField('entries', { minLength: 1 }),
-    body('entries.*.product_id').isUUID(4).withMessage('product_id must be a valid UUID'),
+    body('entries.*.product_id').matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('product_id must be a valid UUID'),
     body('entries.*.counted_quantity').isFloat({ min: 0 }).withMessage('counted_quantity must be >= 0'),
     stringField('notes', { required: false }),
     validate
@@ -114,8 +114,8 @@ router.get(
   '/movements',
   [
     ...paginationQuery,
-    query('branch_id').optional().isUUID(4),
-    query('product_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+    query('product_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('movement_type').optional().isIn([
       'SALE', 'RETURN', 'PURCHASE', 'TRANSFER_OUT', 'TRANSFER_IN',
       'ADJUSTMENT_PLUS', 'ADJUSTMENT_MINUS', 'SHRINKAGE', 'INITIAL', 'INVENTORY_COUNT'
@@ -138,8 +138,8 @@ router.get(
   '/transfers',
   [
     ...paginationQuery,
-    query('from_branch_id').optional().isUUID(4),
-    query('to_branch_id').optional().isUUID(4),
+    query('from_branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+    query('to_branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('status').optional().isIn(['PENDING', 'APPROVED', 'IN_TRANSIT', 'RECEIVED', 'CANCELLED']),
     validate
   ],
@@ -170,7 +170,7 @@ router.post(
     uuidField('to_branch_id'),
     stringField('notes', { required: false }),
     arrayField('items', { minLength: 1 }),
-    body('items.*.product_id').isUUID(4).withMessage('product_id must be a valid UUID'),
+    body('items.*.product_id').matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('product_id must be a valid UUID'),
     body('items.*.quantity').isFloat({ min: 0.001 }).withMessage('quantity must be > 0'),
     validate
   ],
@@ -188,7 +188,7 @@ router.post(
   [
     uuidParam('id'),
     arrayField('items', { minLength: 1 }),
-    body('items.*.id').isUUID(4).withMessage('item id must be a valid UUID'),
+    body('items.*.id').matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('item id must be a valid UUID'),
     body('items.*.shipped_quantity').isFloat({ min: 0.001 }).withMessage('shipped_quantity must be > 0'),
     validate
   ],
@@ -206,7 +206,7 @@ router.post(
   [
     uuidParam('id'),
     arrayField('items', { minLength: 1 }),
-    body('items.*.item_id').isUUID(4).withMessage('item_id must be a valid UUID'),
+    body('items.*.item_id').matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('item_id must be a valid UUID'),
     body('items.*.quantity_received').isFloat({ min: 0 }).withMessage('quantity_received must be >= 0'),
     stringField('notes', { required: false }),
     validate
@@ -238,7 +238,7 @@ router.post(
 router.get(
   '/low-stock',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     ...paginationQuery,
     validate
   ],
@@ -271,7 +271,7 @@ router.post(
 router.get(
   '/reports/shrinkage',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('from_date').optional().isISO8601(),
     query('to_date').optional().isISO8601(),
     validate

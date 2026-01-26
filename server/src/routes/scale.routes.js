@@ -19,7 +19,7 @@ router.get(
   '/products',
   authenticate,
   requireRole(['OWNER', 'MANAGER']),
-  query('branch_id').optional().isUUID().withMessage('Invalid branch ID'),
+  query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('Invalid branch ID'),
   validate,
   scaleController.getExportableProducts
 );
@@ -35,7 +35,7 @@ router.get(
   authenticate,
   requireRole(['OWNER', 'MANAGER']),
   query('format').optional().isIn(['csv', 'txt']).withMessage('Format must be "csv" or "txt"'),
-  query('branch_id').optional().isUUID().withMessage('Invalid branch ID'),
+  query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('Invalid branch ID'),
   validate,
   scaleController.exportPriceList
 );
@@ -74,7 +74,7 @@ router.post(
     .withMessage('PLU code is required')
     .isInt({ min: 1, max: 99999 })
     .withMessage('PLU must be between 1 and 99999'),
-  body('product_id').optional().isUUID().withMessage('Invalid product ID'),
+  body('product_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('Invalid product ID'),
   validate,
   scaleController.validatePLU
 );

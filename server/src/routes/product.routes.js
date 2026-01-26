@@ -26,12 +26,12 @@ router.get(
   '/',
   [
     ...paginationQuery,
-    query('category_id').optional().isUUID(4),
+    query('category_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('is_active').optional().isBoolean(),
     query('is_weighable').optional().isBoolean(),
     query('low_stock').optional().isBoolean(),
     query('search').optional().isString(),
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     validate
   ],
   productController.getAll
@@ -45,14 +45,14 @@ router.get(
 router.get(
   '/search',
   [
-    query('species_id').optional().isUUID(4),
-    query('variety_id').optional().isUUID(4),
-    query('product_type_id').optional().isUUID(4),
+    query('species_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+    query('variety_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+    query('product_type_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('protein_min').optional().isDecimal(),
     query('protein_max').optional().isDecimal(),
     query('is_factory_direct').optional().isBoolean(),
     query('search').optional().isString(),
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     validate
   ],
   productController.advancedSearch
@@ -66,8 +66,8 @@ router.get(
 router.get(
   '/pos',
   [
-    query('branch_id').isUUID(4).withMessage('branch_id is required'),
-    query('category_id').optional().isUUID(4),
+    query('branch_id').matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('branch_id is required'),
+    query('category_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('search').optional().isString(),
     validate
   ],
@@ -235,7 +235,7 @@ router.post(
   requirePermission('canManageProducts'),
   [
     query('product_ids').optional().isArray(),
-    query('category_id').optional().isUUID(4),
+    query('category_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     decimalField('margin_percentage', { min: 0, max: 500 }),
     stringField('rounding_rule', { required: false }),
     integerField('rounding_value', { min: 0, required: false }),

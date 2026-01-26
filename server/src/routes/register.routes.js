@@ -29,7 +29,7 @@ router.use(authenticate);
 router.get(
   '/',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('is_active').optional().isBoolean(),
     validate
   ],
@@ -101,8 +101,8 @@ router.get(
   '/sessions/list',
   [
     ...paginationQuery,
-    query('branch_id').optional().isUUID(4),
-    query('register_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+    query('register_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('status').optional().isIn(['OPEN', 'CLOSED', 'REOPENED']),
     query('business_date').optional().matches(/^\d{4}-\d{2}-\d{2}$/),
     validate
@@ -285,7 +285,7 @@ router.get(
   requirePermission('canViewReports'),
   [
     ...paginationQuery,
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('from_date').optional().matches(/^\d{4}-\d{2}-\d{2}$/),
     query('to_date').optional().matches(/^\d{4}-\d{2}-\d{2}$/),
     query('is_finalized').optional().isBoolean(),

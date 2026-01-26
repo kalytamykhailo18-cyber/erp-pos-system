@@ -25,7 +25,7 @@ router.get(
   '/',
   [
     ...paginationQuery,
-    query('species_id').optional().isUUID(4),
+    query('species_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('is_active').optional().isBoolean(),
     query('search').optional().isString(),
     validate

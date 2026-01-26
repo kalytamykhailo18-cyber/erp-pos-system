@@ -147,7 +147,7 @@ router.post(
   [
     uuidField('customer_id'),
     integerField('points', { min: 1 }),
-    body('sale_id').optional().isUUID(4),
+    body('sale_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     validate
   ],
   loyaltyController.redeemPoints
@@ -179,7 +179,7 @@ router.get(
   '/points/transactions',
   [
     ...paginationQuery,
-    query('customer_id').optional().isUUID(4),
+    query('customer_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('transaction_type').optional().isIn(['EARN', 'REDEEM', 'ADJUST', 'EXPIRE']),
     query('start_date').optional().isISO8601(),
     query('end_date').optional().isISO8601(),
@@ -200,7 +200,7 @@ router.post(
   [
     uuidField('customer_id'),
     decimalField('amount', { min: 0.01 }),
-    body('sale_id').optional().isUUID(4),
+    body('sale_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     stringField('reason', { required: false, maxLength: 500 }),
     validate
   ],
@@ -217,7 +217,7 @@ router.post(
   [
     uuidField('customer_id'),
     decimalField('amount', { min: 0.01 }),
-    body('sale_id').optional().isUUID(4),
+    body('sale_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     validate
   ],
   loyaltyController.useCredit
@@ -249,7 +249,7 @@ router.get(
   '/credit/transactions',
   [
     ...paginationQuery,
-    query('customer_id').optional().isUUID(4),
+    query('customer_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('transaction_type').optional().isIn(['CREDIT', 'DEBIT', 'ADJUST']),
     query('start_date').optional().isISO8601(),
     query('end_date').optional().isISO8601(),
@@ -329,7 +329,7 @@ router.get(
 router.get(
   '/summary',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('start_date').optional().isISO8601(),
     query('end_date').optional().isISO8601(),
     validate

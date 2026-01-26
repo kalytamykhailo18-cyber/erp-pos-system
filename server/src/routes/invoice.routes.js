@@ -24,8 +24,8 @@ router.get(
   '/',
   [
     ...paginationQuery,
-    query('branch_id').optional().isUUID(4),
-    query('invoice_type_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+    query('invoice_type_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('status').optional().isIn(['PENDING', 'ISSUED', 'FAILED', 'CANCELLED']),
     query('from_date').optional().isISO8601(),
     query('to_date').optional().isISO8601(),
@@ -43,7 +43,7 @@ router.get(
 router.get(
   '/stats',
   [
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('start_date').optional().isISO8601(),
     query('end_date').optional().isISO8601(),
     validate
@@ -65,7 +65,7 @@ router.get('/types', invoiceController.getInvoiceTypes);
  */
 router.get('/status/pending', [
   ...paginationQuery,
-  query('branch_id').optional().isUUID(4),
+  query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
   validate
 ], invoiceController.getPendingInvoices);
 
@@ -76,7 +76,7 @@ router.get('/status/pending', [
  */
 router.get('/status/failed', [
   ...paginationQuery,
-  query('branch_id').optional().isUUID(4),
+  query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
   validate
 ], invoiceController.getFailedInvoices);
 
@@ -164,7 +164,7 @@ router.get(
   '/credit-notes/list',
   [
     ...paginationQuery,
-    query('branch_id').optional().isUUID(4),
+    query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('status').optional().isIn(['PENDING', 'ISSUED', 'FAILED', 'CANCELLED']),
     query('from_date').optional().isISO8601(),
     query('to_date').optional().isISO8601(),
