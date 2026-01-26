@@ -56,6 +56,28 @@ router.get('/unread', alertController.getUnreadCount);
 router.get('/counts', alertController.getCounts);
 
 /**
+ * @route   GET /api/v1/alerts/config
+ * @desc    Get alert configuration
+ * @access  Private (Owner/Manager)
+ */
+router.get(
+  '/config',
+  [requirePermission('canViewReports'), validate],
+  alertController.getConfigs
+);
+
+/**
+ * @route   PUT /api/v1/alerts/config
+ * @desc    Update alert configuration
+ * @access  Private (Owner only)
+ */
+router.put(
+  '/config',
+  requirePermission('canManageUsers'),
+  alertController.updateConfig
+);
+
+/**
  * @route   GET /api/v1/alerts/:id
  * @desc    Get alert by ID
  * @access  Private
@@ -101,27 +123,5 @@ router.post(
  * @access  Private
  */
 router.post('/mark-all-read', alertController.markAllAsRead);
-
-/**
- * @route   GET /api/v1/alerts/config
- * @desc    Get alert configuration
- * @access  Private (Owner/Manager)
- */
-router.get(
-  '/config',
-  requirePermission('canViewReports'),
-  alertController.getConfigs
-);
-
-/**
- * @route   PUT /api/v1/alerts/config
- * @desc    Update alert configuration
- * @access  Private (Owner only)
- */
-router.put(
-  '/config',
-  requirePermission('canManageUsers'),
-  alertController.updateConfig
-);
 
 module.exports = router;

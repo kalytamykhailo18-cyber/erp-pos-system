@@ -16,7 +16,15 @@ const BranchSettings: React.FC = () => {
     tax_id: '',
     tax_condition: '',
     factuhoy_point_of_sale: '',
-    default_invoice_type: 'B'
+    default_invoice_type: 'B',
+    weekday_opening_time: '08:30',
+    weekday_closing_time: '20:00',
+    midday_closing_time: '14:30',
+    afternoon_opening_time: '',
+    evening_closing_time: '20:00',
+    sunday_opening_time: '09:00',
+    sunday_closing_time: '13:45',
+    has_shift_change: true
   });
 
   // Load current branch settings on component mount
@@ -32,7 +40,15 @@ const BranchSettings: React.FC = () => {
         tax_id: currentBranch.tax_id || '',
         tax_condition: currentBranch.tax_condition || '',
         factuhoy_point_of_sale: currentBranch.factuhoy_point_of_sale?.toString() || '',
-        default_invoice_type: (currentBranch.default_invoice_type as 'A' | 'B' | 'C') || 'B'
+        default_invoice_type: (currentBranch.default_invoice_type as 'A' | 'B' | 'C') || 'B',
+        weekday_opening_time: currentBranch.weekday_opening_time?.substring(0, 5) || '08:30',
+        weekday_closing_time: currentBranch.weekday_closing_time?.substring(0, 5) || '20:00',
+        midday_closing_time: currentBranch.midday_closing_time?.substring(0, 5) || '14:30',
+        afternoon_opening_time: currentBranch.afternoon_opening_time?.substring(0, 5) || '',
+        evening_closing_time: currentBranch.evening_closing_time?.substring(0, 5) || '20:00',
+        sunday_opening_time: currentBranch.sunday_opening_time?.substring(0, 5) || '09:00',
+        sunday_closing_time: currentBranch.sunday_closing_time?.substring(0, 5) || '13:45',
+        has_shift_change: currentBranch.has_shift_change ?? true
       });
     }
   }, [currentBranch]);
@@ -65,7 +81,15 @@ const BranchSettings: React.FC = () => {
           tax_id: settings.tax_id,
           tax_condition: settings.tax_condition,
           factuhoy_point_of_sale: settings.factuhoy_point_of_sale,
-          default_invoice_type: settings.default_invoice_type as 'A' | 'B' | 'C'
+          default_invoice_type: settings.default_invoice_type as 'A' | 'B' | 'C',
+          weekday_opening_time: settings.weekday_opening_time + ':00',
+          weekday_closing_time: settings.weekday_closing_time + ':00',
+          midday_closing_time: settings.midday_closing_time + ':00',
+          afternoon_opening_time: settings.afternoon_opening_time ? settings.afternoon_opening_time + ':00' : null,
+          evening_closing_time: settings.evening_closing_time + ':00',
+          sunday_opening_time: settings.sunday_opening_time + ':00',
+          sunday_closing_time: settings.sunday_closing_time + ':00',
+          has_shift_change: settings.has_shift_change
         }
       })).unwrap();
     } catch (error) {
@@ -136,6 +160,155 @@ const BranchSettings: React.FC = () => {
             />
           </div>
         )}
+
+        {/* Operating Hours Section */}
+        <div className="pt-6 border-t border-gray-200 dark:border-gray-700 space-y-4 animate-fade-up duration-normal">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Horarios de Atención
+          </h3>
+
+          {/* Weekday Hours */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Lunes a Sábado
+            </h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col animate-fade-right duration-normal">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Hora de Apertura:
+                </label>
+                <input
+                  type="time"
+                  name="weekday_opening_time"
+                  value={settings.weekday_opening_time}
+                  onChange={handleChange}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="flex flex-col animate-fade-left duration-normal">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Hora de Cierre:
+                </label>
+                <input
+                  type="time"
+                  name="weekday_closing_time"
+                  value={settings.weekday_closing_time}
+                  onChange={handleChange}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Shift Change Configuration */}
+          <div className="space-y-4">
+            <label className="flex items-center gap-2 cursor-pointer animate-fade-right duration-normal">
+              <input
+                type="checkbox"
+                name="has_shift_change"
+                checked={settings.has_shift_change}
+                onChange={handleChange}
+                className="w-4 h-4 text-primary-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-primary-500"
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Sucursal tiene cambio de turno
+              </span>
+            </label>
+
+            {settings.has_shift_change && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-zoom-in duration-fast">
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Hora de Cierre del Mediodía (Cambio de Turno):
+                  </label>
+                  <input
+                    type="time"
+                    name="midday_closing_time"
+                    value={settings.midday_closing_time}
+                    onChange={handleChange}
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Ej: 14:30 para Crovara/Boulogne/Tapiales
+                  </p>
+                </div>
+
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Hora de Cierre de la Tarde:
+                  </label>
+                  <input
+                    type="time"
+                    name="evening_closing_time"
+                    value={settings.evening_closing_time}
+                    onChange={handleChange}
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Ej: 20:00 para Crovara/Boulogne, 20:30 para Tapiales
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Split Shift (for Aldo Bonzi) */}
+          <div className="flex flex-col animate-fade-up duration-normal">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Hora de Apertura de la Tarde (opcional - solo para turnos divididos):
+            </label>
+            <input
+              type="time"
+              name="afternoon_opening_time"
+              value={settings.afternoon_opening_time}
+              onChange={handleChange}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Para sucursales con turno dividido (ej: Aldo Bonzi abre 8:30-13:30, cierra, y reabre 16:45-20:15)
+            </p>
+          </div>
+
+          {/* Sunday Hours */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Domingos y Feriados
+            </h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col animate-fade-right duration-normal">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Hora de Apertura:
+                </label>
+                <input
+                  type="time"
+                  name="sunday_opening_time"
+                  value={settings.sunday_opening_time}
+                  onChange={handleChange}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="flex flex-col animate-fade-left duration-normal">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Hora de Cierre:
+                </label>
+                <input
+                  type="time"
+                  name="sunday_closing_time"
+                  value={settings.sunday_closing_time}
+                  onChange={handleChange}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Ej: 09:00 - 13:45 para todas las sucursales
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Petty Cash Section */}
         <div className="pt-6 border-t border-gray-200 dark:border-gray-700 space-y-4 animate-fade-up duration-normal">

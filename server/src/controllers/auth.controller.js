@@ -317,7 +317,10 @@ exports.getMe = async (req, res, next) => {
     const userData = user.toJSON();
     userData.permissions = req.user.permissions;
 
-    return success(res, userData);
+    return success(res, {
+      user: userData,
+      branches: userData.branches || []
+    });
   } catch (error) {
     next(error);
   }

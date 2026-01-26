@@ -40,18 +40,47 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(100),
       allowNull: true
     },
-    // Operating hours
+    // Operating hours - Weekdays (Monday-Saturday)
+    weekday_opening_time: {
+      type: DataTypes.TIME,
+      defaultValue: '08:30:00',
+      comment: 'Opening time Monday-Saturday'
+    },
+    weekday_closing_time: {
+      type: DataTypes.TIME,
+      defaultValue: '20:00:00',
+      comment: 'Closing time Monday-Saturday'
+    },
     midday_closing_time: {
       type: DataTypes.TIME,
-      defaultValue: '14:00:00'
+      defaultValue: '14:00:00',
+      comment: 'Midday closing time for shift change (e.g., 14:30 for most branches)'
+    },
+    afternoon_opening_time: {
+      type: DataTypes.TIME,
+      allowNull: true,
+      comment: 'Afternoon opening time for branches with split shifts (e.g., 16:45 for Aldo Bonzi)'
     },
     evening_closing_time: {
       type: DataTypes.TIME,
-      defaultValue: '20:00:00'
+      defaultValue: '20:00:00',
+      comment: 'Evening closing time'
+    },
+    // Sunday hours (different from weekdays)
+    sunday_opening_time: {
+      type: DataTypes.TIME,
+      defaultValue: '09:00:00',
+      comment: 'Opening time on Sundays'
+    },
+    sunday_closing_time: {
+      type: DataTypes.TIME,
+      defaultValue: '13:45:00',
+      comment: 'Closing time on Sundays'
     },
     has_shift_change: {
       type: DataTypes.BOOLEAN,
-      defaultValue: true
+      defaultValue: true,
+      comment: 'Whether branch has shift change (false for Aldo Bonzi where same employee works both shifts)'
     },
     // Petty Cash Fund
     petty_cash_amount: {

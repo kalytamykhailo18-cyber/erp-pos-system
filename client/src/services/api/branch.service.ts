@@ -12,6 +12,14 @@ export interface UpdateBranchSettingsData {
   tax_condition?: string;
   factuhoy_point_of_sale?: string;
   default_invoice_type?: 'A' | 'B' | 'C';
+  weekday_opening_time?: string;
+  weekday_closing_time?: string;
+  midday_closing_time?: string;
+  afternoon_opening_time?: string | null;
+  evening_closing_time?: string;
+  sunday_opening_time?: string;
+  sunday_closing_time?: string;
+  has_shift_change?: boolean;
 }
 
 const branchService = {
