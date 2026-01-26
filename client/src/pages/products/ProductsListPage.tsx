@@ -157,34 +157,58 @@ const ProductsListPage: React.FC = () => {
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const productData = {
-      name: formData.name,
-      sku: formData.sku || undefined,
-      barcode: formData.barcode || undefined,
-      description: formData.description || undefined,
-      category_id: formData.category_id || undefined,
-      unit_id: formData.unit_id,
-      cost_price: formData.cost_price ? parseFloat(formData.cost_price) : 0,
-      selling_price: formData.sell_price ? parseFloat(formData.sell_price) : 0,
-      tax_rate: formData.tax_rate ? parseFloat(formData.tax_rate) : 21,
-      is_tax_included: formData.is_tax_included,
-      protein_percent: formData.protein_percent ? parseFloat(formData.protein_percent) : undefined,
-      is_active: formData.is_active,
-      is_featured: formData.is_featured,
-      track_stock: formData.track_stock,
-      minimum_stock: formData.min_stock ? parseFloat(formData.min_stock) : 5,
-      initial_stock: formData.initial_stock ? parseFloat(formData.initial_stock) : 0,
-      is_weighable: formData.is_weighable,
-      scale_plu: formData.scale_plu ? parseInt(formData.scale_plu) : undefined,
-      export_to_scale: formData.export_to_scale,
-      tare_weight: formData.tare_weight ? parseFloat(formData.tare_weight) : undefined, // PART 13
-      // PART 6: Three-level taxonomy
-      species_id: formData.species_id || undefined,
-      variety_id: formData.variety_id || undefined,
-      product_type_id: formData.product_type_id || undefined,
-      weight_size: formData.weight_size || undefined,
-      is_factory_direct: formData.is_factory_direct,
+    // Helper function to format decimal to max 2 decimal places
+    const formatDecimal = (value: string): string => {
+      if (!value || value === '') return value;
+      const num = parseFloat(value);
+      if (isNaN(num)) return value;
+      return num.toFixed(2);
     };
+
+    // Build payload with proper type handling
+    const productData: Record<string, any> = {
+      name: formData.name,
+    };
+
+    // Optional string fields - only include if non-empty
+    if (formData.sku) productData.sku = formData.sku;
+    if (formData.barcode) productData.barcode = formData.barcode;
+    if (formData.description) productData.description = formData.description;
+
+    // UUID fields - only include if non-empty
+    if (formData.category_id) productData.category_id = formData.category_id;
+    if (formData.unit_id) productData.unit_id = formData.unit_id;
+
+    // Decimal fields - format to max 2 decimal places, only include if non-empty
+    if (formData.cost_price) productData.cost_price = formatDecimal(formData.cost_price);
+    if (formData.sell_price) productData.selling_price = formatDecimal(formData.sell_price);
+    if (formData.tax_rate) productData.tax_rate = formatDecimal(formData.tax_rate);
+    if (formData.min_stock) productData.minimum_stock = formatDecimal(formData.min_stock);
+    if (formData.protein_percent) productData.protein_percent = formatDecimal(formData.protein_percent);
+    if (formData.tare_weight) productData.tare_weight = formatDecimal(formData.tare_weight);
+
+    // Integer fields - only include if non-empty
+    if (formData.scale_plu) productData.scale_plu = parseInt(formData.scale_plu);
+
+    // Boolean fields - always include with explicit boolean values
+    productData.is_tax_included = Boolean(formData.is_tax_included);
+    productData.is_active = Boolean(formData.is_active);
+    productData.is_featured = Boolean(formData.is_featured);
+    productData.track_stock = Boolean(formData.track_stock);
+    productData.is_weighable = Boolean(formData.is_weighable);
+    productData.export_to_scale = Boolean(formData.export_to_scale);
+    productData.is_factory_direct = Boolean(formData.is_factory_direct);
+
+    // Taxonomy fields - only include if non-empty
+    if (formData.species_id) productData.species_id = formData.species_id;
+    if (formData.variety_id) productData.variety_id = formData.variety_id;
+    if (formData.product_type_id) productData.product_type_id = formData.product_type_id;
+    if (formData.weight_size) productData.weight_size = formData.weight_size;
+
+    // Initial stock only needed for create
+    if (!editingProduct && formData.initial_stock) {
+      productData.initial_stock = formatDecimal(formData.initial_stock);
+    }
 
     if (editingProduct) {
       const result = await dispatch(updateProduct({

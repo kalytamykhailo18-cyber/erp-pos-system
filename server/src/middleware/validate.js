@@ -11,8 +11,12 @@ const validate = (req, res, next) => {
   if (!errors.isEmpty()) {
     const formattedErrors = errors.array().map((error) => ({
       field: error.path,
-      message: error.msg
+      message: error.msg,
+      value: error.value
     }));
+    // Log detailed validation errors for debugging
+    console.error('[Validation Error] Request path:', req.path);
+    console.error('[Validation Error] Errors:', JSON.stringify(formattedErrors, null, 2));
     return next(new ValidationError(formattedErrors));
   }
 

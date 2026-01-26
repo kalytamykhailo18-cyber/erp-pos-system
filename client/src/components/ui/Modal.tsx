@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Dialog, { DialogProps } from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -38,6 +38,8 @@ const Modal: React.FC<ModalProps> = ({
   closeOnOverlayClick = true,
   ...props
 }) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+
   // Map custom sizes to MUI maxWidth
   const getMuiMaxWidth = (): DialogProps['maxWidth'] | false => {
     switch (size) {
@@ -63,6 +65,16 @@ const Modal: React.FC<ModalProps> = ({
     onClose();
   };
 
+  // Fix aria-hidden focus issue: blur any focused element when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      // Blur the currently focused element to prevent aria-hidden warning
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }
+  }, [isOpen]);
+
   return (
     <AnimatedDialog
       open={isOpen}
@@ -71,6 +83,9 @@ const Modal: React.FC<ModalProps> = ({
       fullWidth={size !== 'full'}
       fullScreen={size === 'full'}
       scroll="paper"
+      disableRestoreFocus={false}
+      disableEnforceFocus={false}
+      disableAutoFocus={false}
       sx={{
         '& .MuiDialog-paper': {
           ...(size === 'full' && {
