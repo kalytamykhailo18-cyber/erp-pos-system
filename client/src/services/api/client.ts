@@ -63,11 +63,14 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Format error response
+    // Format error response - preserve validation errors if present
     const errorResponse: ApiResponse = {
       success: false,
       data: null,
-      error: error.response?.data?.error || error.message || 'An error occurred',
+      error: error.response?.data?.error || error.response?.data?.message || error.message || 'An error occurred',
+      message: error.response?.data?.message,
+      code: error.response?.data?.code,
+      errors: error.response?.data?.errors, // Include validation errors array
     };
 
     return Promise.reject(errorResponse);

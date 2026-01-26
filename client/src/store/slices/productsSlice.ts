@@ -276,6 +276,12 @@ export const createProduct = createAsyncThunk<
       const response = await productService.create(productData);
 
       if (!response.success) {
+        // Handle validation errors with specific field messages
+        if (response.errors && response.errors.length > 0) {
+          const errorMessages = response.errors.map(err => `${err.field}: ${err.message}`).join(', ');
+          dispatch(showToast({ type: 'error', message: errorMessages }));
+          throw new Error(errorMessages);
+        }
         throw new Error(response.error || 'Failed to create product');
       }
 
@@ -283,7 +289,10 @@ export const createProduct = createAsyncThunk<
       return response.data;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error creating product';
-      dispatch(showToast({ type: 'error', message }));
+      if (!message.includes(':')) {
+        // Only show toast if we haven't already shown validation errors
+        dispatch(showToast({ type: 'error', message }));
+      }
       return rejectWithValue(message);
     } finally {
       dispatch(stopLoading());
@@ -303,6 +312,12 @@ export const updateProduct = createAsyncThunk<
       const response = await productService.update(id, data);
 
       if (!response.success) {
+        // Handle validation errors with specific field messages
+        if (response.errors && response.errors.length > 0) {
+          const errorMessages = response.errors.map(err => `${err.field}: ${err.message}`).join(', ');
+          dispatch(showToast({ type: 'error', message: errorMessages }));
+          throw new Error(errorMessages);
+        }
         throw new Error(response.error || 'Failed to update product');
       }
 
@@ -310,7 +325,10 @@ export const updateProduct = createAsyncThunk<
       return response.data;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error updating product';
-      dispatch(showToast({ type: 'error', message }));
+      if (!message.includes(':')) {
+        // Only show toast if we haven't already shown validation errors
+        dispatch(showToast({ type: 'error', message }));
+      }
       return rejectWithValue(message);
     } finally {
       dispatch(stopLoading());

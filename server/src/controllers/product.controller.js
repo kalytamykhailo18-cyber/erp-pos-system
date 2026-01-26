@@ -192,26 +192,31 @@ exports.create = async (req, res, next) => {
     // Create initial stock if provided and track_stock is enabled
     if (initial_stock && parseFloat(initial_stock) > 0 && productData.track_stock && req.user?.branch_id) {
       const StockMovement = require('../database/models').StockMovement;
+      const initialQty = parseFloat(initial_stock);
 
       // Create stock entry for current branch
       await BranchStock.create({
         id: uuidv4(),
         product_id: product.id,
         branch_id: req.user.branch_id,
-        quantity: parseFloat(initial_stock),
-        min_stock: productData.min_stock || 0
+        quantity: initialQty,
+        min_stock: productData.minimum_stock || 0
       }, { transaction: t });
 
-      // Create stock movement record
+      // Create stock movement record with correct field names
       await StockMovement.create({
         id: uuidv4(),
         product_id: product.id,
         branch_id: req.user.branch_id,
-        type: 'adjustment',
-        quantity: parseFloat(initial_stock),
-        reason: 'Stock inicial al crear producto',
-        reference: `PRODUCT_CREATE_${product.id}`,
-        created_by: req.user.id
+        movement_type: 'INITIAL', // Correct field name and enum value
+        quantity: initialQty,
+        quantity_before: 0, // Required field - stock was 0 before
+        quantity_after: initialQty, // Required field - stock is now initial_stock
+        reference_type: 'PRODUCT_CREATE',
+        reference_id: product.id,
+        adjustment_reason: 'Stock inicial al crear producto',
+        performed_by: req.user.id,
+        notes: `Creación de producto con stock inicial de ${initialQty}`
       }, { transaction: t });
     }
 
@@ -362,6 +367,9 @@ exports.bulkUpdateByMargin = async (req, res, next) => {
       const costPrice = parseFloat(product.cost_price) || 0;
       if (costPrice <= 0) continue;
 
+      // Save old price BEFORE updating
+      const oldSellingPrice = parseFloat(product.selling_price) || 0;
+
       // Calculate new selling price
       const marginMultiplier = 1 + (parseFloat(margin_percentage) / 100);
       let newSellingPrice = costPrice * marginMultiplier;
@@ -384,7 +392,7 @@ exports.bulkUpdateByMargin = async (req, res, next) => {
         product_id: product.id,
         old_cost_price: product.cost_price,
         new_cost_price: product.cost_price,
-        old_selling_price: product.selling_price,
+        old_selling_price: oldSellingPrice,
         new_selling_price: newSellingPrice,
         change_reason: 'BULK_UPDATE',
         changed_by: req.user.id
@@ -401,7 +409,7 @@ exports.bulkUpdateByMargin = async (req, res, next) => {
         id: product.id,
         name: product.name,
         sku: product.sku,
-        old_price: product.selling_price,
+        old_price: oldSellingPrice,  // Use saved old price, not the updated value
         new_price: newSellingPrice
       });
     }
@@ -570,8 +578,12 @@ exports.bulkUpdateBySupplier = async (req, res, next) => {
     for (const sp of supplierProducts) {
       const product = sp.product;
 
+      // Save old price BEFORE updating
+      const oldSellingPrice = parseFloat(product.selling_price) || 0;
+      const oldCostPrice = parseFloat(product.cost_price) || 0;
+
       // Optionally update cost price from supplier
-      let costPrice = parseFloat(product.cost_price) || 0;
+      let costPrice = oldCostPrice;
       if (update_cost_prices && sp.last_cost_price) {
         costPrice = parseFloat(sp.last_cost_price);
       }
@@ -598,9 +610,9 @@ exports.bulkUpdateBySupplier = async (req, res, next) => {
       await ProductPriceHistory.create({
         id: uuidv4(),
         product_id: product.id,
-        old_cost_price: product.cost_price,
-        new_cost_price: update_cost_prices ? costPrice : product.cost_price,
-        old_selling_price: product.selling_price,
+        old_cost_price: oldCostPrice,
+        new_cost_price: update_cost_prices ? costPrice : oldCostPrice,
+        old_selling_price: oldSellingPrice,
         new_selling_price: newSellingPrice,
         change_reason: 'BULK_UPDATE',
         changed_by: req.user.id
@@ -622,7 +634,7 @@ exports.bulkUpdateBySupplier = async (req, res, next) => {
         id: product.id,
         name: product.name,
         sku: product.sku,
-        old_price: product.selling_price,
+        old_price: oldSellingPrice,  // Use saved old price, not the updated value
         new_price: newSellingPrice
       });
     }
