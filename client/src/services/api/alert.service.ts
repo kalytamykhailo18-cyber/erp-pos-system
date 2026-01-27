@@ -7,7 +7,6 @@ export interface AlertConfig {
   alert_type: string;
   threshold: number | null;
   is_active: boolean;
-  severity_override: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -106,7 +105,6 @@ export const alertService = {
   updateConfig: (alertType: string, updates: {
     threshold?: number;
     is_active?: boolean;
-    severity_override?: string;
     branch_id?: UUID;
   }): Promise<ApiResponse<AlertConfig>> => {
     return put<AlertConfig>('/alerts/config', { alert_type: alertType, ...updates });

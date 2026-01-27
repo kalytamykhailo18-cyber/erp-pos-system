@@ -53,9 +53,41 @@ exports.createConfig = async (req, res, next) => {
 
 exports.updateConfig = async (req, res, next) => {
   try {
-    const config = await AlertConfig.findByPk(req.params.id);
-    if (!config) throw new NotFoundError('Alert config not found');
-    await config.update(req.body);
+    const { alert_type, branch_id, threshold, is_active } = req.body;
+
+    if (!alert_type) {
+      throw new BusinessError('alert_type is required', 'E400');
+    }
+
+    // Find config by alert_type and optionally branch_id
+    const where = { alert_type };
+    if (branch_id) {
+      where.branch_id = branch_id;
+    } else {
+      // Look for global config (branch_id is null)
+      where.branch_id = null;
+    }
+
+    let config = await AlertConfig.findOne({ where });
+
+    if (!config) {
+      // Create new config if doesn't exist
+      config = await AlertConfig.create({
+        id: uuidv4(),
+        alert_type,
+        branch_id: branch_id || null,
+        threshold: threshold !== undefined ? threshold : null,
+        is_active: is_active !== undefined ? is_active : true
+      });
+      return created(res, config);
+    }
+
+    // Update existing config
+    const updateData = {};
+    if (threshold !== undefined) updateData.threshold = threshold;
+    if (is_active !== undefined) updateData.is_active = is_active;
+
+    await config.update(updateData);
     return success(res, config);
   } catch (error) {
     next(error);

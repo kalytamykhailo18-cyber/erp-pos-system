@@ -21,8 +21,7 @@ module.exports = (sequelize) => {
         'HIGH_VALUE_SALE',
         'SYNC_ERROR',
         'LOGIN_FAILED',
-        'PRICE_CHANGE',
-        'BANK_TRANSFER'
+        'PRICE_CHANGE'
       ),
       allowNull: false
     },

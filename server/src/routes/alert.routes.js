@@ -10,7 +10,8 @@ const {
   enumField,
   booleanField,
   paginationQuery,
-  query
+  query,
+  body
 } = require('../middleware/validate');
 
 // All routes require authentication
@@ -74,6 +75,18 @@ router.get(
 router.put(
   '/config',
   requirePermission('canManageUsers'),
+  [
+    enumField('alert_type', [
+      'VOIDED_SALE', 'CASH_DISCREPANCY', 'LOW_PETTY_CASH', 'LOW_STOCK',
+      'LATE_CLOSING', 'AFTER_HOURS_CLOSING', 'REOPEN_REGISTER', 'FAILED_INVOICE',
+      'LARGE_DISCOUNT', 'HIGH_VALUE_SALE', 'SYNC_ERROR', 'LOGIN_FAILED',
+      'PRICE_CHANGE'
+    ], true),
+    booleanField('is_active', false),
+    body('threshold').optional({ nullable: true }).isFloat().withMessage('threshold must be a number'),
+    body('branch_id').optional({ nullable: true }).matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('branch_id must be a valid UUID'),
+    validate
+  ],
   alertController.updateConfig
 );
 
