@@ -23,7 +23,7 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(20),
       allowNull: false,
       validate: {
-        isIn: [['PDF', 'XLSX', 'XLS', 'CSV']]
+        isIn: [['PDF', 'EXCEL', 'CSV']]
       }
     },
     file_url: {
@@ -52,7 +52,7 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(20),
       defaultValue: 'PENDING',
       validate: {
-        isIn: [['PENDING', 'PROCESSING', 'PREVIEW', 'APPLIED', 'FAILED', 'CANCELLED']]
+        isIn: [['PENDING', 'PROCESSING', 'PREVIEW', 'PENDING_REVIEW', 'APPLIED', 'FAILED', 'CANCELLED', 'REVERTED']]
       }
     },
     error_message: {
@@ -81,19 +81,28 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(20),
       allowNull: true,
       validate: {
-        isIn: [['FIXED', 'PERCENT', 'ROUNDING', null]]
+        isIn: [['FIXED', 'PERCENTAGE', null]]
       }
     },
     margin_value: {
       type: DataTypes.DECIMAL(12, 2),
       allowNull: true
     },
+    margin_percentage: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true
+    },
     rounding_rule: {
       type: DataTypes.STRING(20),
       allowNull: true,
       validate: {
-        isIn: [['NONE', 'ROUND_5', 'ROUND_10', 'ROUND_100', null]]
+        isIn: [['NONE', 'UP', 'DOWN', 'NEAREST', null]]
       }
+    },
+    rounding_value: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0
     },
     uploaded_by: {
       type: DataTypes.UUID,
@@ -123,8 +132,8 @@ module.exports = (sequelize) => {
 
   PriceImportBatch.associate = (models) => {
     PriceImportBatch.belongsTo(models.Supplier, { foreignKey: 'supplier_id', as: 'supplier' });
-    PriceImportBatch.belongsTo(models.User, { foreignKey: 'uploaded_by', as: 'uploader' });
-    PriceImportBatch.belongsTo(models.User, { foreignKey: 'applied_by', as: 'applier' });
+    PriceImportBatch.belongsTo(models.User, { foreignKey: 'uploaded_by', as: 'uploaded_by_user' });
+    PriceImportBatch.belongsTo(models.User, { foreignKey: 'applied_by', as: 'applied_by_user' });
     PriceImportBatch.hasMany(models.PriceImportItem, { foreignKey: 'batch_id', as: 'items' });
   };
 

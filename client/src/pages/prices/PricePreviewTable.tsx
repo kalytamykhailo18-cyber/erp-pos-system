@@ -147,7 +147,7 @@ export const PricePreviewTable: React.FC<PricePreviewTableProps> = ({
 
   const getStatusBadge = (item: ExtractedPrice) => {
     // Check match status based on match_type
-    if (item.match_type === 'UNMATCHED' || !item.product_id) {
+    if (item.match_type === 'UNMATCHED' || item.match_type === 'NOT_FOUND' || !item.product_id) {
       return (
         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
           Sin coincidencia
@@ -167,12 +167,14 @@ export const PricePreviewTable: React.FC<PricePreviewTableProps> = ({
     // Show match type
     switch (item.match_type) {
       case 'EXACT_CODE':
+      case 'SKU_EXACT':
         return (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
             Coincide
           </span>
         );
       case 'FUZZY_NAME':
+      case 'NAME_FUZZY':
         return (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
             Similar

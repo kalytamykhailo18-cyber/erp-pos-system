@@ -11,7 +11,7 @@ export interface ExtractedPrice {
     cost_price: number;
     selling_price: number;
   };
-  match_type: 'EXACT_CODE' | 'FUZZY_NAME' | 'MANUAL' | 'UNMATCHED'; // Changed from match_status enum
+  match_type: 'EXACT_CODE' | 'SKU_EXACT' | 'FUZZY_NAME' | 'NAME_FUZZY' | 'MANUAL' | 'UNMATCHED' | 'NOT_FOUND';
   match_confidence?: number; // Changed from confidence
   price_change_percent?: number | null;
   current_cost_price?: number | null;

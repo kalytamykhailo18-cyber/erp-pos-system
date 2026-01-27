@@ -45,7 +45,7 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(20),
       allowNull: true,
       validate: {
-        isIn: [['EXACT_CODE', 'FUZZY_NAME', 'MANUAL', 'UNMATCHED', null]]
+        isIn: [['EXACT_CODE', 'SKU_EXACT', 'FUZZY_NAME', 'NAME_FUZZY', 'MANUAL', 'UNMATCHED', 'NOT_FOUND', null]]
       }
     },
     match_confidence: {

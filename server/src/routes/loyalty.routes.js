@@ -90,7 +90,7 @@ router.post(
  */
 router.post(
   '/accounts/:id/regenerate-qr',
-  requirePermission('canManageLoyalty'),
+  requirePermission('canViewAllBranches'),
   [uuidParam('id'), validate],
   loyaltyController.regenerateQR
 );
@@ -102,7 +102,7 @@ router.post(
  */
 router.put(
   '/accounts/:id/deactivate',
-  requirePermission('canManageLoyalty'),
+  requirePermission('canViewAllBranches'),
   [uuidParam('id'), validate],
   loyaltyController.deactivateAccount
 );
@@ -114,7 +114,7 @@ router.put(
  */
 router.put(
   '/accounts/:id/reactivate',
-  requirePermission('canManageLoyalty'),
+  requirePermission('canViewAllBranches'),
   [uuidParam('id'), validate],
   loyaltyController.reactivateAccount
 );
@@ -160,7 +160,7 @@ router.post(
  */
 router.post(
   '/points/adjust',
-  requirePermission('canManageLoyalty'),
+  requirePermission('canViewAllBranches'),
   [
     uuidField('customer_id'),
     integerField('points'),
@@ -230,7 +230,7 @@ router.post(
  */
 router.post(
   '/credit/adjust',
-  requirePermission('canManageLoyalty'),
+  requirePermission('canViewAllBranches'),
   [
     uuidField('customer_id'),
     decimalField('amount'),
@@ -270,11 +270,11 @@ router.get('/config', loyaltyController.getConfig);
 /**
  * @route   PUT /api/v1/loyalty/config
  * @desc    Update loyalty configuration
- * @access  Private (can_manage_loyalty)
+ * @access  Private (Owner - can_view_all_branches)
  */
 router.put(
   '/config',
-  requirePermission('canManageLoyalty'),
+  requirePermission('canViewAllBranches'),
   [
     body('points_per_peso').optional().isFloat({ min: 0 }),
     body('peso_per_point_redemption').optional().isFloat({ min: 0 }),

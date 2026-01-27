@@ -7,7 +7,6 @@ import {
   PriceHistory,
   Supplier,
 } from '../../services/api/price.service';
-import { uploadToCloudinary } from '../../services/cloudinary.service';
 import { startLoading, stopLoading, showToast } from './uiSlice';
 
 interface PriceState {
@@ -58,25 +57,10 @@ export const uploadPriceFile = createAsyncThunk<
   async ({ file, supplier_id, margin_percentage, rounding_rule, rounding_value }, { dispatch, rejectWithValue }) => {
     try {
       dispatch(startLoading());
-      dispatch(setUploadProgress(0));
+      dispatch(setUploadProgress(50)); // Show progress at 50% while uploading
 
-      // Step 1: Upload file to Cloudinary
-      const cloudinaryResponse = await uploadToCloudinary(file, (progress) => {
-        dispatch(setUploadProgress(progress.percentage));
-      });
-
-      // Step 2: Send Cloudinary URL to backend for processing
-      const fileExt = file.name.split('.').pop()?.toLowerCase();
-      let fileType: 'PDF' | 'EXCEL' | 'CSV' = 'PDF';
-      if (fileExt === 'pdf') fileType = 'PDF';
-      else if (['xls', 'xlsx'].includes(fileExt || '')) fileType = 'EXCEL';
-      else if (fileExt === 'csv') fileType = 'CSV';
-
-      const response = await priceService.uploadFile({
-        file_url: cloudinaryResponse.secure_url,
-        file_name: cloudinaryResponse.original_filename || file.name,
-        file_type: fileType,
-        file_size_bytes: cloudinaryResponse.bytes,
+      // Upload file directly to server
+      const response = await priceService.uploadFileDirect(file, {
         supplier_id,
         margin_percentage,
         rounding_rule,
@@ -89,9 +73,10 @@ export const uploadPriceFile = createAsyncThunk<
 
       dispatch(showToast({ message: 'Archivo procesado correctamente', type: 'success' }));
       return response.data;
-    } catch (error) {
-      dispatch(showToast({ message: 'Error al procesar archivo', type: 'error' }));
-      return rejectWithValue('Error al procesar archivo');
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Error al procesar archivo';
+      dispatch(showToast({ message, type: 'error' }));
+      return rejectWithValue(message);
     } finally {
       dispatch(stopLoading());
       dispatch(setUploadProgress(0));

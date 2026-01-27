@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const priceImportController = require('../controllers/priceImport.controller');
 const { authenticate, requirePermission } = require('../middleware/auth');
 const {
@@ -14,12 +15,33 @@ const {
   body
 } = require('../middleware/validate');
 
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = [
+      'application/pdf',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/csv',
+    ];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PDF, Excel, and CSV files are allowed.'));
+    }
+  },
+});
+
 // All routes require authentication
 router.use(authenticate);
 
 /**
  * @route   POST /api/v1/prices/upload
- * @desc    Process price list file from Cloudinary URL
+ * @desc    Process price list file from Cloudinary URL (legacy)
  * @access  Private (can_import_prices)
  */
 router.post(
@@ -37,6 +59,18 @@ router.post(
     validate
   ],
   priceImportController.uploadFile
+);
+
+/**
+ * @route   POST /api/v1/prices/upload-file
+ * @desc    Upload and process price list file directly
+ * @access  Private (can_import_prices)
+ */
+router.post(
+  '/upload-file',
+  requirePermission('canImportPrices'),
+  upload.single('file'),
+  priceImportController.uploadFileDirect
 );
 
 /**
@@ -60,7 +94,7 @@ router.get(
   [
     uuidParam('id'),
     ...paginationQuery,
-    query('match_status').optional().isIn(['MATCHED', 'SUGGESTED', 'NOT_FOUND', 'MANUAL']),
+    query('match_type').optional().isIn(['EXACT_CODE', 'SKU_EXACT', 'FUZZY_NAME', 'NAME_FUZZY', 'MANUAL', 'UNMATCHED', 'NOT_FOUND']),
     query('search').optional().isString(),
     validate
   ],
@@ -76,7 +110,7 @@ router.get(
   '/batches',
   [
     ...paginationQuery,
-    query('status').optional().isIn(['PENDING', 'PROCESSING', 'READY', 'APPLIED', 'CANCELLED', 'REVERTED']),
+    query('status').optional().isIn(['PENDING', 'PROCESSING', 'PREVIEW', 'PENDING_REVIEW', 'APPLIED', 'FAILED', 'CANCELLED', 'REVERTED']),
     query('supplier_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('start_date').optional().isISO8601(),
     query('end_date').optional().isISO8601(),
@@ -158,7 +192,7 @@ router.put(
   [
     uuidParam('id'),
     booleanField('is_selected'),
-    body('match_status').optional().isIn(['MATCHED', 'SUGGESTED', 'NOT_FOUND', 'MANUAL']),
+    body('match_type').optional().isIn(['EXACT_CODE', 'SKU_EXACT', 'FUZZY_NAME', 'NAME_FUZZY', 'MANUAL', 'UNMATCHED', 'NOT_FOUND']),
     validate
   ],
   priceImportController.selectAllItems

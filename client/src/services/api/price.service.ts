@@ -17,7 +17,7 @@ export interface PriceImportItem {
     cost_price: number;
     selling_price: number;
   };
-  match_type: 'EXACT_CODE' | 'FUZZY_NAME' | 'MANUAL' | 'UNMATCHED';
+  match_type: 'EXACT_CODE' | 'SKU_EXACT' | 'FUZZY_NAME' | 'NAME_FUZZY' | 'MANUAL' | 'UNMATCHED' | 'NOT_FOUND';
   match_confidence: number;
   current_cost_price?: number;
   new_cost_price: number;
@@ -40,7 +40,7 @@ export interface PriceImportBatch {
   file_type: 'PDF' | 'EXCEL' | 'CSV';
   file_url: string;
   file_size_bytes: number;
-  status: 'PENDING' | 'PROCESSING' | 'PREVIEW' | 'APPLIED' | 'CANCELLED' | 'FAILED' | 'REVERTED';
+  status: 'PENDING' | 'PROCESSING' | 'PREVIEW' | 'PENDING_REVIEW' | 'APPLIED' | 'CANCELLED' | 'FAILED' | 'REVERTED';
   ocr_required: boolean;
   ocr_engine?: string;
   extraction_confidence?: number;
@@ -107,7 +107,7 @@ export interface Supplier {
 
 export const priceService = {
   /**
-   * Process file from Cloudinary URL
+   * Process file from Cloudinary URL (legacy)
    */
   uploadFile: (data: {
     file_url: string;
@@ -120,6 +120,30 @@ export const priceService = {
     rounding_value?: number;
   }): Promise<ApiResponse<PriceImportBatch>> => {
     return post<PriceImportBatch>('/prices/upload', data);
+  },
+
+  /**
+   * Upload file directly to server (without Cloudinary)
+   */
+  uploadFileDirect: (
+    file: File,
+    options: {
+      supplier_id?: UUID;
+      margin_percentage?: number;
+      rounding_rule?: 'NONE' | 'UP' | 'DOWN' | 'NEAREST';
+      rounding_value?: number;
+    }
+  ): Promise<ApiResponse<PriceImportBatch>> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (options.supplier_id) formData.append('supplier_id', options.supplier_id);
+    if (options.margin_percentage !== undefined) formData.append('margin_percentage', String(options.margin_percentage));
+    if (options.rounding_rule) formData.append('rounding_rule', options.rounding_rule);
+    if (options.rounding_value !== undefined) formData.append('rounding_value', String(options.rounding_value));
+
+    return post<PriceImportBatch>('/prices/upload-file', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
   },
 
   /**

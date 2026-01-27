@@ -162,8 +162,8 @@ const PriceImportPage: React.FC = () => {
                   status: item.status,
                 })),
                 total_rows_extracted: batchItems.length,
-                rows_matched: batchItems.filter(i => i.match_type !== 'UNMATCHED').length,
-                rows_unmatched: batchItems.filter(i => i.match_type === 'UNMATCHED').length,
+                rows_matched: batchItems.filter(i => i.match_type !== 'UNMATCHED' && i.match_type !== 'NOT_FOUND' && i.product_id).length,
+                rows_unmatched: batchItems.filter(i => i.match_type === 'UNMATCHED' || i.match_type === 'NOT_FOUND' || !i.product_id).length,
               }}
               selectedItems={new Set(
                 batchItems
@@ -184,7 +184,7 @@ const PriceImportPage: React.FC = () => {
               onToggleAllMatched={() => {
                 if (currentBatch?.id) {
                   const allMatchedSelected = batchItems
-                    .filter(i => i.match_type !== 'UNMATCHED')
+                    .filter(i => i.match_type !== 'UNMATCHED' && i.match_type !== 'NOT_FOUND' && i.product_id)
                     .every(i => i.status === 'APPROVED');
 
                   dispatch(selectAllItems({

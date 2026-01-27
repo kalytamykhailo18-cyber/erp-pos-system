@@ -115,8 +115,9 @@ const LoyaltyPage: React.FC = () => {
 
     try {
       await dispatch(updateConfig(loyaltyConfig)).unwrap();
-    } catch (error) {
-      // Error handled in slice
+    } catch (error: any) {
+      // Error is shown via toast in slice
+      console.error('Error saving config:', error);
     }
   };
 
