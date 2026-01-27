@@ -232,14 +232,10 @@ const AlertSettings: React.FC = () => {
                 <Button
                   variant="primary"
                   onClick={handleSave}
-                  disabled={saving}
-                  icon={saving ? (
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <MdSave className="w-4 h-4" />
-                  )}
+                  loading={saving}
+                  icon={<MdSave className="w-4 h-4" />}
                 >
-                  {saving ? 'Guardando...' : 'Guardar'}
+                  Guardar
                 </Button>
               </>
             )}
