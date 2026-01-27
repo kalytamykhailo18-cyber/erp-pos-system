@@ -4,7 +4,6 @@ import { AppDispatch, RootState } from '../../store';
 import {
   loadSpecies,
   loadVarieties,
-  loadVarietiesBySpecies,
   loadProductTypes,
   createSpecies,
   updateSpecies,
@@ -27,7 +26,7 @@ import type { Species, Variety, ProductType, UUID } from '../../types';
 
 const TaxonomySettings: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { species, varieties, varietiesBySpecies, productTypes, loading } = useSelector(
+  const { species, varieties, productTypes } = useSelector(
     (state: RootState) => state.taxonomy
   );
 

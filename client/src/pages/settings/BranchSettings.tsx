@@ -36,7 +36,7 @@ const BranchSettings: React.FC = () => {
         require_customer: currentBranch.require_customer ?? false,
         enable_discounts: currentBranch.enable_discounts ?? true,
         max_discount_percent: currentBranch.max_discount_percent || 10,
-        petty_cash_amount: currentBranch.petty_cash_amount || 100000,
+        petty_cash_amount: parseFloat(String(currentBranch.petty_cash_amount)) || 100000,
         tax_id: currentBranch.tax_id || '',
         tax_condition: currentBranch.tax_condition || '',
         factuhoy_point_of_sale: currentBranch.factuhoy_point_of_sale?.toString() || '',

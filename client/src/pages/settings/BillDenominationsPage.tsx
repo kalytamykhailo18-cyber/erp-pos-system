@@ -6,7 +6,6 @@ import {
   updateDenomination,
   deleteDenomination,
   reorderDenominations,
-  setSelectedDenomination
 } from '../../store/slices/denominationSlice';
 import {
   MdAdd,

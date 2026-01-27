@@ -25,23 +25,27 @@ export const SearchResultsTable: React.FC<SearchResultsTableProps> = ({ searchRe
       const similarPremium = premium.find((p) => {
         const sameSpecies = p.species_id === product.species_id;
         const sameVariety = p.variety_id === product.variety_id;
+        const pProtein = p.protein_percent ? parseFloat(String(p.protein_percent)) : 0;
+        const prodProtein = product.protein_percent ? parseFloat(String(product.protein_percent)) : 0;
         const similarProtein =
           p.protein_percent &&
           product.protein_percent &&
-          Math.abs(p.protein_percent - product.protein_percent) <= 5;
+          Math.abs(pProtein - prodProtein) <= 5;
 
         return sameSpecies && sameVariety && similarProtein;
       });
 
-      if (similarPremium && product.selling_price < similarPremium.selling_price) {
-        const savings = similarPremium.selling_price - product.selling_price;
-        const savingsPercent = Math.round((savings / similarPremium.selling_price) * 100);
+      const productPrice = parseFloat(String(product.selling_price));
+      const premiumPrice = similarPremium ? parseFloat(String(similarPremium.selling_price)) : 0;
+      if (similarPremium && productPrice < premiumPrice) {
+        const savings = premiumPrice - productPrice;
+        const savingsPercent = Math.round((savings / premiumPrice) * 100);
 
         return {
           ...product,
           comparison: {
             premiumProduct: similarPremium.name,
-            premiumPrice: similarPremium.selling_price,
+            premiumPrice: premiumPrice,
             savings,
             savingsPercent,
           },
@@ -122,7 +126,7 @@ export const SearchResultsTable: React.FC<SearchResultsTableProps> = ({ searchRe
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-          {productsWithComparisons.map((product, index) => (
+          {productsWithComparisons.map((product) => (
             <tr
               key={product.id}
               className={`
@@ -205,7 +209,7 @@ export const SearchResultsTable: React.FC<SearchResultsTableProps> = ({ searchRe
               {/* Price */}
               <td className="px-4 py-3 whitespace-nowrap text-right">
                 <span className="text-sm font-bold text-gray-900 dark:text-white">
-                  ${product.selling_price.toLocaleString('es-AR')}
+                  ${parseFloat(String(product.selling_price)).toLocaleString('es-AR')}
                 </span>
               </td>
 
@@ -214,7 +218,7 @@ export const SearchResultsTable: React.FC<SearchResultsTableProps> = ({ searchRe
                 {product.comparison ? (
                   <div className="text-xs">
                     <div className="text-gray-600 dark:text-gray-400">
-                      vs. Premium: ${product.comparison.premiumPrice.toLocaleString('es-AR')}
+                      vs. Premium: ${parseFloat(String(product.comparison.premiumPrice)).toLocaleString('es-AR')}
                     </div>
                     <div className="font-semibold text-green-600 dark:text-green-400">
                       Ahorro: ${product.comparison.savings.toLocaleString('es-AR')} (

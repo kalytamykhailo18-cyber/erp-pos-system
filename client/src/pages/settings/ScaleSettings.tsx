@@ -121,7 +121,8 @@ const ScaleSettings: React.FC = () => {
             variant="secondary"
             onClick={loadStatistics}
             disabled={loading}
-            leftIcon={<MdRefresh className={loading ? 'animate-spin' : ''} />}
+            icon={<MdRefresh className={loading ? 'animate-spin' : ''} />}
+            iconPosition="left"
           >
             Actualizar
           </Button>
@@ -224,7 +225,8 @@ const ScaleSettings: React.FC = () => {
                 variant="primary"
                 onClick={handleDownloadPriceList}
                 disabled={downloading}
-                leftIcon={<MdDownload />}
+                icon={<MdDownload />}
+                iconPosition="left"
                 className="animate-zoom-in duration-normal"
               >
                 {downloading ? 'Descargando...' : `Descargar Lista de Precios (${exportFormat.toUpperCase()})`}

@@ -37,6 +37,7 @@
   * {
     scrollbar-width: thin;
     scrollbar-color: #3b82f6 #e5e7eb;
+    scroll-behavior: smooth;
   }
 
   .dark * {

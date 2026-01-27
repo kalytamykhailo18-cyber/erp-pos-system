@@ -9,7 +9,7 @@ const {
 } = require('../database/models');
 const { success, created, paginated } = require('../utils/apiResponse');
 const { NotFoundError, BusinessError } = require('../middleware/errorHandler');
-const { parsePagination, generateSaleNumber, calculateLoyaltyPoints, formatDecimal } = require('../utils/helpers');
+const { parsePagination, generateSaleNumber, formatDecimal } = require('../utils/helpers');
 const { EVENTS } = require('../socket');
 const logger = require('../utils/logger');
 const factuHoyService = require('../services/factuhoy.service');
@@ -803,6 +803,9 @@ exports.create = async (req, res, next) => {
     if (customer_id) {
       const customer = await Customer.findByPk(customer_id);
 
+      // Get loyalty config for points calculation
+      const loyaltyConfigForPoints = await LoyaltyConfig.findOne();
+
       // Validate and deduct redeemed points
       if (points_redeemed > 0) {
         if (customer.loyalty_points < points_redeemed) {
@@ -826,8 +829,13 @@ exports.create = async (req, res, next) => {
         }, { transaction: t });
       }
 
-      // Calculate and add earned points
-      const pointsEarned = calculateLoyaltyPoints(totalAmount);
+      // Calculate and add earned points using LoyaltyConfig and tier multiplier
+      // CRITICAL FIX: Use config values instead of hardcoded 0.01
+      const pointsPerPeso = loyaltyConfigForPoints ? parseFloat(loyaltyConfigForPoints.points_per_peso) : 1;
+      const tierMultipliers = loyaltyConfigForPoints?.tier_multipliers || { STANDARD: 1, SILVER: 1.25, GOLD: 1.5, PLATINUM: 2 };
+      const customerTier = customer.loyalty_tier || 'STANDARD';
+      const tierMultiplier = tierMultipliers[customerTier] || 1;
+      const pointsEarned = Math.floor(totalAmount * pointsPerPeso * tierMultiplier);
       if (pointsEarned > 0) {
         const newBalance = customer.loyalty_points + pointsEarned;
         await customer.update({ loyalty_points: newBalance }, { transaction: t });

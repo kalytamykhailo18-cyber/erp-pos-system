@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store';
-import { closeSession, getSessionSummary, checkUnapprovedVoids } from '../../store/slices/registersSlice';
+import { closeSession, checkUnapprovedVoids } from '../../store/slices/registersSlice';
 import { loadDenominations } from '../../store/slices/denominationSlice';
 import WarningIcon from '@mui/icons-material/Warning';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import InfoIcon from '@mui/icons-material/Info';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 interface CloseSessionModalProps {

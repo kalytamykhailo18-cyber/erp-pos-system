@@ -13,7 +13,7 @@ import {
 import { Card, Button, Input } from '../../components/ui';
 import { SearchResultsTable } from './SearchResultsTable';
 import { MdSearch, MdClear, MdFileDownload } from 'react-icons/md';
-import type { UUID } from '../../types';
+// UUID type removed - not used
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -50,7 +50,7 @@ const AdvancedSearchPage: React.FC = () => {
   }, [dispatch, filters.species_id]);
 
   // Handle filter change
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFilters((prev) => ({
       ...prev,
@@ -137,7 +137,7 @@ const AdvancedSearchPage: React.FC = () => {
       p.name,
       `${p.protein_percent || '-'}%`,
       p.weight_size || '',
-      `$${p.selling_price.toLocaleString('es-AR')}`,
+      `$${parseFloat(String(p.selling_price)).toLocaleString('es-AR')}`,
       p.is_factory_direct ? 'Fábrica' : 'Premium',
     ]);
 
@@ -324,7 +324,7 @@ const AdvancedSearchPage: React.FC = () => {
             Buscar
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
             onClick={handleClear}
             icon={<MdClear className="w-5 h-5" />}
             iconPosition="left"

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import AlertDetailModal from '../../components/alerts/AlertDetailModal';
-import type { Alert as AlertType } from '../../types';
 
 interface Alert {
   id: string;

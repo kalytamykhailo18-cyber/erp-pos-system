@@ -27,7 +27,7 @@ const PaymentPanel: React.FC = () => {
   const { currentSession } = useAppSelector((state) => state.registers);
   const { cart, isPaymentMode, payments, paymentMethods, loyaltyPointsToRedeem, creditToUse } = useAppSelector((state) => state.pos);
   const { config: loyaltyConfig } = useAppSelector((state) => state.loyalty);
-  const { zones, neighborhoods, calculation } = useAppSelector((state) => state.shipping);
+  const { neighborhoods, calculation } = useAppSelector((state) => state.shipping);
   const loading = useAppSelector((state) => state.ui.loading);
 
   const [selectedMethodId, setSelectedMethodId] = useState<string>('');
@@ -199,7 +199,7 @@ const PaymentPanel: React.FC = () => {
           try {
             await dispatch(
               createSaleShipping({
-                saleId: sale.id,
+                saleId: String(sale.id),
                 data: {
                   customer_id: cart.customer?.id,
                   delivery_address: deliveryAddress,

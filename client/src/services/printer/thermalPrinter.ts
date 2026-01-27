@@ -130,11 +130,11 @@ const generatePrintHTML = (data: ReceiptData['structuredData']): string => {
         <tbody>
           ${items.map(item => `
             <tr>
-              <td colspan="3" class="item-name">${item.product_name}</td>
+              <td colspan="3" class="item-name">${item.product?.name || item.product?.short_name || 'Producto'}</td>
             </tr>
             <tr class="item-detail">
               <td>${parseFloat(String(item.quantity))} x ${formatMoney(item.unit_price)}</td>
-              <td colspan="2" class="right">${formatMoney(item.subtotal)}</td>
+              <td colspan="2" class="right">${formatMoney(item.line_total)}</td>
             </tr>
             ${parseFloat(String(item.discount_amount)) > 0 ? `
               <tr class="item-detail">

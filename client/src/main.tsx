@@ -15,7 +15,7 @@ serviceWorkerRegistration.register({
   onSuccess: () => {
     console.log('[App] Service Worker registered - App is ready for offline use');
   },
-  onUpdate: (registration) => {
+  onUpdate: () => {
     console.log('[App] New version available! Please refresh to update.');
     // Optionally, show a toast notification to user about update
   },

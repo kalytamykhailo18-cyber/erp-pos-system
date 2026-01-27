@@ -16,7 +16,7 @@ import ConversationsList from './ConversationsList';
 import ChatWindow from './ChatWindow';
 import NewConversationModal from './NewConversationModal';
 import type { ChatConversation, ChatMessage, UUID } from '../../types';
-import { io } from 'socket.io-client';
+import { socketService } from '../../services/socket.service';
 
 const ChatPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -26,28 +26,16 @@ const ChatPage: React.FC = () => {
 
   const [showNewConversationModal, setShowNewConversationModal] = useState(false);
 
-  // Initialize WebSocket connection
+  // Subscribe to chat events using existing socketService
+  // Note: Chat events are NOT wrapped (unlike business events)
   useEffect(() => {
     if (!user?.id) return;
 
-    const socketUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    const newSocket = io(socketUrl, {
-      auth: {
-        token: localStorage.getItem('token')
-      }
-    });
-
-    newSocket.on('connect', () => {
-      console.log('Chat WebSocket connected');
-    });
-
-    newSocket.on('chat:new_message', (data: { conversation_id: UUID; message: ChatMessage }) => {
-      // Add message to current conversation if applicable
+    // chat:new_message - notification sent to user room (raw payload)
+    const handleNewMessage = (data: { conversation_id: UUID; message: ChatMessage }) => {
       dispatch(addMessageRealtime(data.message));
 
-      // Update unread count for the conversation
       if (currentConversation?.id !== data.conversation_id) {
-        // Increment unread count for other conversations
         const conversation = conversations.find(c => c.id === data.conversation_id);
         if (conversation) {
           dispatch(updateUnreadCount({
@@ -56,19 +44,26 @@ const ChatPage: React.FC = () => {
           }));
         }
       }
-    });
+    };
 
-    newSocket.on('chat:message_deleted', (data: { message_id: UUID }) => {
-      // Handle message deletion in real-time
+    // chat:message - sent to conversation room (for active viewers)
+    const handleConversationMessage = (message: ChatMessage) => {
+      dispatch(addMessageRealtime(message));
+    };
+
+    // chat:message_deleted - sent to conversation room
+    const handleMessageDeleted = (data: { message_id: UUID }) => {
       dispatch(removeMessageRealtime({ messageId: data.message_id }));
-    });
+    };
 
-    newSocket.on('disconnect', () => {
-      console.log('Chat WebSocket disconnected');
-    });
+    socketService.on('chat:new_message', handleNewMessage as (data: unknown) => void);
+    socketService.on('chat:message', handleConversationMessage as (data: unknown) => void);
+    socketService.on('chat:message_deleted', handleMessageDeleted as (data: unknown) => void);
 
     return () => {
-      newSocket.close();
+      socketService.off('chat:new_message', handleNewMessage as (data: unknown) => void);
+      socketService.off('chat:message', handleConversationMessage as (data: unknown) => void);
+      socketService.off('chat:message_deleted', handleMessageDeleted as (data: unknown) => void);
     };
   }, [user?.id, dispatch, conversations, currentConversation]);
 
@@ -77,12 +72,19 @@ const ChatPage: React.FC = () => {
     dispatch(fetchConversations());
   }, [dispatch]);
 
-  // Load messages when conversation changes
+  // Join/leave conversation room and load messages when conversation changes
   useEffect(() => {
     if (currentConversation?.id) {
+      socketService.joinConversation(currentConversation.id);
       dispatch(fetchMessages({ conversationId: currentConversation.id }));
       dispatch(markAsRead(currentConversation.id));
     }
+
+    return () => {
+      if (currentConversation?.id) {
+        socketService.leaveConversation(currentConversation.id);
+      }
+    };
   }, [currentConversation?.id, dispatch]);
 
   const handleSelectConversation = (conversation: ChatConversation) => {

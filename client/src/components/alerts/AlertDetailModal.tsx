@@ -82,7 +82,7 @@ const AlertDetailModal: React.FC<AlertDetailModalProps> = ({ alert, onClose, onR
       onClose();
     } catch (error) {
       console.error('Error resolving alert:', error);
-      alert('Error al resolver la alerta');
+      window.alert('Error al resolver la alerta');
     } finally {
       setResolving(false);
     }

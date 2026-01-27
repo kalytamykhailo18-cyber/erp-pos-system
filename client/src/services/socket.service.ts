@@ -6,6 +6,16 @@ import type { Alert, UUID } from '../types';
 
 const SOCKET_URL = import.meta.env.VITE_WS_URL || 'http://localhost:3000';
 
+/**
+ * Server wraps all events with this structure
+ */
+interface SocketEventPayload<T = unknown> {
+  event: string;
+  data: T;
+  branch_id?: UUID;
+  timestamp: string;
+}
+
 class SocketService {
   private socket: Socket | null = null;
   private reconnectAttempts = 0;
@@ -15,6 +25,16 @@ class SocketService {
     if (this.socket?.connected) {
       return;
     }
+
+    // Clean up existing disconnected socket before creating new one
+    if (this.socket) {
+      this.socket.removeAllListeners();
+      this.socket.disconnect();
+      this.socket = null;
+    }
+
+    // Reset reconnect counter for fresh connection
+    this.reconnectAttempts = 0;
 
     this.socket = io(SOCKET_URL, {
       auth: { token },
@@ -36,27 +56,15 @@ class SocketService {
       console.log('Socket connected');
       this.reconnectAttempts = 0;
       store.dispatch(setOnlineStatus(true));
-
-      // Join appropriate rooms
-      const state = store.getState();
-      const branchId = state.auth.currentBranch?.id;
-      const isOwner = state.auth.user?.role?.can_view_all_branches;
-
-      if (branchId) {
-        this.joinBranch(branchId);
-      }
-
-      if (isOwner) {
-        this.joinOwners();
-      }
+      // Note: Server auto-joins branch room and owners room based on token
     });
 
-    this.socket.on('disconnect', (reason) => {
+    this.socket.on('disconnect', (reason: string) => {
       console.log('Socket disconnected:', reason);
       store.dispatch(setOnlineStatus(false));
     });
 
-    this.socket.on('connect_error', (error) => {
+    this.socket.on('connect_error', (error: Error) => {
       console.error('Socket connection error:', error);
       this.reconnectAttempts++;
 
@@ -65,73 +73,86 @@ class SocketService {
       }
     });
 
-    // Business events
-    this.socket.on('SALE_CREATED', (data: { sale_id: UUID; sale_number: string; total_amount: number }) => {
-      console.log('Sale created:', data);
-      // Could dispatch action to update dashboard if needed
+    // Business events - Server wraps data in { event, data, timestamp }
+    this.socket.on('SALE_CREATED', (payload: SocketEventPayload) => {
+      console.log('Sale created:', payload.data);
     });
 
-    this.socket.on('SALE_VOIDED', (data: { sale_id: UUID; sale_number: string }) => {
-      console.log('Sale voided:', data);
+    this.socket.on('SALE_VOIDED', (payload: SocketEventPayload) => {
+      console.log('Sale voided:', payload.data);
     });
 
-    this.socket.on('SESSION_CLOSED', (data: {
-      session_id: UUID;
-      branch_id: UUID;
-      register_id?: UUID;
-      discrepancy: number;
-    }) => {
-      console.log('Session closed:', data);
+    this.socket.on('SESSION_OPENED', (payload: SocketEventPayload) => {
+      console.log('Session opened:', payload.data);
     });
 
-    this.socket.on('ALERT_CREATED', (alert: Alert) => {
-      console.log('New alert:', alert);
-      store.dispatch(addAlert(alert));
+    this.socket.on('SESSION_CLOSED', (payload: SocketEventPayload) => {
+      console.log('Session closed:', payload.data);
+    });
 
-      // Could show toast notification for critical alerts
-      if (alert.severity === 'CRITICAL' || alert.severity === 'HIGH') {
-        // Toast notification is handled by the alerts slice
+    this.socket.on('ALERT_CREATED', (payload: SocketEventPayload<Alert>) => {
+      console.log('New alert:', payload.data);
+      if (payload.data) {
+        store.dispatch(addAlert(payload.data));
       }
     });
 
-    this.socket.on('STOCK_LOW', (data: {
-      branch_id: UUID;
-      product_id: UUID;
-      product_name: string;
-      current_stock: number;
-      min_stock: number;
-    }) => {
-      console.log('Low stock warning:', data);
+    this.socket.on('STOCK_LOW', (payload: SocketEventPayload) => {
+      console.log('Low stock warning:', payload.data);
     });
 
-    this.socket.on('PRICE_CHANGED', (data: {
-      product_id: UUID;
-      product_name: string;
-      old_price: number;
-      new_price: number;
-    }) => {
-      console.log('Price changed:', data);
+    this.socket.on('STOCK_UPDATED', (payload: SocketEventPayload) => {
+      console.log('Stock updated:', payload.data);
+    });
+
+    this.socket.on('PRICE_UPDATED', (payload: SocketEventPayload) => {
+      console.log('Price updated:', payload.data);
+    });
+
+    // Transfer events
+    this.socket.on('TRANSFER_CREATED', (payload: SocketEventPayload) => {
+      console.log('Transfer created:', payload.data);
+    });
+
+    this.socket.on('TRANSFER_APPROVED', (payload: SocketEventPayload) => {
+      console.log('Transfer approved:', payload.data);
+    });
+
+    this.socket.on('TRANSFER_IN_TRANSIT', (payload: SocketEventPayload) => {
+      console.log('Transfer in transit:', payload.data);
+    });
+
+    this.socket.on('TRANSFER_RECEIVED', (payload: SocketEventPayload) => {
+      console.log('Transfer received:', payload.data);
+    });
+
+    this.socket.on('TRANSFER_CANCELLED', (payload: SocketEventPayload) => {
+      console.log('Transfer cancelled:', payload.data);
     });
   }
 
-  joinBranch(branchId: UUID): void {
+  // Switch to different branch room
+  subscribeToBranch(branchId: UUID): void {
     if (!this.socket?.connected) return;
-    this.socket.emit('JOIN_BRANCH', branchId);
+    this.socket.emit('subscribe:branch', branchId);
   }
 
-  leaveBranch(branchId: UUID): void {
+  // Join conversation room for real-time chat
+  joinConversation(conversationId: UUID): void {
     if (!this.socket?.connected) return;
-    this.socket.emit('LEAVE_BRANCH', branchId);
+    this.socket.emit('join:conversation', conversationId);
   }
 
-  joinOwners(): void {
+  // Leave conversation room
+  leaveConversation(conversationId: UUID): void {
     if (!this.socket?.connected) return;
-    this.socket.emit('JOIN_OWNERS');
+    this.socket.emit('leave:conversation', conversationId);
   }
 
-  leaveOwners(): void {
+  // Send typing indicator
+  sendTyping(conversationId: UUID, typing: boolean): void {
     if (!this.socket?.connected) return;
-    this.socket.emit('LEAVE_OWNERS');
+    this.socket.emit('chat:typing', { conversationId, typing });
   }
 
   disconnect(): void {
@@ -153,6 +174,8 @@ class SocketService {
   }
 
   // Subscribe to custom events
+  // Note: Business events are wrapped { event, data, timestamp }
+  // Chat events (chat:*) are NOT wrapped - they send raw data
   on(event: string, callback: (...args: unknown[]) => void): void {
     if (this.socket) {
       this.socket.on(event, callback);

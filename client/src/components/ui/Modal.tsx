@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import Dialog, { DialogProps } from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -38,8 +38,6 @@ const Modal: React.FC<ModalProps> = ({
   closeOnOverlayClick = true,
   ...props
 }) => {
-  const contentRef = useRef<HTMLDivElement>(null);
-
   // Map custom sizes to MUI maxWidth
   const getMuiMaxWidth = (): DialogProps['maxWidth'] | false => {
     switch (size) {

@@ -165,7 +165,7 @@ const SyncStatus: React.FC = () => {
         await loadPendingSales();
         await loadLastSyncTime();
       } else {
-        setSyncMessage(`Sync failed: ${result.message || 'Unknown error'}`);
+        setSyncMessage(`Sync failed: ${result.errors?.length > 0 ? result.errors.join(', ') : 'Unknown error'}`);
       }
     } catch (error) {
       console.error('[SyncStatus] Sync error:', error);

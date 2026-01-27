@@ -22,7 +22,7 @@ import type { UUID, Decimal, DeductionType } from '../../types';
 const NonSalesDeductions: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { deductions, pendingDeductions, loading } = useSelector(
+  const { deductions, pendingDeductions } = useSelector(
     (state: RootState) => state.nonSalesDeduction
   );
 
@@ -47,7 +47,7 @@ const NonSalesDeductions: React.FC = () => {
     reason?: string;
   }>({});
 
-  const branchId = user?.branch_id;
+  const branchId = user?.primary_branch_id;
   const isManager = user?.role?.name === 'MANAGER' || user?.role?.name === 'OWNER';
 
   useEffect(() => {
@@ -271,7 +271,7 @@ const NonSalesDeductions: React.FC = () => {
                     )}
                     <p>
                       <strong>Solicitado por:</strong>{' '}
-                      {deduction.requester?.full_name || 'Desconocido'}
+                      {deduction.requester ? `${deduction.requester.first_name} ${deduction.requester.last_name}` : 'Desconocido'}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -349,7 +349,7 @@ const NonSalesDeductions: React.FC = () => {
                   </td>
                   <td className="px-4 py-3 text-sm">{getStatusBadge(deduction.approval_status)}</td>
                   <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                    {deduction.approver?.full_name || '-'}
+                    {deduction.approver ? `${deduction.approver.first_name} ${deduction.approver.last_name}` : '-'}
                   </td>
                 </tr>
               ))}

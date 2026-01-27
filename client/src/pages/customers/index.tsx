@@ -136,7 +136,7 @@ const CustomersPage: React.FC = () => {
       city: formData.city || undefined,
       postal_code: formData.postal_code || undefined,
       is_wholesale: formData.is_wholesale,
-      wholesale_discount_percent: formData.wholesale_discount_percent ? parseFloat(formData.wholesale_discount_percent) : undefined,
+      wholesale_discount_percent: formData.wholesale_discount_percent || undefined,
       assigned_vendor_id: formData.assigned_vendor_id || undefined,
       notes: formData.notes || undefined,
     };

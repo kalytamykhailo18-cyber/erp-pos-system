@@ -85,7 +85,7 @@ export const getSpeciesById = createAsyncThunk<
   { rejectValue: string }
 >(
   'taxonomy/getSpeciesById',
-  async (id, { dispatch, rejectWithValue }) => {
+  async (id, { rejectWithValue }) => {
     try {
       const response = await speciesService.getById(id);
 

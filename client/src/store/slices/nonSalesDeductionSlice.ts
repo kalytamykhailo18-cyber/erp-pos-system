@@ -87,7 +87,7 @@ export const loadPendingDeductions = createAsyncThunk<
   { rejectValue: string }
 >(
   'nonSalesDeduction/loadPending',
-  async (params, { dispatch, rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
       const response = await nonSalesDeductionService.getPending(params || {});
 

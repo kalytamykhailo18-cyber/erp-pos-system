@@ -219,6 +219,8 @@ module.exports = (sequelize) => {
     Sale.belongsTo(models.Customer, { foreignKey: 'customer_id', as: 'customer' });
     Sale.belongsTo(models.User, { foreignKey: 'seller_id', as: 'seller' });
     Sale.belongsTo(models.User, { foreignKey: 'created_by', as: 'creator' });
+    // Alias 'cashier' for the same created_by field - used by services and frontend
+    Sale.belongsTo(models.User, { foreignKey: 'created_by', as: 'cashier' });
     Sale.belongsTo(models.User, { foreignKey: 'voided_by', as: 'voider' });
     Sale.belongsTo(models.User, { foreignKey: 'void_approved_by', as: 'void_approver' });
     Sale.belongsTo(models.User, { foreignKey: 'discount_applied_by', as: 'discount_applier' });

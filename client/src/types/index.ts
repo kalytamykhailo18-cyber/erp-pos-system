@@ -477,8 +477,9 @@ export interface Sale {
   session_id: UUID;
   customer_id?: UUID;
   customer?: Customer;
-  cashier_id: UUID;
-  cashier?: User;
+  created_by: UUID;
+  creator?: User;
+  cashier?: User; // Alias for creator - same user
   subtotal: Decimal;
   discount_type?: 'PERCENT' | 'FIXED' | 'WHOLESALE' | null;
   discount_value?: Decimal;
@@ -506,16 +507,17 @@ export interface SaleItem {
   id: UUID;
   sale_id: UUID;
   product_id: UUID;
-  product_name: string;
-  product_sku: string;
+  product?: Product; // Related product (for name, sku, etc.)
   quantity: Decimal;
   unit_price: Decimal;
+  cost_price?: Decimal;
   discount_percent: Decimal;
   discount_amount: Decimal;
   tax_rate: Decimal;
   tax_amount: Decimal;
-  subtotal: Decimal;
-  total: Decimal;
+  line_total: Decimal; // This is the actual DB field name
+  notes?: string;
+  created_at?: ISODateString;
 }
 
 // Register & Session Types

@@ -188,7 +188,8 @@ const createOfflineSale = async (
   },
   cart: Cart,
   payments: SalePayment[],
-  userId: UUID
+  userId: UUID,
+  loyaltyConfig?: { peso_per_point_redemption?: number; minimum_change_for_credit?: number }
 ): Promise<LocalSale> => {
   const localId = uuidv4();
   const now = new Date().toISOString();
@@ -199,10 +200,12 @@ const createOfflineSale = async (
   const taxAmount = Number(cart.tax_amount);
   const total = Number(cart.total);
 
-  // Calculate loyalty values
+  // Calculate loyalty values using config (matches backend sale.controller.js:537)
+  const pesoPerPoint = loyaltyConfig?.peso_per_point_redemption || 0.1;
+  const minChangeForCredit = loyaltyConfig?.minimum_change_for_credit || 10;
   const pointsRedeemed = saleData.points_to_redeem || 0;
   const creditUsed = saleData.credit_to_use || 0;
-  const pointsRedemptionValue = pointsRedeemed * 0.1; // 10 points = $1
+  const pointsRedemptionValue = pointsRedeemed * pesoPerPoint;
 
   // Calculate actual total after loyalty deductions (matches backend calculation at sale.controller.js:466)
   const totalAfterLoyalty = total - pointsRedemptionValue - creditUsed;
@@ -210,7 +213,7 @@ const createOfflineSale = async (
   // Calculate change amount - just overpayment on final total
   const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
   const changeAmount = Math.max(0, totalPaid - totalAfterLoyalty);
-  const changeAsCreditAmount = (saleData.change_as_credit && changeAmount > 10) ? changeAmount : 0;
+  const changeAsCreditAmount = (saleData.change_as_credit && changeAmount > minChangeForCredit) ? changeAmount : 0;
 
   // Calculate points earned (0.01 points per peso as per helpers.js:134)
   const pointsEarned = cart.customer ? Math.floor(totalAfterLoyalty * 0.01) : 0;
@@ -393,8 +396,9 @@ export const completeSale = createAsyncThunk<
     try {
       dispatch(startLoading('Procesando venta...'));
 
-      const state = getState() as { pos: POSState };
+      const state = getState() as { pos: POSState; loyalty: { config: { peso_per_point_redemption?: number; minimum_change_for_credit?: number } | null } };
       const { cart, payments } = state.pos;
+      const loyaltyConfig = state.loyalty?.config;
 
       if (cart.items.length === 0) {
         throw new Error('Cart is empty');
@@ -463,7 +467,8 @@ export const completeSale = createAsyncThunk<
             saleData,
             cart,
             payments,
-            saleData.user_id
+            saleData.user_id,
+            loyaltyConfig || undefined
           );
 
           dispatch(showToast({
@@ -481,7 +486,8 @@ export const completeSale = createAsyncThunk<
           saleData,
           cart,
           payments,
-          saleData.user_id
+          saleData.user_id,
+          loyaltyConfig || undefined
         );
 
         dispatch(showToast({

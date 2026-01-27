@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MdAttachMoney, MdPerson, MdDescription } from 'react-icons/md';
+import { MdAttachMoney } from 'react-icons/md';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { loadDailyReport } from '../../store/slices/reportsSlice';
 import { ShiftReportData, WithdrawalType } from '../../types';

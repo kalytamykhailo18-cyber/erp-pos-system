@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const {
-  Alert, AlertConfig, User, Branch, sequelize
+  Alert, AlertConfig, User, Branch, Sale, sequelize
 } = require('../database/models');
 const { success, created, paginated } = require('../utils/apiResponse');
 const { NotFoundError, BusinessError } = require('../middleware/errorHandler');
@@ -244,12 +244,35 @@ exports.resolveAlert = async (req, res, next) => {
       throw new BusinessError('Alert is already resolved', 'E409');
     }
 
-    await alert.update({
-      is_resolved: true,
-      resolved_by: req.user.id,
-      resolved_at: new Date(),
-      resolution_notes: resolution_notes || null
-    });
+    // Start transaction for atomic updates
+    const t = await sequelize.transaction();
+
+    try {
+      // Update alert as resolved
+      await alert.update({
+        is_resolved: true,
+        resolved_by: req.user.id,
+        resolved_at: new Date(),
+        resolution_notes: resolution_notes || null
+      }, { transaction: t });
+
+      // CRITICAL: If this is a VOIDED_SALE alert, also approve the void on the Sale
+      // This allows the register to close after manager approves the void
+      if (alert.alert_type === 'VOIDED_SALE' && alert.reference_type === 'SALE' && alert.reference_id) {
+        const sale = await Sale.findByPk(alert.reference_id, { transaction: t });
+        if (sale && sale.status === 'VOIDED' && !sale.void_approved_by) {
+          await sale.update({
+            void_approved_by: req.user.id
+          }, { transaction: t });
+          logger.info(`[Alert] Void approved for sale ${sale.sale_number} by user ${req.user.id} via alert resolution`);
+        }
+      }
+
+      await t.commit();
+    } catch (err) {
+      await t.rollback();
+      throw err;
+    }
 
     // Emit resolution event via WebSocket
     const io = req.app.get('io');

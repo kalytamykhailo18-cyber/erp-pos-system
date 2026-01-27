@@ -42,14 +42,14 @@ const StockLevelOverview: React.FC = () => {
       setSummary(inventoryReport.summary);
       // Get top 5 most critical items (lowest quantity relative to minimum)
       const sortedItems = inventoryReport.inventory
-        .map(item => ({
+        .map((item: { product: string; sku: string; branch: string; quantity: number; min_stock: number }) => ({
           product: item.product,
           sku: item.sku,
           branch: item.branch,
           quantity: item.quantity,
           min_stock: item.min_stock
         }))
-        .sort((a, b) => (a.quantity / a.min_stock) - (b.quantity / b.min_stock))
+        .sort((a: LowStockItem, b: LowStockItem) => (a.quantity / a.min_stock) - (b.quantity / b.min_stock))
         .slice(0, 5);
       setCriticalItems(sortedItems);
     }

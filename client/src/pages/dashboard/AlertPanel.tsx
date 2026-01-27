@@ -30,21 +30,6 @@ const AlertPanel: React.FC = () => {
     return () => clearInterval(interval);
   }, [dispatch]);
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'CRITICAL':
-        return 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-800 dark:text-red-300';
-      case 'HIGH':
-        return 'bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-300';
-      case 'MEDIUM':
-        return 'bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300';
-      case 'LOW':
-        return 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-300';
-      default:
-        return 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-300';
-    }
-  };
-
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case 'CRITICAL':
@@ -58,26 +43,6 @@ const AlertPanel: React.FC = () => {
       default:
         return <CampaignIcon sx={{ fontSize: 20 }} />;
     }
-  };
-
-  const getAlertTypeLabel = (alertType: string) => {
-    const labels: { [key: string]: string } = {
-      VOIDED_SALE: 'Venta Anulada',
-      CASH_DISCREPANCY: 'Diferencia de Caja',
-      LOW_PETTY_CASH: 'Fondo Bajo',
-      LOW_STOCK: 'Stock Bajo',
-      LATE_CLOSING: 'Cierre Tardío',
-      AFTER_HOURS_CLOSING: 'Cierre Fuera de Horario',
-      REOPEN_REGISTER: 'Caja Reabierta',
-      FAILED_INVOICE: 'Factura Fallida',
-      LARGE_DISCOUNT: 'Descuento Grande',
-      HIGH_VALUE_SALE: 'Venta Alto Valor',
-      SYNC_ERROR: 'Error de Sincronización',
-      LOGIN_FAILED: 'Login Fallido',
-      PRICE_CHANGE: 'Cambio de Precio',
-      BANK_TRANSFER: 'Transferencia Bancaria',
-    };
-    return labels[alertType] || alertType;
   };
 
   const getTimeAgo = (dateStr: string) => {
@@ -165,7 +130,7 @@ const AlertPanel: React.FC = () => {
 
       {/* Recent Alerts List */}
       <div className="space-y-3">
-        {recentAlerts.map((alert: any, index: number) => (
+        {recentAlerts.map((alert: any) => (
           <div
             key={alert.id}
             className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"

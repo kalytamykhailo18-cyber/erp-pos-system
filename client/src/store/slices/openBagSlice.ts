@@ -105,7 +105,7 @@ export const loadLowStockBags = createAsyncThunk<
   { rejectValue: string }
 >(
   'openBag/loadLowStock',
-  async (params, { dispatch, rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
       const response = await openBagService.getLowStock(params || {});
 

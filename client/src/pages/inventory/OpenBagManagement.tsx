@@ -6,7 +6,6 @@ import {
   loadLowStockBags,
   openBag,
   closeBag,
-  setSelectedOpenBag,
 } from '../../store/slices/openBagSlice';
 import { MdAdd, MdClose, MdWarning, MdCheckCircle } from 'react-icons/md';
 import { ProductSelector } from '../../components/ui/ProductSelector';
@@ -15,7 +14,7 @@ import type { UUID, Decimal } from '../../types';
 const OpenBagManagement: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { openBags, lowStockBags, loading } = useSelector((state: RootState) => state.openBag);
+  const { openBags, lowStockBags } = useSelector((state: RootState) => state.openBag);
 
   const [showOpenModal, setShowOpenModal] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
@@ -39,7 +38,7 @@ const OpenBagManagement: React.FC = () => {
   // Close bag form
   const [closeNotes, setCloseNotes] = useState('');
 
-  const branchId = user?.branch_id;
+  const branchId = user?.primary_branch_id;
 
   useEffect(() => {
     if (branchId) {
