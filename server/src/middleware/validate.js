@@ -44,7 +44,8 @@ const uuidField = (fieldName, required = true) => {
   const chain = body(fieldName)
     .matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
     .withMessage(`${fieldName} must be a valid UUID format`);
-  return required ? chain : chain.optional({ nullable: true });
+  // Use 'falsy' to skip validation for empty strings, null, and undefined
+  return required ? chain : chain.optional({ values: 'falsy' });
 };
 
 /**
@@ -55,22 +56,16 @@ const emailField = (fieldName = 'email', required = true) => {
     .isEmail()
     .withMessage('Invalid email format')
     .normalizeEmail();
-  return required ? chain : chain.optional({ nullable: true });
+  return required ? chain : chain.optional({ values: 'falsy' });
 };
 
 /**
- * Password validation
+ * Password validation - minimum 8 characters
  */
 const passwordField = (fieldName = 'password') =>
   body(fieldName)
     .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters')
-    .matches(/[a-z]/)
-    .withMessage('Password must contain a lowercase letter')
-    .matches(/[A-Z]/)
-    .withMessage('Password must contain an uppercase letter')
-    .matches(/[0-9]/)
-    .withMessage('Password must contain a number');
+    .withMessage('Password must be at least 8 characters');
 
 /**
  * PIN validation (4-6 digits)
@@ -111,7 +106,7 @@ const decimalField = (fieldName, { min, max, required = true, maxDecimals = 2 } 
     return true;
   });
 
-  return required ? chain : chain.optional({ nullable: true });
+  return required ? chain : chain.optional({ values: 'falsy' });
 };
 
 /**
@@ -130,7 +125,7 @@ const integerField = (fieldName, { min, max, required = true } = {}) => {
     chain = chain.isInt({ max }).withMessage(`${fieldName} must be at most ${max}`);
   }
 
-  return required ? chain : chain.optional({ nullable: true });
+  return required ? chain : chain.optional({ values: 'falsy' });
 };
 
 /**
@@ -150,7 +145,7 @@ const stringField = (fieldName, { minLength, maxLength, required = true } = {}) 
     chain = chain.isLength({ max: maxLength }).withMessage(`${fieldName} must be at most ${maxLength} characters`);
   }
 
-  return required ? chain : chain.optional({ nullable: true });
+  return required ? chain : chain.optional({ values: 'falsy' });
 };
 
 /**
@@ -160,7 +155,7 @@ const booleanField = (fieldName, required = false) => {
   const chain = body(fieldName)
     .isBoolean()
     .withMessage(`${fieldName} must be a boolean`);
-  return required ? chain : chain.optional({ nullable: true });
+  return required ? chain : chain.optional({ values: 'falsy' });
 };
 
 /**
@@ -170,7 +165,7 @@ const enumField = (fieldName, validValues, required = true) => {
   const chain = body(fieldName)
     .isIn(validValues)
     .withMessage(`${fieldName} must be one of: ${validValues.join(', ')}`);
-  return required ? chain : chain.optional({ nullable: true });
+  return required ? chain : chain.optional({ values: 'falsy' });
 };
 
 /**
@@ -180,7 +175,7 @@ const dateField = (fieldName, required = true) => {
   const chain = body(fieldName)
     .isISO8601()
     .withMessage(`${fieldName} must be a valid ISO 8601 date`);
-  return required ? chain : chain.optional({ nullable: true });
+  return required ? chain : chain.optional({ values: 'falsy' });
 };
 
 /**
@@ -190,7 +185,7 @@ const dateOnlyField = (fieldName, required = true) => {
   const chain = body(fieldName)
     .matches(/^\d{4}-\d{2}-\d{2}$/)
     .withMessage(`${fieldName} must be in YYYY-MM-DD format`);
-  return required ? chain : chain.optional({ nullable: true });
+  return required ? chain : chain.optional({ values: 'falsy' });
 };
 
 /**
@@ -209,7 +204,7 @@ const arrayField = (fieldName, { minLength, maxLength, required = true } = {}) =
     chain = chain.isArray({ max: maxLength }).withMessage(`${fieldName} must have at most ${maxLength} items`);
   }
 
-  return required ? chain : chain.optional({ nullable: true });
+  return required ? chain : chain.optional({ values: 'falsy' });
 };
 
 /**

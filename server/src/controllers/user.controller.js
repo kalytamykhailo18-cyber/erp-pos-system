@@ -62,9 +62,14 @@ exports.create = async (req, res, next) => {
   try {
     const { branch_ids, password, ...userData } = req.body;
 
+    // Filter out empty strings for optional UUID fields
+    const cleanUserData = Object.fromEntries(
+      Object.entries(userData).filter(([_, v]) => v !== '')
+    );
+
     const user = await User.create({
       id: uuidv4(),
-      ...userData,
+      ...cleanUserData,
       password_hash: password
     }, { transaction: t });
 

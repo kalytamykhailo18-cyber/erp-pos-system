@@ -35,6 +35,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
     is_active: user?.is_active !== undefined ? user.is_active : true,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -165,6 +166,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setApiError(null);
 
     if (!validateForm()) {
       return;
@@ -210,8 +212,11 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
       }
 
       onSave();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving user:', error);
+      // Show API error message to user
+      const errorMessage = error?.error || error?.message || 'Error al guardar el usuario';
+      setApiError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -235,6 +240,13 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* API Error Message */}
+          {apiError && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-sm">
+              <p className="text-sm text-red-700 dark:text-red-300">{apiError}</p>
+            </div>
+          )}
+
           {/* Avatar Upload */}
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
