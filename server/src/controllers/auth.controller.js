@@ -145,9 +145,13 @@ exports.login = async (req, res, next) => {
       maxDiscountPercent: user.role.max_discount_percent ? parseFloat(user.role.max_discount_percent) : 0
     };
 
-    // Get user branches
+    // Get user branches with junction table data (is_primary)
     const userWithBranches = await User.findByPk(user.id, {
-      include: [{ model: Branch, as: 'branches' }]
+      include: [{
+        model: Branch,
+        as: 'branches',
+        through: { attributes: ['is_primary'] }
+      }]
     });
 
     // Create audit log entry for login
@@ -306,7 +310,11 @@ exports.getMe = async (req, res, next) => {
       include: [
         { model: Role, as: 'role' },
         { model: Branch, as: 'primary_branch' },
-        { model: Branch, as: 'branches' }
+        {
+          model: Branch,
+          as: 'branches',
+          through: { attributes: ['is_primary'] }
+        }
       ]
     });
 

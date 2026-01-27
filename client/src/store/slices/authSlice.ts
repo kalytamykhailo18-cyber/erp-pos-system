@@ -307,16 +307,18 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
-        state.availableBranches = action.payload.branches || [];
+        // Branches are inside user object from backend response
+        const branches = action.payload.user.branches || [];
+        state.availableBranches = branches;
         state.loginType = 'full';
         state.error = null;
 
-        // Set default branch
-        if (action.payload.branches && action.payload.branches.length > 0) {
-          const primaryBranch = action.payload.branches.find(
-            (b: any) => b.user_branches?.is_primary === true
+        // Set default branch - find primary branch from junction table data (Sequelize returns PascalCase)
+        if (branches.length > 0) {
+          const primaryBranch = branches.find(
+            (b: Branch) => b.UserBranch?.is_primary === true
           );
-          state.currentBranch = primaryBranch || action.payload.branches[0];
+          state.currentBranch = primaryBranch || branches[0];
         }
       })
       .addCase(login.rejected, (state, action) => {
@@ -371,13 +373,16 @@ const authSlice = createSlice({
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.isAuthenticated = true;
-        state.availableBranches = action.payload.branches || [];
+        // Branches come from both user.branches and separate branches array in /auth/me response
+        const branches = action.payload.branches || action.payload.user.branches || [];
+        state.availableBranches = branches;
 
-        if (action.payload.branches && action.payload.branches.length > 0 && !state.currentBranch) {
-          const primaryBranch = action.payload.branches.find(
-            (b: any) => b.user_branches?.is_primary === true
+        // Set default branch if not already set - find primary branch from junction table data (Sequelize returns PascalCase)
+        if (branches.length > 0 && !state.currentBranch) {
+          const primaryBranch = branches.find(
+            (b: Branch) => b.UserBranch?.is_primary === true
           );
-          state.currentBranch = primaryBranch || action.payload.branches[0];
+          state.currentBranch = primaryBranch || branches[0];
         }
       })
       .addCase(getCurrentUser.rejected, (state) => {

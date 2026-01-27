@@ -163,6 +163,11 @@ export interface Branch {
   timezone?: string;
   created_at?: ISODateString;
   updated_at?: ISODateString;
+
+  // Junction table data (from UserBranch through table - Sequelize returns PascalCase)
+  UserBranch?: {
+    is_primary: boolean;
+  };
 }
 
 // Category Types

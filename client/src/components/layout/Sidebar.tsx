@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useAppSelector, useAppDispatch } from '../../store';
 import { logout, setCurrentBranch } from '../../store/slices/authSlice';
 import { toggleTheme } from '../../store/slices/uiSlice';
 import { useNavigation } from '../../hooks';
 import { Branch } from '../../types';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import {
   MdDashboard,
   MdPointOfSale,
@@ -47,41 +49,36 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user, availableBranches, currentBranch } = useAppSelector((state) => state.auth);
   const { theme } = useAppSelector((state) => state.ui);
 
-  const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  // MUI Menu anchor elements (null = closed, element = open)
+  const [branchAnchorEl, setBranchAnchorEl] = useState<null | HTMLElement>(null);
+  const [userAnchorEl, setUserAnchorEl] = useState<null | HTMLElement>(null);
 
-  const branchDropdownRef = useRef<HTMLDivElement>(null);
-  const userDropdownRef = useRef<HTMLDivElement>(null);
+  const branchMenuOpen = Boolean(branchAnchorEl);
+  const userMenuOpen = Boolean(userAnchorEl);
 
   const canAccessAllBranches = user?.role?.can_view_all_branches;
 
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (branchDropdownRef.current && !branchDropdownRef.current.contains(event.target as Node)) {
-        setBranchDropdownOpen(false);
-      }
-      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
-        setUserDropdownOpen(false);
-      }
-    };
+  const handleBranchMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setBranchAnchorEl(event.currentTarget);
+  };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  const handleBranchMenuClose = () => {
+    setBranchAnchorEl(null);
+  };
+
+  const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setUserAnchorEl(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setUserAnchorEl(null);
+  };
 
   const navigation: NavigationItem[] = [
     {
       name: 'Dashboard',
       path: '/dashboard',
       icon: <MdDashboard className="w-5 h-5" />,
-    },
-    {
-      name: 'Mi Perfil',
-      path: '/profile',
-      icon: <MdPerson className="w-5 h-5" />,
     },
     {
       name: 'Punto de Venta',
@@ -156,6 +153,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   ];
 
   const handleLogout = () => {
+    handleUserMenuClose();
     dispatch(logout());
     goTo('/login');
   };
@@ -165,7 +163,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     if (branch) {
       dispatch(setCurrentBranch(branch));
     }
-    setBranchDropdownOpen(false);
+    handleBranchMenuClose();
   };
 
   const isActive = (path: string) => {
@@ -225,45 +223,70 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {/* Branch Selector (for owners) */}
         {canAccessAllBranches && availableBranches && availableBranches.length > 1 && (
           <div className="px-4 py-3 border-b border-primary-600/30">
-            <div className="relative" ref={branchDropdownRef}>
-              <button
-                onClick={() => setBranchDropdownOpen(!branchDropdownOpen)}
-                className="w-full flex items-center justify-between px-3 py-2.5 text-sm bg-white/10 rounded-md hover:bg-white/20 backdrop-blur-sm"
+            <button
+              onClick={handleBranchMenuOpen}
+              className="w-full flex items-center justify-between px-3 py-2.5 text-sm bg-white/10 rounded-md hover:bg-white/20 backdrop-blur-sm"
+              aria-controls={branchMenuOpen ? 'branch-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={branchMenuOpen ? 'true' : undefined}
+            >
+              <span className="font-medium text-white truncate">
+                {currentBranch?.name || 'Todas las sucursales'}
+              </span>
+              <MdKeyboardArrowDown
+                className={`w-5 h-5 text-white/70 transition-transform ${
+                  branchMenuOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+            <Menu
+              id="branch-menu"
+              anchorEl={branchAnchorEl}
+              open={branchMenuOpen}
+              onClose={handleBranchMenuClose}
+              MenuListProps={{
+                'aria-labelledby': 'branch-button',
+              }}
+              sx={{ zIndex: 9999 }}
+              slotProps={{
+                paper: {
+                  sx: {
+                    bgcolor: 'rgb(30 58 138 / 0.95)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgb(37 99 235 / 0.3)',
+                    minWidth: 200,
+                  },
+                },
+              }}
+            >
+              <MenuItem
+                onClick={() => handleBranchChange('')}
+                sx={{
+                  color: 'white',
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
+                }}
               >
-                <span className="font-medium text-white truncate">
-                  {currentBranch?.name || 'Todas las sucursales'}
-                </span>
-                <MdKeyboardArrowDown
-                  className={`w-5 h-5 text-white/70 ${
-                    branchDropdownOpen ? 'rotate-180' : ''
-                  }`}
-                />
-              </button>
-
-              {branchDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-primary-800/95 rounded-md shadow-2xl border border-primary-600/30 z-20 backdrop-blur-md overflow-hidden">
-                  <button
-                    onClick={() => handleBranchChange('')}
-                    className="w-full px-4 py-2.5 text-left text-sm text-white hover:bg-white/10"
-                  >
-                    Todas las sucursales
-                  </button>
-                  {availableBranches.map((branch: Branch) => (
-                    <button
-                      key={branch.id}
-                      onClick={() => handleBranchChange(branch.id)}
-                      className={`w-full px-4 py-2.5 text-left text-sm ${
-                        currentBranch?.id === branch.id
-                          ? 'bg-primary-700 text-white font-semibold'
-                          : 'text-white/90 hover:bg-white/10'
-                      }`}
-                    >
-                      {branch.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                Todas las sucursales
+              </MenuItem>
+              {availableBranches.map((branch: Branch) => (
+                <MenuItem
+                  key={branch.id}
+                  onClick={() => handleBranchChange(branch.id)}
+                  selected={currentBranch?.id === branch.id}
+                  sx={{
+                    color: 'white',
+                    '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
+                    '&.Mui-selected': {
+                      bgcolor: 'rgb(29 78 216)',
+                      fontWeight: 600,
+                      '&:hover': { bgcolor: 'rgb(29 78 216)' },
+                    },
+                  }}
+                >
+                  {branch.name}
+                </MenuItem>
+              ))}
+            </Menu>
           </div>
         )}
 
@@ -301,62 +324,112 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* User Info - Fixed at Bottom */}
         <div className="p-4 border-t border-primary-600/30 bg-primary-600/30 backdrop-blur-sm">
-          <div className="relative" ref={userDropdownRef}>
-            <button
-              onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-              className="w-full flex items-center gap-3 p-2.5 rounded-md hover:bg-white/10"
+          <button
+            onClick={handleUserMenuOpen}
+            className="w-full flex items-center gap-3 p-2.5 rounded-md hover:bg-white/10"
+            aria-controls={userMenuOpen ? 'user-menu' : undefined}
+            aria-haspopup="true"
+            aria-expanded={userMenuOpen ? 'true' : undefined}
+          >
+            <div className="w-10 h-10 bg-gradient-to-br from-white/30 to-white/10 rounded-full flex items-center justify-center backdrop-blur-sm ring-2 ring-white/20">
+              <span className="text-white font-bold text-sm">
+                {user?.first_name?.[0]}{user?.last_name?.[0]}
+              </span>
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-sm font-semibold text-white truncate">
+                {user?.first_name} {user?.last_name}
+              </p>
+              <p className="text-xs text-white/70 truncate">
+                {user?.role?.name}
+              </p>
+            </div>
+            <MdKeyboardArrowDown
+              className={`w-5 h-5 text-white/70 flex-shrink-0 transition-transform ${
+                userMenuOpen ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+          <Menu
+            id="user-menu"
+            anchorEl={userAnchorEl}
+            open={userMenuOpen}
+            onClose={handleUserMenuClose}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'center',
+            }}
+            transformOrigin={{
+              vertical: 'bottom',
+              horizontal: 'center',
+            }}
+            MenuListProps={{
+              'aria-labelledby': 'user-button',
+            }}
+            sx={{ zIndex: 9999 }}
+            slotProps={{
+              paper: {
+                sx: {
+                  bgcolor: 'rgb(30 58 138 / 0.95)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgb(37 99 235 / 0.3)',
+                  minWidth: 200,
+                },
+              },
+            }}
+          >
+            <MenuItem
+              onClick={() => {
+                handleUserMenuClose();
+                goTo('/profile');
+              }}
+              sx={{
+                color: 'white',
+                gap: 1.5,
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
+              }}
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-white/30 to-white/10 rounded-full flex items-center justify-center backdrop-blur-sm ring-2 ring-white/20">
-                <span className="text-white font-bold text-sm">
-                  {user?.first_name?.[0]}{user?.last_name?.[0]}
-                </span>
-              </div>
-              <div className="flex-1 text-left min-w-0">
-                <p className="text-sm font-semibold text-white truncate">
-                  {user?.first_name} {user?.last_name}
-                </p>
-                <p className="text-xs text-white/70 truncate">
-                  {user?.role?.name}
-                </p>
-              </div>
-              <MdKeyboardArrowDown
-                className={`w-5 h-5 text-white/70 flex-shrink-0 ${
-                  userDropdownOpen ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
-
-            {userDropdownOpen && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-primary-800/95 rounded-md shadow-2xl border border-primary-600/30 backdrop-blur-md overflow-hidden">
-                <button
-                  onClick={() => {
-                    dispatch(toggleTheme());
-                    setUserDropdownOpen(false);
-                  }}
-                  className="w-full px-4 py-3 text-left text-sm text-white hover:bg-white/10 flex items-center gap-3"
-                >
-                  {theme === 'dark' ? (
-                    <>
-                      <MdLightMode className="w-5 h-5" />
-                      <span>Modo Claro</span>
-                    </>
-                  ) : (
-                    <>
-                      <MdDarkMode className="w-5 h-5" />
-                      <span>Modo Oscuro</span>
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="w-full px-4 py-3 text-left text-sm text-red-300 hover:bg-red-500/20 hover:text-red-200 flex items-center gap-3"
-                >
-                  <MdLogout className="w-5 h-5" />
-                  <span>Cerrar Sesión</span>
-                </button>
-              </div>
-            )}
-          </div>
+              <MdPerson className="w-5 h-5" />
+              <span>Mi Perfil</span>
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                dispatch(toggleTheme());
+                handleUserMenuClose();
+              }}
+              sx={{
+                color: 'white',
+                gap: 1.5,
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
+              }}
+            >
+              {theme === 'dark' ? (
+                <>
+                  <MdLightMode className="w-5 h-5" />
+                  <span>Modo Claro</span>
+                </>
+              ) : (
+                <>
+                  <MdDarkMode className="w-5 h-5" />
+                  <span>Modo Oscuro</span>
+                </>
+              )}
+            </MenuItem>
+            <MenuItem
+              onClick={handleLogout}
+              sx={{
+                color: 'rgb(252 165 165)',
+                gap: 1.5,
+                '&:hover': {
+                  bgcolor: 'rgba(239, 68, 68, 0.2)',
+                  color: 'rgb(254 202 202)',
+                },
+              }}
+            >
+              <MdLogout className="w-5 h-5" />
+              <span>Cerrar Sesión</span>
+            </MenuItem>
+          </Menu>
         </div>
       </aside>
     </>
