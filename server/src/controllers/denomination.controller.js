@@ -121,6 +121,9 @@ exports.updateDenomination = async (req, res, next) => {
 
     await denomination.save();
 
+    // Reload to get proper DECIMAL format from database
+    await denomination.reload();
+
     return success(res, denomination, 'Denomination updated successfully');
   } catch (error) {
     next(error);
