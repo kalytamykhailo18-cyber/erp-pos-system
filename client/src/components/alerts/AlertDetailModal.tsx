@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAppDispatch } from '../../store';
 import { markAlertAsRead } from '../../store/slices/alertsSlice';
 import { alertService } from '../../services/api';
@@ -164,7 +165,7 @@ const AlertDetailModal: React.FC<AlertDetailModalProps> = ({ alert, onClose, onR
     );
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
@@ -319,7 +320,8 @@ const AlertDetailModal: React.FC<AlertDetailModalProps> = ({ alert, onClose, onR
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
