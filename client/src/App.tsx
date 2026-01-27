@@ -35,6 +35,7 @@ const ExpensesPage = React.lazy(() => import('./pages/expenses'));
 const AlertSettingsPage = React.lazy(() => import('./pages/settings/AlertSettings'));
 const ChatPage = React.lazy(() => import('./pages/chat'));
 const SyncStatusPage = React.lazy(() => import('./pages/sync/SyncStatus'));
+const UserProfilePage = React.lazy(() => import('./pages/UserProfilePage'));
 
 // Loading fallback
 const PageLoader = () => (
@@ -188,6 +189,7 @@ const AppRouter: React.FC = () => {
                 {/* Routes with MainLayout */}
                 <Route element={<LayoutWrapper />}>
                   <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/profile" element={<UserProfilePage />} />
                   <Route path="/products/*" element={<ProductsPage />} />
                   <Route path="/customers/*" element={<CustomersPage />} />
                   <Route path="/reports/*" element={<ReportsPage />} />

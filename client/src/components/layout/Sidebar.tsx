@@ -26,6 +26,7 @@ import {
   MdChat,
   MdSearch,
   MdLocalShipping,
+  MdPerson,
 } from 'react-icons/md';
 
 interface SidebarProps {
@@ -76,6 +77,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       name: 'Dashboard',
       path: '/dashboard',
       icon: <MdDashboard className="w-5 h-5" />,
+    },
+    {
+      name: 'Mi Perfil',
+      path: '/profile',
+      icon: <MdPerson className="w-5 h-5" />,
     },
     {
       name: 'Punto de Venta',
