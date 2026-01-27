@@ -26,10 +26,11 @@ router.get(
     ...paginationQuery,
     query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
     query('invoice_type_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+    query('invoice_type').optional().isIn(['A', 'B', 'C', 'NC_A', 'NC_B', 'NC_C']),
     query('status').optional().isIn(['PENDING', 'ISSUED', 'FAILED', 'CANCELLED']),
-    query('from_date').optional().isISO8601(),
-    query('to_date').optional().isISO8601(),
-    query('customer_document_number').optional().isString(),
+    query('start_date').optional().isISO8601(),
+    query('end_date').optional().isISO8601(),
+    query('search').optional().isString(),
     validate
   ],
   invoiceController.getAll

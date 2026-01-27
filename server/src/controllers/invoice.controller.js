@@ -13,21 +13,41 @@ const factuHoyService = require('../services/factuhoy.service');
 exports.getAll = async (req, res, next) => {
   try {
     const { page, limit, offset } = parsePagination(req.query);
-    const { branch_id, invoice_type_id, status, start_date, end_date, search } = req.query;
+    const { branch_id, invoice_type_id, invoice_type, status, start_date, end_date, search } = req.query;
 
     const where = {};
-    if (invoice_type_id) where.invoice_type_id = invoice_type_id;
+
+    // Handle invoice type filter - by ID or by code
+    if (invoice_type_id) {
+      where.invoice_type_id = invoice_type_id;
+    } else if (invoice_type) {
+      // Look up invoice_type_id by code
+      const typeRecord = await InvoiceType.findOne({ where: { code: invoice_type } });
+      if (typeRecord) {
+        where.invoice_type_id = typeRecord.id;
+      }
+    }
+
     if (status) where.status = status;
     if (start_date || end_date) {
       where.issued_at = {};
       if (start_date) where.issued_at[Op.gte] = new Date(start_date);
-      if (end_date) where.issued_at[Op.lte] = new Date(end_date);
+      if (end_date) {
+        const endDate = new Date(end_date);
+        endDate.setHours(23, 59, 59, 999);
+        where.issued_at[Op.lte] = endDate;
+      }
     }
     if (search) {
-      where[Op.or] = [
-        { invoice_number: { [Op.iLike]: `%${search}%` } },
-        { cae: { [Op.iLike]: `%${search}%` } }
+      const searchConditions = [
+        { cae: { [Op.iLike]: `%${search}%` } },
+        { customer_name: { [Op.iLike]: `%${search}%` } }
       ];
+      // If search is numeric, also search by invoice_number
+      if (/^\d+$/.test(search)) {
+        searchConditions.push({ invoice_number: parseInt(search) });
+      }
+      where[Op.or] = searchConditions;
     }
 
     // Build include array with branch filter through Sale
