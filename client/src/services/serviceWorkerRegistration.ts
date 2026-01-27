@@ -25,7 +25,7 @@ const isLocalhost = Boolean(
 export function register(config?: Config) {
   if ('serviceWorker' in navigator) {
     // The URL constructor is available in all browsers that support SW.
-    const publicUrl = new URL(process.env.PUBLIC_URL || '', window.location.href);
+    const publicUrl = new URL(import.meta.env.BASE_URL || '', window.location.href);
     if (publicUrl.origin !== window.location.origin) {
       // Service worker won't work if PUBLIC_URL is on a different origin
       return;
