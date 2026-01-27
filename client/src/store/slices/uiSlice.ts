@@ -40,6 +40,21 @@ interface UIState {
   lastSync: string | null;
 }
 
+// Initialize theme from localStorage or system preference
+const getInitialTheme = (): 'light' | 'dark' => {
+  if (typeof window !== 'undefined') {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      return savedTheme;
+    }
+    // Fall back to system preference
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+  }
+  return 'dark'; // Default to dark
+};
+
 const initialState: UIState = {
   loading: false,
   loadingMessage: null,
@@ -51,7 +66,7 @@ const initialState: UIState = {
     data: null,
   },
   sidebarOpen: true,
-  theme: 'dark',
+  theme: getInitialTheme(),
   posLayout: 'grid',
   posGridSize: 'medium',
   numpadActive: false,

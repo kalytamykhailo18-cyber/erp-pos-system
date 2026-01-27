@@ -157,16 +157,22 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
 // Main App Router with MUI Theme
 const AppRouter: React.FC = () => {
-  // Detect dark mode from localStorage or system preference
-  const isDarkMode = useMemo(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      return savedTheme === 'dark';
-    }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }, []);
+  // Get theme from Redux state
+  const reduxTheme = useAppSelector((state) => state.ui.theme);
 
+  const isDarkMode = reduxTheme === 'dark';
   const theme = useMemo(() => (isDarkMode ? darkMuiTheme : muiTheme), [isDarkMode]);
+
+  // Apply dark class to HTML element and save to localStorage
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDarkMode) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('theme', reduxTheme);
+  }, [isDarkMode, reduxTheme]);
 
   return (
     <ThemeProvider theme={theme}>

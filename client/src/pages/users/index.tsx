@@ -17,12 +17,12 @@ const UsersPage: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Map Redux pagination to PaginationState format
+  // Map Redux pagination to PaginationState format (handle both naming conventions)
   const pagination: PaginationState = useMemo(() => ({
-    page: reduxPagination.page,
-    limit: reduxPagination.limit,
-    total_items: reduxPagination.total,
-    total_pages: reduxPagination.pages,
+    page: reduxPagination?.page ?? 1,
+    limit: reduxPagination?.limit ?? 20,
+    total_items: (reduxPagination as any)?.total_items ?? reduxPagination?.total ?? 0,
+    total_pages: (reduxPagination as any)?.total_pages ?? reduxPagination?.pages ?? 0,
   }), [reduxPagination]);
 
   // Check if user has permission to manage users

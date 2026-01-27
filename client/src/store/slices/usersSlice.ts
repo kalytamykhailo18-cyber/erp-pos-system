@@ -43,13 +43,19 @@ export const fetchUsers = createAsyncThunk<
   async (params = {}, { dispatch, rejectWithValue }) => {
     try {
       dispatch(startLoading('Cargando usuarios...'));
-      const response = await userService.getAll(params);
+      const response = await userService.getAll(params) as any;
 
       if (!response.success) {
         throw new Error(response.error || 'Error al cargar usuarios');
       }
 
-      return response.data;
+      // Handle both response formats:
+      // Format 1: { data: { users, pagination } }
+      // Format 2: { data: [users], pagination } (current backend format)
+      const users = Array.isArray(response.data) ? response.data : response.data?.users || [];
+      const pagination = response.pagination || response.data?.pagination || { page: 1, limit: 20, total_items: 0, total_pages: 0 };
+
+      return { users, pagination };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error al cargar usuarios';
       dispatch(showToast({ type: 'error', message }));
@@ -262,7 +268,14 @@ const usersSlice = createSlice({
     builder
       .addCase(fetchUsers.fulfilled, (state, action) => {
         state.users = action.payload.users;
-        state.pagination = action.payload.pagination;
+        // Map backend pagination format to frontend format
+        const p = action.payload.pagination as any;
+        state.pagination = {
+          page: p.page,
+          limit: p.limit,
+          total: p.total_items ?? p.total ?? 0,
+          pages: p.total_pages ?? p.pages ?? 0,
+        };
         state.error = null;
       })
       .addCase(fetchUsers.rejected, (state, action) => {
