@@ -45,6 +45,11 @@ export interface UpdateUserData {
   is_active?: boolean;
   language?: string;
   branch_ids?: UUID[];
+  avatar_url?: string;
+}
+
+export interface AvatarUploadResponse {
+  avatar_url: string;
 }
 
 export interface UpdateProfileData {
@@ -130,6 +135,20 @@ export const userService = {
    */
   updateProfile: (data: UpdateProfileData): Promise<ApiResponse<User>> => {
     return put<User>('/users/profile', data);
+  },
+
+  /**
+   * Upload user avatar (base64 image)
+   */
+  uploadAvatar: (id: UUID, avatar: string): Promise<ApiResponse<AvatarUploadResponse>> => {
+    return post<AvatarUploadResponse>(`/users/${id}/avatar`, { avatar });
+  },
+
+  /**
+   * Delete user avatar
+   */
+  deleteAvatar: (id: UUID): Promise<ApiResponse<null>> => {
+    return del<null>(`/users/${id}/avatar`);
   },
 };
 

@@ -2,8 +2,9 @@ const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const { User, Role, Branch, sequelize } = require('../database/models');
 const { success, created, paginated } = require('../utils/apiResponse');
-const { NotFoundError, ForbiddenError } = require('../middleware/errorHandler');
+const { NotFoundError, ForbiddenError, ValidationError } = require('../middleware/errorHandler');
 const { parsePagination } = require('../utils/helpers');
+const { uploadBase64Image, deleteImage, extractPublicIdFromUrl } = require('../services/cloudinary.service');
 
 exports.getAll = async (req, res, next) => {
   try {
@@ -167,6 +168,85 @@ exports.updateBranches = async (req, res, next) => {
 
     await user.setBranches(req.body.branch_ids);
     return success(res, null, 'Branches updated');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Upload user avatar
+ * @route POST /api/v1/users/:id/avatar
+ */
+exports.uploadAvatar = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { avatar } = req.body;
+
+    // Check permissions - can only update own avatar or admin can update others
+    if (id !== req.user.id && !req.user.permissions.canManageUsers) {
+      throw new ForbiddenError('Cannot update other users avatar');
+    }
+
+    const user = await User.findByPk(id);
+    if (!user) throw new NotFoundError('User not found');
+
+    if (!avatar) {
+      throw new ValidationError('Avatar image data is required');
+    }
+
+    // Delete old avatar if exists
+    if (user.avatar_url) {
+      const oldPublicId = extractPublicIdFromUrl(user.avatar_url);
+      if (oldPublicId) {
+        try {
+          await deleteImage(oldPublicId);
+        } catch (err) {
+          // Log but don't fail if old image deletion fails
+          console.error('Failed to delete old avatar:', err);
+        }
+      }
+    }
+
+    // Upload new avatar to Cloudinary
+    const uploadResult = await uploadBase64Image(avatar, {
+      folder: 'user-avatars',
+      publicId: `avatar-${id}`,
+    });
+
+    // Update user with new avatar URL
+    await user.update({ avatar_url: uploadResult.url });
+
+    return success(res, { avatar_url: uploadResult.url }, 'Avatar uploaded successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete user avatar
+ * @route DELETE /api/v1/users/:id/avatar
+ */
+exports.deleteAvatar = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Check permissions
+    if (id !== req.user.id && !req.user.permissions.canManageUsers) {
+      throw new ForbiddenError('Cannot delete other users avatar');
+    }
+
+    const user = await User.findByPk(id);
+    if (!user) throw new NotFoundError('User not found');
+
+    if (user.avatar_url) {
+      const publicId = extractPublicIdFromUrl(user.avatar_url);
+      if (publicId) {
+        await deleteImage(publicId);
+      }
+      await user.update({ avatar_url: null });
+    }
+
+    return success(res, null, 'Avatar deleted successfully');
   } catch (error) {
     next(error);
   }

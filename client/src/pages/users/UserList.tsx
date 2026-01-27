@@ -4,7 +4,7 @@ import { deactivateUser, unlockUser, resetUserPassword } from '../../store/slice
 import { Pagination } from '../../components/ui';
 import type { PaginationState } from '../../components/ui/Pagination';
 import type { User } from '../../types';
-import { MdGroup, MdLock, MdEdit, MdLockOpen, MdKey, MdBlock } from 'react-icons/md';
+import { MdGroup, MdLock, MdEdit, MdLockOpen, MdKey, MdBlock, MdPerson } from 'react-icons/md';
 
 interface UserListProps {
   users: User[];
@@ -122,11 +122,19 @@ const UserList: React.FC<UserListProps> = ({
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center">
-                          <span className="text-primary-700 dark:text-primary-300 font-semibold">
-                            {user.first_name?.charAt(0)}
-                            {user.last_name?.charAt(0)}
-                          </span>
+                        <div className="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                          {user.avatar_url ? (
+                            <img
+                              src={user.avatar_url}
+                              alt={`${user.first_name} ${user.last_name}`}
+                              className="h-10 w-10 object-cover"
+                            />
+                          ) : (
+                            <span className="text-primary-700 dark:text-primary-300 font-semibold">
+                              {user.first_name?.charAt(0)}
+                              {user.last_name?.charAt(0)}
+                            </span>
+                          )}
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900 dark:text-white">

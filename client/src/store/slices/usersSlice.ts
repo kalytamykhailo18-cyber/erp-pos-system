@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { userService, type CreateUserData, type UpdateUserData, type UserListParams } from '../../services/api/user.service';
 import { startLoading, stopLoading, showToast } from './uiSlice';
+import { updateUser as updateAuthUser } from './authSlice';
 import type { User } from '../../types';
+import type { RootState } from '../index';
 
 interface UsersState {
   users: User[];
@@ -247,6 +249,80 @@ export const resetUserPassword = createAsyncThunk<
   }
 );
 
+export const uploadUserAvatar = createAsyncThunk<
+  { id: string; avatar_url: string },
+  { id: string; avatar: string },
+  { rejectValue: string; state: RootState }
+>(
+  'users/uploadAvatar',
+  async ({ id, avatar }, { dispatch, getState, rejectWithValue }) => {
+    try {
+      dispatch(startLoading('Subiendo avatar...'));
+      const response = await userService.uploadAvatar(id, avatar);
+
+      if (!response.success) {
+        throw new Error(response.error || 'Error al subir avatar');
+      }
+
+      // If updating current user, also update auth state
+      const currentUserId = getState().auth.user?.id;
+      if (currentUserId === id) {
+        dispatch(updateAuthUser({ avatar_url: response.data.avatar_url }));
+      }
+
+      dispatch(showToast({
+        type: 'success',
+        message: 'Avatar actualizado correctamente',
+      }));
+
+      return { id, avatar_url: response.data.avatar_url };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error al subir avatar';
+      dispatch(showToast({ type: 'error', message }));
+      return rejectWithValue(message);
+    } finally {
+      dispatch(stopLoading());
+    }
+  }
+);
+
+export const deleteUserAvatar = createAsyncThunk<
+  string,
+  string,
+  { rejectValue: string; state: RootState }
+>(
+  'users/deleteAvatar',
+  async (id, { dispatch, getState, rejectWithValue }) => {
+    try {
+      dispatch(startLoading('Eliminando avatar...'));
+      const response = await userService.deleteAvatar(id);
+
+      if (!response.success) {
+        throw new Error(response.error || 'Error al eliminar avatar');
+      }
+
+      // If deleting current user's avatar, also update auth state
+      const currentUserId = getState().auth.user?.id;
+      if (currentUserId === id) {
+        dispatch(updateAuthUser({ avatar_url: undefined }));
+      }
+
+      dispatch(showToast({
+        type: 'success',
+        message: 'Avatar eliminado correctamente',
+      }));
+
+      return id;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error al eliminar avatar';
+      dispatch(showToast({ type: 'error', message }));
+      return rejectWithValue(message);
+    } finally {
+      dispatch(stopLoading());
+    }
+  }
+);
+
 // Slice
 
 const usersSlice = createSlice({
@@ -344,6 +420,38 @@ const usersSlice = createSlice({
       })
       .addCase(unlockUser.rejected, (state, action) => {
         state.error = action.payload || 'Error al desbloquear usuario';
+      });
+
+    // Upload Avatar
+    builder
+      .addCase(uploadUserAvatar.fulfilled, (state, action) => {
+        const index = state.users.findIndex((u) => u.id === action.payload.id);
+        if (index !== -1) {
+          state.users[index].avatar_url = action.payload.avatar_url;
+        }
+        if (state.currentUser?.id === action.payload.id) {
+          state.currentUser.avatar_url = action.payload.avatar_url;
+        }
+        state.error = null;
+      })
+      .addCase(uploadUserAvatar.rejected, (state, action) => {
+        state.error = action.payload || 'Error al subir avatar';
+      });
+
+    // Delete Avatar
+    builder
+      .addCase(deleteUserAvatar.fulfilled, (state, action) => {
+        const index = state.users.findIndex((u) => u.id === action.payload);
+        if (index !== -1) {
+          state.users[index].avatar_url = undefined;
+        }
+        if (state.currentUser?.id === action.payload) {
+          state.currentUser.avatar_url = undefined;
+        }
+        state.error = null;
+      })
+      .addCase(deleteUserAvatar.rejected, (state, action) => {
+        state.error = action.payload || 'Error al eliminar avatar';
       });
   },
 });

@@ -52,6 +52,7 @@ export interface User {
   failed_login_attempts?: number;
   locked_until?: ISODateString | null;
   language?: string;
+  avatar_url?: string;
   created_at: ISODateString;
   updated_at?: ISODateString;
 }

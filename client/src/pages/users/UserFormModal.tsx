@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch } from '../../store';
-import { createUser, updateUser } from '../../store/slices/usersSlice';
+import { createUser, updateUser, uploadUserAvatar, deleteUserAvatar } from '../../store/slices/usersSlice';
 import { roleService, branchService } from '../../services/api';
 import { Button } from '../../components/ui';
 import type { User, Role, Branch } from '../../types';
-import { MdClose } from 'react-icons/md';
+import { MdClose, MdCameraAlt, MdDelete, MdPerson } from 'react-icons/md';
 
 interface UserFormModalProps {
   user: User | null;
@@ -14,9 +14,13 @@ interface UserFormModalProps {
 
 const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) => {
   const dispatch = useAppDispatch();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatar_url || null);
+  const [pendingAvatar, setPendingAvatar] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     employee_code: user?.employee_code || '',
     email: user?.email || '',
@@ -54,6 +58,60 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
 
     fetchData();
   }, []);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setErrors({ ...errors, avatar: 'El archivo debe ser una imagen' });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors({ ...errors, avatar: 'La imagen no debe superar 5MB' });
+      return;
+    }
+
+    // Clear previous error
+    if (errors.avatar) {
+      setErrors({ ...errors, avatar: '' });
+    }
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setAvatarPreview(base64);
+      setPendingAvatar(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeleteAvatar = async () => {
+    if (user?.id && user.avatar_url) {
+      setAvatarLoading(true);
+      try {
+        await dispatch(deleteUserAvatar(user.id)).unwrap();
+        setAvatarPreview(null);
+        setPendingAvatar(null);
+      } catch (error) {
+        console.error('Error deleting avatar:', error);
+      } finally {
+        setAvatarLoading(false);
+      }
+    } else {
+      // Just clear the preview for new users or pending uploads
+      setAvatarPreview(null);
+      setPendingAvatar(null);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -129,17 +187,26 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
       if (formData.primary_branch_id) submitData.primary_branch_id = formData.primary_branch_id;
       if (formData.pin_code) submitData.pin_code = formData.pin_code;
 
+      let userId: string;
+
       if (user) {
         // Update existing user
         submitData.is_active = formData.is_active;
         if (formData.password) {
           submitData.password = formData.password;
         }
-        await dispatch(updateUser({ id: user.id, data: submitData }));
+        await dispatch(updateUser({ id: user.id, data: submitData })).unwrap();
+        userId = user.id;
       } else {
         // Create new user
         submitData.password = formData.password;
-        await dispatch(createUser(submitData));
+        const result = await dispatch(createUser(submitData)).unwrap();
+        userId = result.id;
+      }
+
+      // Upload avatar if there's a pending one
+      if (pendingAvatar && userId) {
+        await dispatch(uploadUserAvatar({ id: userId, avatar: pendingAvatar })).unwrap();
       }
 
       onSave();
@@ -168,6 +235,63 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Avatar Upload */}
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+              <div
+                onClick={handleAvatarClick}
+                className="w-24 h-24 rounded-sm bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border-2 border-dashed border-gray-300 dark:border-gray-600"
+              >
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <MdPerson className="w-12 h-12 text-gray-400" />
+                )}
+                {avatarLoading && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleAvatarClick}
+                className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors"
+                title="Cambiar avatar"
+              >
+                <MdCameraAlt className="w-4 h-4" />
+              </button>
+              {avatarPreview && (
+                <button
+                  type="button"
+                  onClick={handleDeleteAvatar}
+                  disabled={avatarLoading}
+                  className="absolute -top-1 -right-1 w-6 h-6 bg-danger-500 text-white rounded-full flex items-center justify-center hover:bg-danger-600 transition-colors disabled:opacity-50"
+                  title="Eliminar avatar"
+                >
+                  <MdDelete className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              className="hidden"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Haz clic para subir una foto (max 5MB)
+            </p>
+            {errors.avatar && (
+              <p className="text-danger-500 text-sm">{errors.avatar}</p>
+            )}
+          </div>
+
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div>

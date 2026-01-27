@@ -331,10 +331,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             aria-haspopup="true"
             aria-expanded={userMenuOpen ? 'true' : undefined}
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-white/30 to-white/10 rounded-full flex items-center justify-center backdrop-blur-sm ring-2 ring-white/20">
-              <span className="text-white font-bold text-sm">
-                {user?.first_name?.[0]}{user?.last_name?.[0]}
-              </span>
+            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center backdrop-blur-sm ring-2 ring-white/20 bg-gradient-to-br from-white/30 to-white/10">
+              {user?.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={`${user.first_name} ${user.last_name}`}
+                  className="w-10 h-10 object-cover"
+                />
+              ) : (
+                <span className="text-white font-bold text-sm">
+                  {user?.first_name?.[0]}{user?.last_name?.[0]}
+                </span>
+              )}
             </div>
             <div className="flex-1 text-left min-w-0">
               <p className="text-sm font-semibold text-white truncate">

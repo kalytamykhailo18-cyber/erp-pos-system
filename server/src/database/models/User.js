@@ -79,6 +79,12 @@ module.exports = (sequelize) => {
     language: {
       type: DataTypes.STRING(10),
       defaultValue: 'es'
+    },
+    // Avatar
+    avatar_url: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+      comment: 'Cloudinary URL for user avatar image'
     }
   }, {
     tableName: 'users',

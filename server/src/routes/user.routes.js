@@ -157,4 +157,30 @@ router.put(
   userController.updateBranches
 );
 
+/**
+ * @route   POST /api/v1/users/:id/avatar
+ * @desc    Upload user avatar (base64 image)
+ * @access  Private (self or can_manage_users)
+ */
+router.post(
+  '/:id/avatar',
+  [
+    uuidParam('id'),
+    stringField('avatar', { required: true }),
+    validate
+  ],
+  userController.uploadAvatar
+);
+
+/**
+ * @route   DELETE /api/v1/users/:id/avatar
+ * @desc    Delete user avatar
+ * @access  Private (self or can_manage_users)
+ */
+router.delete(
+  '/:id/avatar',
+  [uuidParam('id'), validate],
+  userController.deleteAvatar
+);
+
 module.exports = router;

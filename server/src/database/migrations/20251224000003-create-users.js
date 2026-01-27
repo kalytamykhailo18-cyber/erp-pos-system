@@ -79,6 +79,11 @@ module.exports = {
         type: Sequelize.STRING(10),
         defaultValue: 'es'
       },
+      avatar_url: {
+        type: Sequelize.STRING(500),
+        allowNull: true,
+        comment: 'Cloudinary URL for user avatar image'
+      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
