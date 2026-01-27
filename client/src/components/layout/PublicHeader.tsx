@@ -1,10 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigation } from '../../hooks/useNavigation';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import LoginIcon from '@mui/icons-material/Login';
 
 const PublicHeader: React.FC = () => {
-  const navigate = useNavigate();
+  const { goTo, goToLogin } = useNavigation();
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
@@ -13,7 +13,7 @@ const PublicHeader: React.FC = () => {
           {/* Logo */}
           <div
             className="flex items-center gap-2 cursor-pointer"
-            onClick={() => navigate('/')}
+            onClick={() => goTo('/')}
           >
             <div className="w-10 h-10 bg-primary-600 rounded-sm flex items-center justify-center">
               <StorefrontIcon sx={{ fontSize: 24 }} className="text-white" />
@@ -52,7 +52,7 @@ const PublicHeader: React.FC = () => {
 
           {/* Login Button */}
           <button
-            onClick={() => navigate('/login')}
+            onClick={goToLogin}
             className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors"
           >
             <LoginIcon sx={{ fontSize: 20 }} />

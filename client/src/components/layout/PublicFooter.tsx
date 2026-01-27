@@ -1,10 +1,12 @@
 import React from 'react';
+import { useNavigation } from '../../hooks/useNavigation';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 
 const PublicFooter: React.FC = () => {
+  const { goToLogin } = useNavigation();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -45,9 +47,9 @@ const PublicFooter: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="/login" className="hover:text-primary-400 transition-colors">
+                <button onClick={goToLogin} className="hover:text-primary-400 transition-colors">
                   Iniciar Sesión
-                </a>
+                </button>
               </li>
               <li>
                 <a href="#contact" className="hover:text-primary-400 transition-colors">

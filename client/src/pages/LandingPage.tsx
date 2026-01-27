@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigation } from '../hooks/useNavigation';
 import PublicHeader from '../components/layout/PublicHeader';
 import PublicFooter from '../components/layout/PublicFooter';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
@@ -16,7 +16,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import DevicesIcon from '@mui/icons-material/Devices';
 
 const LandingPage: React.FC = () => {
-  const navigate = useNavigate();
+  const { goToLogin } = useNavigation();
 
   const features = [
     {
@@ -100,7 +100,7 @@ const LandingPage: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-zoom-in">
               <button
-                onClick={() => navigate('/login')}
+                onClick={goToLogin}
                 className="px-8 py-4 bg-white text-primary-700 rounded-sm font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"
               >
                 Comenzar Ahora
@@ -226,7 +226,7 @@ const LandingPage: React.FC = () => {
             Comienza a usar Juan POS hoy y lleva tu tienda de mascotas al siguiente nivel
           </p>
           <button
-            onClick={() => navigate('/login')}
+            onClick={goToLogin}
             className="px-10 py-4 bg-primary-600 text-white rounded-sm font-semibold hover:bg-primary-700 transition-all transform hover:scale-105 shadow-lg text-lg"
           >
             Iniciar Sesión Ahora
