@@ -65,7 +65,7 @@ router.post(
     uuidParam('conversationId'),
     stringField('content', { minLength: 1 }),
     enumField('message_type', ['TEXT', 'IMAGE', 'TRANSFER_REQUEST'], { required: false }),
-    uuidField('transfer_id', { required: false }),
+    uuidField('transfer_id', false),
     validate
   ],
   chatController.sendMessage

@@ -68,8 +68,8 @@ router.post(
   '/',
   [
     requireRole(['CASHIER', 'MANAGER', 'OWNER']),
-    uuidField('branch_id', { required: true }),
-    uuidField('product_id', { required: true }),
+    uuidField('branch_id', true),
+    uuidField('product_id', true),
     decimalField('quantity', { min: 0.001, required: true }),
     enumField('deduction_type', ['FREE_SAMPLE', 'DONATION'], { required: true }),
     stringField('reason', { max: 500, required: false }),

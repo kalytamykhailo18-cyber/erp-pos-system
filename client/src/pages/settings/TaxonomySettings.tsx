@@ -26,11 +26,16 @@ import type { Species, Variety, ProductType, UUID } from '../../types';
 
 const TaxonomySettings: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { species, varieties, productTypes } = useSelector(
+  const { species, varieties, productTypes, loading } = useSelector(
     (state: RootState) => state.taxonomy
   );
 
   const [activeTab, setActiveTab] = useState<'species' | 'varieties' | 'types'>('species');
+
+  // Saving states for each modal
+  const [savingSpecies, setSavingSpecies] = useState(false);
+  const [savingVariety, setSavingVariety] = useState(false);
+  const [savingType, setSavingType] = useState(false);
 
   // Species state
   const [showSpeciesModal, setShowSpeciesModal] = useState(false);
@@ -182,29 +187,46 @@ const TaxonomySettings: React.FC = () => {
       return;
     }
 
-    if (editingSpecies) {
-      await dispatch(updateSpecies({ id: editingSpecies.id, data: speciesForm }));
-    } else {
-      await dispatch(createSpecies(speciesForm));
+    setSavingSpecies(true);
+    try {
+      if (editingSpecies) {
+        await dispatch(updateSpecies({ id: editingSpecies.id, data: speciesForm })).unwrap();
+      } else {
+        await dispatch(createSpecies(speciesForm)).unwrap();
+      }
+
+      // Operation succeeded - close modal and reload
+      setShowSpeciesModal(false);
+      dispatch(loadSpecies());
+    } catch {
+      // Error is already handled by thunk (shows toast)
+    } finally {
+      setSavingSpecies(false);
     }
-    setShowSpeciesModal(false);
-    dispatch(loadSpecies());
   };
 
   const handleDeleteSpecies = async (id: UUID) => {
     if (window.confirm('¿Estás seguro de eliminar esta especie?')) {
-      await dispatch(deleteSpecies(id));
-      dispatch(loadSpecies());
+      try {
+        await dispatch(deleteSpecies(id)).unwrap();
+        dispatch(loadSpecies());
+      } catch {
+        // Error is already handled by thunk (shows toast)
+      }
     }
   };
 
   const handleToggleSpecies = async (sp: Species) => {
-    if (sp.is_active) {
-      await dispatch(deactivateSpecies(sp.id));
-    } else {
-      await dispatch(activateSpecies(sp.id));
+    try {
+      if (sp.is_active) {
+        await dispatch(deactivateSpecies(sp.id)).unwrap();
+      } else {
+        await dispatch(activateSpecies(sp.id)).unwrap();
+      }
+      dispatch(loadSpecies());
+    } catch {
+      // Error is already handled by thunk (shows toast)
     }
-    dispatch(loadSpecies());
   };
 
   // ============================================
@@ -238,39 +260,61 @@ const TaxonomySettings: React.FC = () => {
       return;
     }
 
-    if (editingVariety) {
-      await dispatch(
-        updateVariety({
-          id: editingVariety.id,
-          data: { ...varietyForm, species_id: selectedSpeciesForVariety },
-        })
-      );
-    } else {
-      await dispatch(
-        createVariety({
-          ...varietyForm,
-          species_id: selectedSpeciesForVariety,
-        })
-      );
+    // Type guard - selectedSpeciesForVariety is validated in validateVarietyForm
+    if (!selectedSpeciesForVariety) {
+      return;
     }
-    setShowVarietyModal(false);
-    dispatch(loadVarieties());
+
+    setSavingVariety(true);
+    try {
+      if (editingVariety) {
+        await dispatch(
+          updateVariety({
+            id: editingVariety.id,
+            data: { ...varietyForm, species_id: selectedSpeciesForVariety as UUID },
+          })
+        ).unwrap();
+      } else {
+        await dispatch(
+          createVariety({
+            ...varietyForm,
+            species_id: selectedSpeciesForVariety as UUID,
+          })
+        ).unwrap();
+      }
+
+      // Operation succeeded - close modal and reload
+      setShowVarietyModal(false);
+      dispatch(loadVarieties());
+    } catch {
+      // Error is already handled by thunk (shows toast)
+    } finally {
+      setSavingVariety(false);
+    }
   };
 
   const handleDeleteVariety = async (id: UUID) => {
     if (window.confirm('¿Estás seguro de eliminar esta variedad?')) {
-      await dispatch(deleteVariety(id));
-      dispatch(loadVarieties());
+      try {
+        await dispatch(deleteVariety(id)).unwrap();
+        dispatch(loadVarieties());
+      } catch {
+        // Error is already handled by thunk (shows toast)
+      }
     }
   };
 
   const handleToggleVariety = async (variety: Variety) => {
-    if (variety.is_active) {
-      await dispatch(deactivateVariety(variety.id));
-    } else {
-      await dispatch(activateVariety(variety.id));
+    try {
+      if (variety.is_active) {
+        await dispatch(deactivateVariety(variety.id)).unwrap();
+      } else {
+        await dispatch(activateVariety(variety.id)).unwrap();
+      }
+      dispatch(loadVarieties());
+    } catch {
+      // Error is already handled by thunk (shows toast)
     }
-    dispatch(loadVarieties());
   };
 
   // ============================================
@@ -302,30 +346,56 @@ const TaxonomySettings: React.FC = () => {
       return;
     }
 
-    if (editingType) {
-      await dispatch(updateProductType({ id: editingType.id, data: typeForm }));
-    } else {
-      await dispatch(createProductType(typeForm));
+    setSavingType(true);
+    try {
+      if (editingType) {
+        await dispatch(updateProductType({ id: editingType.id, data: typeForm })).unwrap();
+      } else {
+        await dispatch(createProductType(typeForm)).unwrap();
+      }
+
+      // Operation succeeded - close modal and reload
+      setShowTypeModal(false);
+      dispatch(loadProductTypes());
+    } catch {
+      // Error is already handled by thunk (shows toast)
+    } finally {
+      setSavingType(false);
     }
-    setShowTypeModal(false);
-    dispatch(loadProductTypes());
   };
 
   const handleDeleteType = async (id: UUID) => {
     if (window.confirm('¿Estás seguro de eliminar este tipo de producto?')) {
-      await dispatch(deleteProductType(id));
-      dispatch(loadProductTypes());
+      try {
+        await dispatch(deleteProductType(id)).unwrap();
+        dispatch(loadProductTypes());
+      } catch {
+        // Error is already handled by thunk (shows toast)
+      }
     }
   };
 
   const handleToggleType = async (type: ProductType) => {
-    if (type.is_active) {
-      await dispatch(deactivateProductType(type.id));
-    } else {
-      await dispatch(activateProductType(type.id));
+    try {
+      if (type.is_active) {
+        await dispatch(deactivateProductType(type.id)).unwrap();
+      } else {
+        await dispatch(activateProductType(type.id)).unwrap();
+      }
+      dispatch(loadProductTypes());
+    } catch {
+      // Error is already handled by thunk (shows toast)
     }
-    dispatch(loadProductTypes());
   };
+
+  // Show loading spinner on initial load
+  if (loading && species.length === 0 && varieties.length === 0 && productTypes.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -715,15 +785,20 @@ const TaxonomySettings: React.FC = () => {
                     setShowSpeciesModal(false);
                     setSpeciesErrors({});
                   }}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm transition-colors"
+                  disabled={savingSpecies}
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm transition-colors disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors"
+                  disabled={savingSpecies}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
-                  Guardar
+                  {savingSpecies && (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  )}
+                  {savingSpecies ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
             </form>
@@ -757,11 +832,13 @@ const TaxonomySettings: React.FC = () => {
                   } rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2`}
                 >
                   <option value="">Seleccionar especie...</option>
-                  {species.filter((s) => s.is_active).map((sp) => (
-                    <option key={sp.id} value={sp.id}>
-                      {sp.name}
-                    </option>
-                  ))}
+                  {species
+                    .filter((s) => s.is_active || s.id === selectedSpeciesForVariety)
+                    .map((sp) => (
+                      <option key={sp.id} value={sp.id}>
+                        {sp.name}{!sp.is_active ? ' (Inactivo)' : ''}
+                      </option>
+                    ))}
                 </select>
                 {varietyErrors.species_id && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400">{varietyErrors.species_id}</p>
@@ -830,15 +907,20 @@ const TaxonomySettings: React.FC = () => {
                     setShowVarietyModal(false);
                     setVarietyErrors({});
                   }}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm transition-colors"
+                  disabled={savingVariety}
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm transition-colors disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors"
+                  disabled={savingVariety}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
-                  Guardar
+                  {savingVariety && (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  )}
+                  {savingVariety ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
             </form>
@@ -917,15 +999,20 @@ const TaxonomySettings: React.FC = () => {
                     setShowTypeModal(false);
                     setTypeErrors({});
                   }}
-                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm transition-colors"
+                  disabled={savingType}
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-sm transition-colors disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors"
+                  disabled={savingType}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
-                  Guardar
+                  {savingType && (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  )}
+                  {savingType ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
             </form>

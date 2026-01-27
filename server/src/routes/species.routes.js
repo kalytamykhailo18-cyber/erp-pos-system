@@ -50,11 +50,11 @@ router.get(
 router.post(
   '/',
   [
-    requirePermission('OWNER'),
+    requirePermission('canManageProducts'),
     stringField('name', { min: 1, max: 100, required: true }),
     stringField('description', { max: 1000, required: false }),
     integerField('sort_order', { min: 0, required: false }),
-    booleanField('is_active', { required: false }),
+    booleanField('is_active', false),
     validate
   ],
   speciesController.create
@@ -68,12 +68,12 @@ router.post(
 router.put(
   '/:id',
   [
-    requirePermission('OWNER'),
+    requirePermission('canManageProducts'),
     uuidParam('id'),
     stringField('name', { min: 1, max: 100, required: false }),
     stringField('description', { max: 1000, required: false }),
     integerField('sort_order', { min: 0, required: false }),
-    booleanField('is_active', { required: false }),
+    booleanField('is_active', false),
     validate
   ],
   speciesController.update
@@ -86,7 +86,7 @@ router.put(
  */
 router.delete(
   '/:id',
-  [requirePermission('OWNER'), uuidParam('id'), validate],
+  [requirePermission('canManageProducts'), uuidParam('id'), validate],
   speciesController.delete
 );
 
@@ -97,7 +97,7 @@ router.delete(
  */
 router.patch(
   '/:id/activate',
-  [requirePermission('OWNER'), uuidParam('id'), validate],
+  [requirePermission('canManageProducts'), uuidParam('id'), validate],
   speciesController.activate
 );
 
@@ -108,7 +108,7 @@ router.patch(
  */
 router.patch(
   '/:id/deactivate',
-  [requirePermission('OWNER'), uuidParam('id'), validate],
+  [requirePermission('canManageProducts'), uuidParam('id'), validate],
   speciesController.deactivate
 );
 

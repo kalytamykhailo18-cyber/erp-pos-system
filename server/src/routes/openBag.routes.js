@@ -74,8 +74,8 @@ router.post(
   '/',
   [
     requireRole(['CASHIER', 'MANAGER', 'OWNER']),
-    uuidField('branch_id', { required: true }),
-    uuidField('product_id', { required: true }),
+    uuidField('branch_id', true),
+    uuidField('product_id', true),
     decimalField('original_weight', { min: 0.001, required: true }),
     decimalField('low_stock_threshold', { min: 0, required: false }),
     stringField('notes', { max: 500, required: false }),
@@ -95,7 +95,7 @@ router.patch(
     requireRole(['CASHIER', 'MANAGER', 'OWNER']),
     uuidParam('id'),
     decimalField('quantity', { min: 0.001, required: true }),
-    uuidField('sale_id', { required: false }),
+    uuidField('sale_id', false),
     validate
   ],
   openBagController.deduct

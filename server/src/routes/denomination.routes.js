@@ -71,7 +71,7 @@ router.put(
     uuidParam('id'),
     decimalField('value', { min: 0, required: false }),
     stringField('label', { minLength: 1, maxLength: 50, required: false }),
-    booleanField('is_active', { required: false }),
+    booleanField('is_active', false),
     integerField('display_order', { min: 0, required: false }),
     validate
   ],

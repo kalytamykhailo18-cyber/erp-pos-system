@@ -67,12 +67,12 @@ router.get(
 router.post(
   '/',
   [
-    requirePermission('OWNER'),
-    uuidField('species_id', { required: true }),
+    requirePermission('canManageProducts'),
+    uuidField('species_id', true),
     stringField('name', { min: 1, max: 100, required: true }),
     stringField('description', { max: 1000, required: false }),
     integerField('sort_order', { min: 0, required: false }),
-    booleanField('is_active', { required: false }),
+    booleanField('is_active', false),
     validate
   ],
   varietyController.create
@@ -86,13 +86,13 @@ router.post(
 router.put(
   '/:id',
   [
-    requirePermission('OWNER'),
+    requirePermission('canManageProducts'),
     uuidParam('id'),
-    uuidField('species_id', { required: false }),
+    uuidField('species_id', false),
     stringField('name', { min: 1, max: 100, required: false }),
     stringField('description', { max: 1000, required: false }),
     integerField('sort_order', { min: 0, required: false }),
-    booleanField('is_active', { required: false }),
+    booleanField('is_active', false),
     validate
   ],
   varietyController.update
@@ -105,7 +105,7 @@ router.put(
  */
 router.delete(
   '/:id',
-  [requirePermission('OWNER'), uuidParam('id'), validate],
+  [requirePermission('canManageProducts'), uuidParam('id'), validate],
   varietyController.delete
 );
 
@@ -116,7 +116,7 @@ router.delete(
  */
 router.patch(
   '/:id/activate',
-  [requirePermission('OWNER'), uuidParam('id'), validate],
+  [requirePermission('canManageProducts'), uuidParam('id'), validate],
   varietyController.activate
 );
 
@@ -127,7 +127,7 @@ router.patch(
  */
 router.patch(
   '/:id/deactivate',
-  [requirePermission('OWNER'), uuidParam('id'), validate],
+  [requirePermission('canManageProducts'), uuidParam('id'), validate],
   varietyController.deactivate
 );
 
