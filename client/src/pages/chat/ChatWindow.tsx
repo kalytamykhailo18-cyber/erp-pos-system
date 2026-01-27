@@ -33,7 +33,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setMessageInput('');
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -172,7 +172,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           <Input
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             placeholder="Escribe un mensaje..."
             className="flex-1"
             disabled={loading}

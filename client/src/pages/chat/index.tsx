@@ -6,6 +6,7 @@ import {
   fetchMessages,
   sendMessage,
   markAsRead,
+  setCurrentConversation,
   addMessageRealtime,
   removeMessageRealtime,
   updateUnreadCount
@@ -88,7 +89,7 @@ const ChatPage: React.FC = () => {
   }, [currentConversation?.id, dispatch]);
 
   const handleSelectConversation = (conversation: ChatConversation) => {
-    dispatch(fetchMessages({ conversationId: conversation.id }));
+    dispatch(setCurrentConversation(conversation));
   };
 
   const handleCreateConversation = async (branchAId: UUID, branchBId: UUID) => {

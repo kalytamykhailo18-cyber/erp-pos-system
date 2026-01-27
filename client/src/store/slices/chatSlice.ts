@@ -215,6 +215,9 @@ const chatSlice = createSlice({
   name: 'chat',
   initialState,
   reducers: {
+    setCurrentConversation: (state, action: PayloadAction<ChatConversation>) => {
+      state.currentConversation = action.payload;
+    },
     clearCurrentConversation: (state) => {
       state.currentConversation = null;
       state.messages = [];
@@ -281,11 +284,15 @@ const chatSlice = createSlice({
       })
       .addCase(fetchMessages.fulfilled, (state, action) => {
         state.loading = false;
-        // Prepend for pagination (older messages loaded)
+        // Backend returns messages in DESC order (newest first)
+        // Reverse for display: oldest at top, newest at bottom
+        const reversedMessages = [...action.payload.messages].reverse();
+
         if (action.meta.arg.page === 1) {
-          state.messages = action.payload.messages;
+          state.messages = reversedMessages;
         } else {
-          state.messages = [...action.payload.messages, ...state.messages];
+          // Prepend older messages at top (they come as newer-to-older, so reverse first)
+          state.messages = [...reversedMessages, ...state.messages];
         }
         state.pagination.total = action.payload.total;
         state.pagination.page = action.meta.arg.page || 1;
@@ -323,6 +330,7 @@ const chatSlice = createSlice({
 });
 
 export const {
+  setCurrentConversation,
   clearCurrentConversation,
   clearError,
   addMessageRealtime,

@@ -25,7 +25,8 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
   };
 
   const formatLastMessage = (conversation: ChatConversation) => {
-    const lastMessage = conversation.messages?.[conversation.messages.length - 1];
+    // Backend returns messages ordered DESC with limit 1, so first element is the latest
+    const lastMessage = conversation.messages?.[0];
     if (!lastMessage) return 'Sin mensajes';
 
     if (lastMessage.message_type === 'TRANSFER_REQUEST') {
@@ -33,7 +34,7 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
     }
 
     if (lastMessage.is_deleted) {
-      return '🚫 Mensaje eliminado';
+      return 'Mensaje eliminado';
     }
 
     return lastMessage.content.substring(0, 50) + (lastMessage.content.length > 50 ? '...' : '');

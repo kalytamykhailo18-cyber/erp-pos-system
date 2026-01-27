@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 const { sequelize } = require('../database/models');
 const {
@@ -20,14 +21,23 @@ exports.getConversations = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
+    // First, get conversation IDs where user is participant
+    const userParticipations = await ChatParticipant.findAll({
+      where: { user_id: userId, left_at: null },
+      attributes: ['conversation_id', 'last_read_at']
+    });
+
+    if (userParticipations.length === 0) {
+      return success(res, []);
+    }
+
+    const conversationIds = userParticipations.map(p => p.conversation_id);
+    const lastReadMap = new Map(userParticipations.map(p => [p.conversation_id, p.last_read_at]));
+
+    // Fetch conversations with all needed data
     const conversations = await ChatConversation.findAll({
+      where: { id: conversationIds },
       include: [
-        {
-          model: ChatParticipant,
-          as: 'participants',
-          where: { user_id: userId, left_at: null },
-          required: true
-        },
         {
           model: ChatParticipant,
           as: 'participants',
@@ -41,13 +51,35 @@ exports.getConversations = async (req, res, next) => {
           separate: true,
           limit: 1,
           order: [['created_at', 'DESC']],
-          attributes: ['id', 'content', 'message_type', 'created_at']
+          attributes: ['id', 'content', 'message_type', 'created_at', 'is_deleted']
         }
       ],
       order: [['updated_at', 'DESC']]
     });
 
-    return success(res, conversations);
+    // Calculate unread count for each conversation
+    const conversationsWithUnread = await Promise.all(conversations.map(async (conv) => {
+      const convJson = conv.toJSON();
+      const lastReadAt = lastReadMap.get(conv.id);
+
+      // Count unread messages (messages after last_read_at)
+      const whereClause = {
+        conversation_id: conv.id,
+        is_deleted: false,
+        sender_id: { [Op.ne]: userId } // Don't count own messages
+      };
+
+      if (lastReadAt) {
+        whereClause.created_at = { [Op.gt]: lastReadAt };
+      }
+
+      const unreadCount = await ChatMessage.count({ where: whereClause });
+      convJson.unread_count = unreadCount;
+
+      return convJson;
+    }));
+
+    return success(res, conversationsWithUnread);
   } catch (error) {
     next(error);
   }
@@ -66,7 +98,7 @@ exports.getOrCreateBranchConversation = async (req, res, next) => {
     let conversation = await ChatConversation.findOne({
       where: {
         conversation_type: 'BRANCH',
-        [sequelize.Op.or]: [
+        [Op.or]: [
           { branch_a_id, branch_b_id },
           { branch_a_id: branch_b_id, branch_b_id: branch_a_id }
         ]
@@ -174,8 +206,7 @@ exports.getMessages = async (req, res, next) => {
 
     const { count, rows } = await ChatMessage.findAndCountAll({
       where: {
-        conversation_id: conversationId,
-        is_deleted: false
+        conversation_id: conversationId
       },
       include: [
         { model: User, as: 'sender', attributes: ['id', 'first_name', 'last_name'] },
