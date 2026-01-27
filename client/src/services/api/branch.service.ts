@@ -10,7 +10,7 @@ export interface UpdateBranchSettingsData {
   petty_cash_amount?: number;
   tax_id?: string;
   tax_condition?: string;
-  factuhoy_point_of_sale?: string;
+  factuhoy_point_of_sale?: number;
   default_invoice_type?: 'A' | 'B' | 'C';
   weekday_opening_time?: string;
   weekday_closing_time?: string;

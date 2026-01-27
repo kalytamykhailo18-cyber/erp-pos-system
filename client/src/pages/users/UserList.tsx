@@ -4,7 +4,7 @@ import { deactivateUser, unlockUser, resetUserPassword } from '../../store/slice
 import { Pagination } from '../../components/ui';
 import type { PaginationState } from '../../components/ui/Pagination';
 import type { User } from '../../types';
-import { MdGroup, MdLock, MdEdit, MdLockOpen, MdKey, MdBlock, MdPerson } from 'react-icons/md';
+import { MdGroup, MdLock, MdEdit, MdLockOpen, MdKey, MdBlock } from 'react-icons/md';
 
 interface UserListProps {
   users: User[];
