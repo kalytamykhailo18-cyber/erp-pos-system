@@ -33,8 +33,8 @@ exports.getBySpecies = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
   try {
-    const { page, limit, offset, sortBy, sortOrder } = parsePagination(req.query);
-    const { species_id, is_active, search } = req.query;
+    const { page, limit, offset } = parsePagination(req.query);
+    const { species_id, is_active, search, sort_by, sort_order } = req.query;
 
     const where = {};
     if (species_id) where.species_id = species_id;
@@ -52,7 +52,7 @@ exports.getAll = async (req, res, next) => {
           attributes: ['id', 'name']
         }
       ],
-      order: [[sortBy || 'sort_order', sortOrder || 'ASC']],
+      order: [[sort_by || 'updated_at', sort_order?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC']],
       limit,
       offset
     });

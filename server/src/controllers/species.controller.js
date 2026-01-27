@@ -7,8 +7,8 @@ const { parsePagination } = require('../utils/helpers');
 
 exports.getAll = async (req, res, next) => {
   try {
-    const { page, limit, offset, sortBy, sortOrder } = parsePagination(req.query);
-    const { is_active, search } = req.query;
+    const { page, limit, offset } = parsePagination(req.query);
+    const { is_active, search, sort_by, sort_order } = req.query;
 
     const where = {};
     if (is_active !== undefined) where.is_active = is_active === 'true';
@@ -27,7 +27,7 @@ exports.getAll = async (req, res, next) => {
           required: false
         }
       ],
-      order: [[sortBy || 'sort_order', sortOrder || 'ASC']],
+      order: [[sort_by || 'updated_at', sort_order?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC']],
       limit,
       offset
     });

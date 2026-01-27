@@ -523,6 +523,11 @@ const TaxonomySettings: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+              {species.length === 0 && (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  No hay especies registradas
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -618,6 +623,11 @@ const TaxonomySettings: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+              {varieties.length === 0 && (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  No hay variedades registradas
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -709,6 +719,11 @@ const TaxonomySettings: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+              {productTypes.length === 0 && (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  No hay tipos de producto registrados
+                </div>
+              )}
             </div>
           </div>
         )}
