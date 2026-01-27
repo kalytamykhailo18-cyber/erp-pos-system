@@ -15,6 +15,7 @@ import {
   cancelTransfer,
   fetchTransferById
 } from '../../store/slices/transferSlice';
+import { loadProducts } from '../../store/slices/productsSlice';
 import { Card, Button } from '../../components/ui';
 import { MdInventory } from 'react-icons/md';
 import StockInventoryList from './StockInventoryList';
@@ -83,6 +84,13 @@ const StockPage: React.FC = () => {
     }
   }, [activeTab]);
 
+  // Load products when inventory count modal is opened (for product search)
+  useEffect(() => {
+    if (showInventoryCountModal && products.length === 0) {
+      dispatch(loadProducts({ limit: 500 }));
+    }
+  }, [showInventoryCountModal, products.length, dispatch]);
+
   const loadStock = () => {
     if (!currentBranch?.id) return;
     dispatch(fetchBranchStock({
@@ -103,18 +111,20 @@ const StockPage: React.FC = () => {
   };
 
   // Handle stock adjustment
-  const handleAdjustment = async () => {
-    if (!selectedItem || !adjustmentData.quantity || !currentBranch?.id) return;
+  const handleAdjustment = async (productIdFromModal?: string) => {
+    const productId = selectedItem?.product_id || productIdFromModal;
+    if (!productId || !adjustmentData.quantity || !currentBranch?.id) return;
 
     try {
       await dispatch(adjustStock({
         branch_id: currentBranch.id,
-        product_id: selectedItem.product_id,
+        product_id: productId,
         quantity: parseFloat(adjustmentData.quantity),
         reason: adjustmentData.reason,
       })).unwrap();
 
       setShowAdjustModal(false);
+      setSelectedItem(null);
       setAdjustmentData({ quantity: '', reason: '', type: 'adjustment' });
       loadStock();
     } catch (error) {
@@ -123,18 +133,20 @@ const StockPage: React.FC = () => {
   };
 
   // Handle shrinkage adjustment (quick adjustment for pet food)
-  const handleShrinkageAdjustment = async () => {
-    if (!selectedItem || !adjustmentData.quantity || !currentBranch?.id) return;
+  const handleShrinkageAdjustment = async (productIdFromModal?: string) => {
+    const productId = selectedItem?.product_id || productIdFromModal;
+    if (!productId || !adjustmentData.quantity || !currentBranch?.id) return;
 
     try {
       await dispatch(recordShrinkage({
         branch_id: currentBranch.id,
-        product_id: selectedItem.product_id,
+        product_id: productId,
         quantity: parseFloat(adjustmentData.quantity),
         reason: adjustmentData.reason || 'OTHER',
       })).unwrap();
 
       setShowShrinkageModal(false);
+      setSelectedItem(null);
       setAdjustmentData({ quantity: '', reason: '', type: 'adjustment' });
       loadStock();
     } catch (error) {
@@ -385,8 +397,12 @@ const StockPage: React.FC = () => {
       {/* Modals */}
       <AdjustStockModal
         isOpen={showAdjustModal}
-        onClose={() => setShowAdjustModal(false)}
+        onClose={() => {
+          setShowAdjustModal(false);
+          setSelectedItem(null);
+        }}
         selectedItem={selectedItem}
+        stockItems={stock}
         adjustmentData={adjustmentData}
         onDataChange={setAdjustmentData}
         onSubmit={handleAdjustment}
@@ -395,8 +411,12 @@ const StockPage: React.FC = () => {
 
       <ShrinkageModal
         isOpen={showShrinkageModal}
-        onClose={() => setShowShrinkageModal(false)}
+        onClose={() => {
+          setShowShrinkageModal(false);
+          setSelectedItem(null);
+        }}
         selectedItem={selectedItem}
+        stockItems={stock}
         adjustmentData={adjustmentData}
         onDataChange={setAdjustmentData}
         onSubmit={handleShrinkageAdjustment}

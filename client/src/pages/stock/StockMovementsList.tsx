@@ -36,10 +36,14 @@ const StockMovementsList: React.FC<StockMovementsListProps> = ({
       SALE: { label: 'Venta', color: 'text-danger-500' },
       PURCHASE: { label: 'Compra', color: 'text-green-500' },
       ADJUSTMENT: { label: 'Ajuste', color: 'text-blue-500' },
+      ADJUSTMENT_PLUS: { label: 'Ajuste (+)', color: 'text-green-500' },
+      ADJUSTMENT_MINUS: { label: 'Ajuste (-)', color: 'text-danger-500' },
       TRANSFER_IN: { label: 'Transferencia (entrada)', color: 'text-green-500' },
       TRANSFER_OUT: { label: 'Transferencia (salida)', color: 'text-warning-500' },
       SHRINKAGE: { label: 'Merma', color: 'text-warning-500' },
       COUNT: { label: 'Conteo', color: 'text-purple-500' },
+      INVENTORY_COUNT: { label: 'Conteo Físico', color: 'text-purple-500' },
+      INITIAL: { label: 'Inicial', color: 'text-blue-500' },
       RETURN: { label: 'Devolución', color: 'text-green-500' },
     };
     return styles[type] || { label: type, color: 'text-gray-500' };
@@ -132,8 +136,8 @@ const StockMovementsList: React.FC<StockMovementsListProps> = ({
                         <span className={`text-sm font-medium ${style.color}`}>
                           {style.label}
                         </span>
-                        {(mov as any).notes || (mov as any).adjustment_reason && (
-                          <p className="text-xs text-gray-400">{(mov as any).notes || (mov as any).adjustment_reason || (mov as any).reason}</p>
+                        {(mov.notes || mov.adjustment_reason) && (
+                          <p className="text-xs text-gray-400">{mov.notes || mov.adjustment_reason}</p>
                         )}
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -150,7 +154,7 @@ const StockMovementsList: React.FC<StockMovementsListProps> = ({
                         {formatNumber(mov.quantity_after)}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
-                        {(mov as any).performed_by_name || (mov as any).created_by_name || '-'}
+                        {mov.performed_by_name || '-'}
                       </td>
                     </tr>
                   );

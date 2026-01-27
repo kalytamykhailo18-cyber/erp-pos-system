@@ -77,8 +77,8 @@ router.post(
   [
     uuidField('branch_id'),
     uuidField('product_id'),
-    enumField('adjustment_type', ['PLUS', 'MINUS']),
-    decimalField('quantity', { min: 0.001 }),
+    // quantity can be positive (add) or negative (subtract)
+    body('quantity').isFloat().withMessage('quantity is required and must be a number'),
     stringField('reason', { minLength: 1, maxLength: 255 }),
     stringField('notes', { required: false }),
     validate

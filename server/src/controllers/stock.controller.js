@@ -41,18 +41,47 @@ exports.getBranchStock = async (req, res, next) => {
 
     const { count, rows } = await BranchStock.findAndCountAll({
       where,
-      include: [{
-        model: Product,
-        as: 'product',
-        where: productWhere,
-        required: true
-      }],
+      include: [
+        {
+          model: Product,
+          as: 'product',
+          where: productWhere,
+          required: true
+        },
+        {
+          model: Branch,
+          as: 'branch',
+          attributes: ['id', 'name', 'code']
+        }
+      ],
       order: [[{ model: Product, as: 'product' }, 'name', 'ASC']],
       limit,
       offset
     });
 
-    return paginated(res, rows, { page, limit, total_items: count });
+    // Transform to flat structure expected by frontend
+    const transformedRows = rows.map(row => {
+      const data = row.toJSON();
+      return {
+        id: data.id,
+        product_id: data.product_id,
+        product_name: data.product?.name || '',
+        product_sku: data.product?.sku || '',
+        branch_id: data.branch_id,
+        branch_name: data.branch?.name || '',
+        quantity: parseFloat(data.quantity) || 0,
+        reserved_quantity: parseFloat(data.reserved_quantity) || 0,
+        expected_shrinkage: parseFloat(data.expected_shrinkage) || 0,
+        actual_shrinkage: parseFloat(data.actual_shrinkage) || 0,
+        last_counted_at: data.last_counted_at,
+        last_counted_quantity: data.last_counted_quantity ? parseFloat(data.last_counted_quantity) : null,
+        min_stock: data.min_stock ? parseFloat(data.min_stock) : null,
+        max_stock: data.max_stock ? parseFloat(data.max_stock) : null,
+        updated_at: data.updated_at
+      };
+    });
+
+    return paginated(res, transformedRows, { page, limit, total_items: count });
   } catch (error) {
     next(error);
   }
@@ -76,7 +105,12 @@ exports.getProductStock = async (req, res, next) => {
 exports.adjustStock = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-    const { branch_id, product_id, quantity, reason, notes } = req.body;
+    const { branch_id, product_id, reason, notes } = req.body;
+    const quantity = parseFloat(req.body.quantity);
+
+    if (isNaN(quantity) || quantity === 0) {
+      throw new BusinessError('Invalid quantity');
+    }
 
     let stock = await BranchStock.findOne({
       where: { branch_id, product_id }
@@ -117,7 +151,25 @@ exports.adjustStock = async (req, res, next) => {
     }, { transaction: t });
 
     await t.commit();
-    return success(res, { stock, movement });
+
+    // Return flat structure for frontend
+    const movementData = movement.toJSON();
+    return success(res, {
+      stock: stock.toJSON(),
+      movement: {
+        id: movementData.id,
+        product_id: movementData.product_id,
+        branch_id: movementData.branch_id,
+        movement_type: movementData.movement_type,
+        quantity: parseFloat(movementData.quantity),
+        quantity_before: parseFloat(movementData.quantity_before),
+        quantity_after: parseFloat(movementData.quantity_after),
+        adjustment_reason: movementData.adjustment_reason,
+        notes: movementData.notes,
+        performed_by: movementData.performed_by,
+        created_at: movementData.created_at
+      }
+    });
   } catch (error) {
     await t.rollback();
     next(error);
@@ -178,7 +230,32 @@ exports.getMovements = async (req, res, next) => {
       offset
     });
 
-    return paginated(res, rows, { page, limit, total_items: count });
+    // Transform to flat structure expected by frontend
+    const transformedRows = rows.map(row => {
+      const data = row.toJSON();
+      return {
+        id: data.id,
+        product_id: data.product_id,
+        product_name: data.product?.name || '',
+        product_sku: data.product?.sku || '',
+        branch_id: data.branch_id,
+        branch_name: data.branch?.name || '',
+        movement_type: data.movement_type,
+        quantity: parseFloat(data.quantity) || 0,
+        quantity_before: parseFloat(data.quantity_before) || 0,
+        quantity_after: parseFloat(data.quantity_after) || 0,
+        reference_type: data.reference_type,
+        reference_id: data.reference_id,
+        adjustment_reason: data.adjustment_reason,
+        related_branch_id: data.related_branch_id,
+        performed_by: data.performed_by,
+        performed_by_name: data.performer ? `${data.performer.first_name} ${data.performer.last_name}` : null,
+        notes: data.notes,
+        created_at: data.created_at
+      };
+    });
+
+    return paginated(res, transformedRows, { page, limit, total_items: count });
   } catch (error) {
     next(error);
   }
@@ -505,7 +582,12 @@ exports.getShrinkage = async (req, res, next) => {
 exports.recordShrinkage = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-    const { branch_id, product_id, quantity, reason, notes } = req.body;
+    const { branch_id, product_id, reason, notes } = req.body;
+    const quantity = parseFloat(req.body.quantity);
+
+    if (isNaN(quantity) || quantity <= 0) {
+      throw new BusinessError('Invalid shrinkage quantity');
+    }
 
     // Get current stock
     const stock = await BranchStock.findOne({
@@ -540,7 +622,22 @@ exports.recordShrinkage = async (req, res, next) => {
     }, { transaction: t });
 
     await t.commit();
-    return created(res, movement);
+
+    // Return flat structure for frontend
+    const movementData = movement.toJSON();
+    return created(res, {
+      id: movementData.id,
+      product_id: movementData.product_id,
+      branch_id: movementData.branch_id,
+      movement_type: movementData.movement_type,
+      quantity: parseFloat(movementData.quantity),
+      quantity_before: parseFloat(movementData.quantity_before),
+      quantity_after: parseFloat(movementData.quantity_after),
+      adjustment_reason: movementData.adjustment_reason,
+      notes: movementData.notes,
+      performed_by: movementData.performed_by,
+      created_at: movementData.created_at
+    });
   } catch (error) {
     await t.rollback();
     next(error);

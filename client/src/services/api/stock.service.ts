@@ -21,6 +21,8 @@ export interface StockItem {
   actual_shrinkage: number;
   last_counted_at: string | null;
   last_counted_quantity: number | null;
+  min_stock: number | null;
+  max_stock: number | null;
   updated_at: string;
 }
 

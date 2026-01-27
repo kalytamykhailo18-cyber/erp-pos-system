@@ -161,13 +161,13 @@ const StockInventoryList: React.FC<StockInventoryListProps> = ({
                       <td className="px-6 py-4 text-right">
                         <span className={`text-lg font-bold ${
                           item.quantity <= 0 ? 'text-danger-500' :
-                          item.quantity <= 0 ? 'text-warning-500' : 'text-gray-900 dark:text-white'
+                          (item.min_stock != null && item.quantity <= item.min_stock) ? 'text-warning-500' : 'text-gray-900 dark:text-white'
                         }`}>
                           {formatNumber(item.quantity)}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right text-sm text-gray-500">
-                        {0} / {999}
+                        {item.min_stock != null ? formatNumber(item.min_stock) : '-'} / {item.max_stock != null ? formatNumber(item.max_stock) : '-'}
                       </td>
                       <td className="px-6 py-4 text-right text-sm text-gray-500">
                         {item.expected_shrinkage ? `${item.expected_shrinkage}%` : '-'}
@@ -177,7 +177,7 @@ const StockInventoryList: React.FC<StockInventoryListProps> = ({
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger-100 text-danger-800 dark:bg-danger-900/20 dark:text-danger-400">
                             Sin stock
                           </span>
-                        ) : item.quantity <= 0 ? (
+                        ) : item.min_stock != null && item.quantity <= item.min_stock ? (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800 dark:bg-warning-900/20 dark:text-warning-400">
                             Stock bajo
                           </span>
