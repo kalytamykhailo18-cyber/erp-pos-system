@@ -109,17 +109,22 @@ exports.deleteConfig = async (req, res, next) => {
 exports.getAll = async (req, res, next) => {
   try {
     const { page, limit, offset } = parsePagination(req.query);
-    const { branch_id, alert_type, severity, is_read, start_date, end_date } = req.query;
+    const { branch_id, alert_type, severity, is_read, from_date, to_date } = req.query;
 
     const where = {};
     if (branch_id) where.branch_id = branch_id;
     if (alert_type) where.alert_type = alert_type;
     if (severity) where.severity = severity;
     if (is_read !== undefined) where.is_read = is_read === 'true';
-    if (start_date || end_date) {
+    if (from_date || to_date) {
       where.created_at = {};
-      if (start_date) where.created_at[Op.gte] = new Date(start_date);
-      if (end_date) where.created_at[Op.lte] = new Date(end_date);
+      if (from_date) where.created_at[Op.gte] = new Date(from_date);
+      if (to_date) {
+        // Set to end of day for inclusive date range
+        const endDate = new Date(to_date);
+        endDate.setHours(23, 59, 59, 999);
+        where.created_at[Op.lte] = endDate;
+      }
     }
 
     const { count, rows } = await Alert.findAndCountAll({
