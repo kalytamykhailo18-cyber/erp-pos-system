@@ -122,13 +122,13 @@ const CustomersPage: React.FC = () => {
     e.preventDefault();
 
     const customerData = {
-      first_name: formData.first_name,
-      last_name: formData.last_name,
+      first_name: formData.first_name || undefined,
+      last_name: formData.last_name || undefined,
       email: formData.email || undefined,
       phone: formData.phone || undefined,
-      document_type: formData.document_type,
+      document_type: formData.document_type || undefined,
       document_number: formData.document_number || undefined,
-      tax_condition: formData.tax_condition,
+      tax_condition: formData.tax_condition || undefined,
       company_name: formData.company_name || undefined,
       address: formData.address || undefined,
       doorbell_apt: formData.doorbell_apt || undefined,
@@ -136,7 +136,7 @@ const CustomersPage: React.FC = () => {
       city: formData.city || undefined,
       postal_code: formData.postal_code || undefined,
       is_wholesale: formData.is_wholesale,
-      wholesale_discount_percent: formData.wholesale_discount_percent || undefined,
+      wholesale_discount_percent: formData.wholesale_discount_percent ? parseFloat(formData.wholesale_discount_percent) : undefined,
       assigned_vendor_id: formData.assigned_vendor_id || undefined,
       notes: formData.notes || undefined,
     };
