@@ -28,7 +28,7 @@ const SessionFilters: React.FC<SessionFiltersProps> = ({ filters, onFilterChange
             <option value="">Todos</option>
             <option value="OPEN">Abierto</option>
             <option value="CLOSED">Cerrado</option>
-            <option value="CANCELLED">Cancelado</option>
+            <option value="REOPENED">Reabierto</option>
           </select>
         </div>
 
