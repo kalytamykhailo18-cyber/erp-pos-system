@@ -274,7 +274,7 @@ const authSlice = createSlice({
       state.error = null;
     },
 
-    setCurrentBranch: (state, action: PayloadAction<Branch>) => {
+    setCurrentBranch: (state, action: PayloadAction<Branch | null>) => {
       state.currentBranch = action.payload;
     },
 

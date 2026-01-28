@@ -159,9 +159,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   };
 
   const handleBranchChange = (branchId: string) => {
-    const branch = availableBranches.find((b: Branch) => b.id === branchId);
-    if (branch) {
-      dispatch(setCurrentBranch(branch));
+    if (!branchId) {
+      // "Todas las sucursales" selected - clear current branch
+      dispatch(setCurrentBranch(null));
+    } else {
+      const branch = availableBranches.find((b: Branch) => b.id === branchId);
+      if (branch) {
+        dispatch(setCurrentBranch(branch));
+      }
     }
     handleBranchMenuClose();
   };
@@ -220,8 +225,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Branch Selector (for owners) */}
-        {canAccessAllBranches && availableBranches && availableBranches.length > 1 && (
+        {/* Branch Selector - shows for users with multiple branches */}
+        {availableBranches && availableBranches.length > 1 && (
           <div className="px-4 py-3 border-b border-primary-600/30 bg-primary-700/40">
             <p className="text-[10px] uppercase tracking-wider text-white/50 font-semibold mb-1.5 px-1">
               Sucursal Activa
@@ -263,15 +268,24 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 },
               }}
             >
-              <MenuItem
-                onClick={() => handleBranchChange('')}
-                sx={{
-                  color: 'white',
-                  '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
-                }}
-              >
-                Todas las sucursales
-              </MenuItem>
+              {/* "Todas las sucursales" only for users with can_view_all_branches permission */}
+              {canAccessAllBranches && (
+                <MenuItem
+                  onClick={() => handleBranchChange('')}
+                  selected={currentBranch === null}
+                  sx={{
+                    color: 'white',
+                    '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
+                    '&.Mui-selected': {
+                      bgcolor: 'rgb(29 78 216)',
+                      fontWeight: 600,
+                      '&:hover': { bgcolor: 'rgb(29 78 216)' },
+                    },
+                  }}
+                >
+                  Todas las sucursales
+                </MenuItem>
+              )}
               {availableBranches.map((branch: Branch) => (
                 <MenuItem
                   key={branch.id}
