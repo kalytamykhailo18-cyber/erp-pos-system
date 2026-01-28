@@ -115,6 +115,31 @@ const CashRegistersSettings: React.FC = () => {
 
   const inputClassName = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent';
 
+  // Show message if no branch selected (user selected "Todas las sucursales")
+  if (!currentBranch) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-6 animate-fade-up duration-normal">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Cajas Registradoras
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Administra las cajas registradoras de cada sucursal
+          </p>
+        </div>
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-sm p-6 text-center animate-fade-up duration-light-slow">
+          <MdPointOfSale className="w-12 h-12 mx-auto mb-3 text-amber-500" />
+          <p className="text-amber-700 dark:text-amber-400 font-medium">
+            Selecciona una sucursal para administrar sus cajas registradoras
+          </p>
+          <p className="text-sm text-amber-600 dark:text-amber-500 mt-2">
+            Usa el selector de sucursal en el menu lateral para elegir una sucursal especifica.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -125,7 +150,7 @@ const CashRegistersSettings: React.FC = () => {
               Cajas Registradoras
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Administra las cajas registradoras de la sucursal {currentBranch?.name}
+              Administra las cajas registradoras de la sucursal {currentBranch.name}
             </p>
           </div>
           <Button

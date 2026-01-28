@@ -300,22 +300,37 @@ exports.generateDailyReportData = async (branchId, date) => {
 // Owner Dashboard
 exports.getOwnerDashboard = async (req, res, next) => {
   try {
-    const { start_date, end_date } = req.query;
+    const { start_date, end_date, branch_id } = req.query;
     const endDate = end_date ? new Date(end_date) : new Date();
     const startDate = start_date ? new Date(start_date) : new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    // Get all branches for the owner
+    // Build branch filter - either specific branch or all active branches
+    const branchWhere = { is_active: true };
+    if (branch_id) {
+      branchWhere.id = branch_id;
+    }
+
+    // Get branches based on filter
     const branches = await Branch.findAll({
-      where: { is_active: true },
+      where: branchWhere,
       attributes: ['id', 'name', 'code']
     });
 
+    // Get branch IDs for filtering sales/sessions
+    const branchIds = branches.map(b => b.id);
+
+    // Build sale filter with optional branch restriction
+    const saleWhere = {
+      status: 'COMPLETED',
+      created_at: { [Op.between]: [startDate, endDate] }
+    };
+    if (branchIds.length > 0) {
+      saleWhere.branch_id = { [Op.in]: branchIds };
+    }
+
     // Overall metrics
     const overallSales = await Sale.findOne({
-      where: {
-        status: 'COMPLETED',
-        created_at: { [Op.between]: [startDate, endDate] }
-      },
+      where: saleWhere,
       attributes: [
         [sequelize.fn('COUNT', sequelize.col('id')), 'total_sales'],
         [sequelize.fn('SUM', sequelize.col('total_amount')), 'total_revenue'],
@@ -325,10 +340,7 @@ exports.getOwnerDashboard = async (req, res, next) => {
 
     // Sales by branch
     const salesByBranch = await Sale.findAll({
-      where: {
-        status: 'COMPLETED',
-        created_at: { [Op.between]: [startDate, endDate] }
-      },
+      where: saleWhere,
       attributes: [
         'branch_id',
         [sequelize.fn('COUNT', sequelize.col('Sale.id')), 'total_sales'],
@@ -340,10 +352,7 @@ exports.getOwnerDashboard = async (req, res, next) => {
 
     // Daily trend using Sequelize ORM
     const dailyTrendRaw = await Sale.findAll({
-      where: {
-        status: 'COMPLETED',
-        created_at: { [Op.between]: [startDate, endDate] }
-      },
+      where: saleWhere,
       attributes: [
         [sequelize.fn('DATE', sequelize.col('created_at')), 'date'],
         [sequelize.fn('COUNT', sequelize.col('id')), 'sales_count'],
@@ -360,12 +369,18 @@ exports.getOwnerDashboard = async (req, res, next) => {
       revenue: parseFloat(d.revenue) || 0
     }));
 
+    // Build session filter with optional branch restriction
+    const sessionWhere = {
+      closed_at: { [Op.between]: [startDate, endDate] },
+      discrepancy_cash: { [Op.ne]: 0 }
+    };
+    if (branchIds.length > 0) {
+      sessionWhere.branch_id = { [Op.in]: branchIds };
+    }
+
     // Cash discrepancies
     const discrepancies = await RegisterSession.findAll({
-      where: {
-        closed_at: { [Op.between]: [startDate, endDate] },
-        discrepancy_cash: { [Op.ne]: 0 }
-      },
+      where: sessionWhere,
       attributes: [
         'branch_id',
         [sequelize.fn('COUNT', sequelize.col('RegisterSession.id')), 'count'],
@@ -375,12 +390,18 @@ exports.getOwnerDashboard = async (req, res, next) => {
       group: ['branch_id', 'branch.id', 'branch.name', 'branch.code']
     });
 
+    // Build shrinkage filter with optional branch restriction
+    const shrinkageWhere = {
+      movement_type: 'SHRINKAGE',
+      created_at: { [Op.between]: [startDate, endDate] }
+    };
+    if (branchIds.length > 0) {
+      shrinkageWhere.branch_id = { [Op.in]: branchIds };
+    }
+
     // Shrinkage summary using Sequelize ORM
     const shrinkageMovements = await StockMovement.findAll({
-      where: {
-        movement_type: 'SHRINKAGE',
-        created_at: { [Op.between]: [startDate, endDate] }
-      },
+      where: shrinkageWhere,
       include: [{
         model: Product,
         as: 'product',
@@ -412,10 +433,7 @@ exports.getOwnerDashboard = async (req, res, next) => {
         {
           model: Sale,
           as: 'sale',
-          where: {
-            status: 'COMPLETED',
-            created_at: { [Op.between]: [startDate, endDate] }
-          },
+          where: saleWhere,
           attributes: []
         },
         {

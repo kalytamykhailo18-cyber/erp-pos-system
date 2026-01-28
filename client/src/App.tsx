@@ -97,6 +97,13 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     };
   }, [token, isAuthenticated]);
 
+  // Subscribe to branch room when branch changes
+  useEffect(() => {
+    if (isAuthenticated && currentBranch?.id) {
+      socketService.subscribeToBranch(currentBranch.id);
+    }
+  }, [isAuthenticated, currentBranch?.id]);
+
   // Download data for offline use when authenticated
   useEffect(() => {
     const downloadOfflineData = async () => {

@@ -17,13 +17,19 @@ export const reportService = {
   },
 
   /**
-   * Get owner dashboard (multi-branch overview)
+   * Get owner dashboard (multi-branch overview or single branch)
+   * When branch_id is provided, filters data to that specific branch
    */
   getOwnerDashboard: (params?: {
     start_date?: string;
     end_date?: string;
+    branch_id?: UUID;
   }): Promise<ApiResponse<OwnerDashboardData>> => {
-    return get<OwnerDashboardData>('/reports/owner-dashboard', params);
+    // Filter out empty/undefined values
+    const cleanParams = Object.fromEntries(
+      Object.entries(params || {}).filter(([_, v]) => v !== '' && v !== undefined)
+    );
+    return get<OwnerDashboardData>('/reports/owner-dashboard', cleanParams);
   },
 
   /**

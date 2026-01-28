@@ -314,6 +314,33 @@ const StockPage: React.FC = () => {
     { id: 'transfers' as StockTab, name: 'Transferencias' },
   ];
 
+  // Show message when "Todas las sucursales" is selected
+  if (!currentBranch) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-down duration-fast">
+          <div className="animate-fade-right duration-normal">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Gestión de Stock
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">
+              Control de inventario con soporte para mermas
+            </p>
+          </div>
+        </div>
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-sm p-6 text-center animate-fade-up duration-normal">
+          <MdInventory className="w-12 h-12 mx-auto mb-3 text-amber-500" />
+          <p className="text-amber-700 dark:text-amber-400 font-medium">
+            Selecciona una sucursal para gestionar su inventario
+          </p>
+          <p className="text-sm text-amber-600 dark:text-amber-500 mt-2">
+            El stock se gestiona por sucursal. Usa el selector de sucursal en el menu lateral.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="p-6 space-y-6">

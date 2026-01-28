@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MdAttachMoney } from 'react-icons/md';
+import { MdAttachMoney, MdStore } from 'react-icons/md';
 import { useAppDispatch, useAppSelector } from '../../store';
 import { loadDailyReport } from '../../store/slices/reportsSlice';
 import { ShiftReportData, WithdrawalType } from '../../types';
@@ -245,6 +245,30 @@ const DailyReport: React.FC = () => {
       </div>
     );
   };
+
+  // Show message when "Todas las sucursales" is selected
+  if (!currentBranch) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-6 animate-fade-down duration-fast">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Reporte Diario por Turnos</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Detalle de cierres de caja por turno
+          </p>
+        </div>
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-sm p-6 text-center animate-fade-up duration-normal">
+          <MdStore className="w-12 h-12 mx-auto mb-3 text-amber-500" />
+          <p className="text-amber-700 dark:text-amber-400 font-medium">
+            Selecciona una sucursal para ver el reporte diario
+          </p>
+          <p className="text-sm text-amber-600 dark:text-amber-500 mt-2">
+            El reporte diario muestra el detalle de turnos y cierres de caja de una sucursal especifica.
+            Usa el selector de sucursal en el menu lateral.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 relative">

@@ -13,22 +13,33 @@ const AlertPanel: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { alerts, unreadCount } = useAppSelector((state) => state.alerts);
+  const { currentBranch } = useAppSelector((state) => state.auth);
   const loading = useAppSelector((state) => state.ui.loading);
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
 
   useEffect(() => {
+    // Build params - filter by branch if a specific branch is selected
+    const params: { is_read: string; page: number; limit: number; branch_id?: string } = {
+      is_read: 'false',
+      page: 1,
+      limit: 5
+    };
+    if (currentBranch?.id) {
+      params.branch_id = currentBranch.id;
+    }
+
     // Load recent unread alerts (top 5) and unread count
-    dispatch(fetchAlerts({ is_read: 'false', page: 1, limit: 5 }));
-    dispatch(fetchUnreadCount({}));
+    dispatch(fetchAlerts(params));
+    dispatch(fetchUnreadCount(currentBranch?.id ? { branch_id: currentBranch.id } : {}));
 
     // Refresh every 30 seconds
     const interval = setInterval(() => {
-      dispatch(fetchAlerts({ is_read: 'false', page: 1, limit: 5 }));
-      dispatch(fetchUnreadCount({}));
+      dispatch(fetchAlerts(params));
+      dispatch(fetchUnreadCount(currentBranch?.id ? { branch_id: currentBranch.id } : {}));
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [dispatch]);
+  }, [dispatch, currentBranch?.id]);
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
@@ -71,9 +82,17 @@ const AlertPanel: React.FC = () => {
   };
 
   const handleAlertResolved = () => {
-    // Refresh alerts and counts
-    dispatch(fetchAlerts({ is_read: 'false', page: 1, limit: 5 }));
-    dispatch(fetchUnreadCount({}));
+    // Refresh alerts and counts with branch filter
+    const params: { is_read: string; page: number; limit: number; branch_id?: string } = {
+      is_read: 'false',
+      page: 1,
+      limit: 5
+    };
+    if (currentBranch?.id) {
+      params.branch_id = currentBranch.id;
+    }
+    dispatch(fetchAlerts(params));
+    dispatch(fetchUnreadCount(currentBranch?.id ? { branch_id: currentBranch.id } : {}));
   };
 
   if (!hasAlerts) {

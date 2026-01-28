@@ -15,7 +15,7 @@ const initialState: DashboardState = {
 
 export const fetchOwnerDashboard = createAsyncThunk(
   'dashboard/fetchOwnerDashboard',
-  async (params: { start_date: string; end_date: string }, { dispatch }) => {
+  async (params: { start_date: string; end_date: string; branch_id?: string }, { dispatch }) => {
     dispatch(startLoading());
     try {
       const response = await reportService.getOwnerDashboard(params);

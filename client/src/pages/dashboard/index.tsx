@@ -17,6 +17,10 @@ import QuickActions from './QuickActions';
 const DashboardPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { data, error } = useAppSelector((state) => state.dashboard);
+  const { currentBranch } = useAppSelector((state) => state.auth);
+
+  // Track if viewing all branches (null) or a specific branch
+  const isAllBranches = currentBranch === null;
 
   const [dateRange, setDateRange] = useState({
     start_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -24,8 +28,12 @@ const DashboardPage: React.FC = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchOwnerDashboard(dateRange));
-  }, [dispatch, dateRange]);
+    // Pass branch_id when a specific branch is selected
+    dispatch(fetchOwnerDashboard({
+      ...dateRange,
+      branch_id: currentBranch?.id
+    }));
+  }, [dispatch, dateRange, currentBranch?.id]);
 
   const handleDateRangeChange = (start: string, end: string) => {
     setDateRange({ start_date: start, end_date: end });
@@ -44,7 +52,7 @@ const DashboardPage: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-6 animate-fade-down duration-fast">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white animate-fade-right duration-normal">
-            Dashboard - Vista General
+            Dashboard {isAllBranches ? '- Vista General' : `- ${currentBranch?.name}`}
           </h1>
           <div className="flex flex-col sm:flex-row gap-4 animate-fade-left duration-normal">
             <label className="flex flex-col">
@@ -72,10 +80,12 @@ const DashboardPage: React.FC = () => {
       {/* Pending Invoices Alert */}
       <PendingInvoicesAlert />
 
-      {/* Branch Status Table - Real-time overview per branch */}
-      <div className="animate-fade-up duration-fast">
-        <BranchStatusTable />
-      </div>
+      {/* Branch Status Table - Real-time overview per branch (only for all branches view) */}
+      {isAllBranches && (
+        <div className="animate-fade-up duration-fast">
+          <BranchStatusTable />
+        </div>
+      )}
 
       {/* Real-time Alert System */}
       <div className="animate-fade-up duration-normal">
@@ -87,10 +97,12 @@ const DashboardPage: React.FC = () => {
         <QuickActions />
       </div>
 
-      {/* Live Branch Shift Status - Detailed shift information */}
-      <div className="animate-fade-up duration-light-slow">
-        <BranchShiftStatus />
-      </div>
+      {/* Live Branch Shift Status - Detailed shift information (only for all branches view) */}
+      {isAllBranches && (
+        <div className="animate-fade-up duration-light-slow">
+          <BranchShiftStatus />
+        </div>
+      )}
 
       {data && (
         <>
@@ -103,10 +115,13 @@ const DashboardPage: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="animate-fade-right duration-normal">
-              <BranchSalesChart salesByBranch={data.by_branch} />
-            </div>
+          <div className={`grid grid-cols-1 ${isAllBranches ? 'lg:grid-cols-2' : ''} gap-6`}>
+            {/* Branch Sales Chart - only show when viewing all branches */}
+            {isAllBranches && (
+              <div className="animate-fade-right duration-normal">
+                <BranchSalesChart salesByBranch={data.by_branch} />
+              </div>
+            )}
             <div className="animate-fade-left duration-normal">
               <DailyTrendChart dailyTrend={data.daily_trend} />
             </div>
