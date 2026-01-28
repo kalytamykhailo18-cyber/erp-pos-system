@@ -261,17 +261,20 @@ const paginationQuery = [
 /**
  * Cash denomination breakdown validation
  * Validates the structure of opening_denominations or closing_denominations objects
+ * Updated for Argentina 2024 currency denominations
  */
 const denominationBreakdown = (fieldName, required = false) => {
   const validators = [
     body(fieldName).optional().isObject().withMessage(`${fieldName} must be an object`),
+    // Argentina 2024 bill denominations
+    body(`${fieldName}.bills_20000`).optional().isInt({ min: 0 }).withMessage(`${fieldName}.bills_20000 must be a non-negative integer`),
+    body(`${fieldName}.bills_10000`).optional().isInt({ min: 0 }).withMessage(`${fieldName}.bills_10000 must be a non-negative integer`),
+    body(`${fieldName}.bills_2000`).optional().isInt({ min: 0 }).withMessage(`${fieldName}.bills_2000 must be a non-negative integer`),
     body(`${fieldName}.bills_1000`).optional().isInt({ min: 0 }).withMessage(`${fieldName}.bills_1000 must be a non-negative integer`),
     body(`${fieldName}.bills_500`).optional().isInt({ min: 0 }).withMessage(`${fieldName}.bills_500 must be a non-negative integer`),
     body(`${fieldName}.bills_200`).optional().isInt({ min: 0 }).withMessage(`${fieldName}.bills_200 must be a non-negative integer`),
     body(`${fieldName}.bills_100`).optional().isInt({ min: 0 }).withMessage(`${fieldName}.bills_100 must be a non-negative integer`),
     body(`${fieldName}.bills_50`).optional().isInt({ min: 0 }).withMessage(`${fieldName}.bills_50 must be a non-negative integer`),
-    body(`${fieldName}.bills_20`).optional().isInt({ min: 0 }).withMessage(`${fieldName}.bills_20 must be a non-negative integer`),
-    body(`${fieldName}.bills_10`).optional().isInt({ min: 0 }).withMessage(`${fieldName}.bills_10 must be a non-negative integer`),
     body(`${fieldName}.coins`).optional().isFloat({ min: 0 }).withMessage(`${fieldName}.coins must be a non-negative number`)
   ];
   return validators;

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store';
-import { openSession } from '../../store/slices/registersSlice';
+import { openSession, getCashierSession } from '../../store/slices/registersSlice';
 import { loadRegisters } from '../../store/slices/registersSlice';
 import { loadDenominations } from '../../store/slices/denominationSlice';
 import { logout } from '../../store/slices/authSlice';
+import { showToast } from '../../store/slices/uiSlice';
 import WarningIcon from '@mui/icons-material/Warning';
 
 interface OpenRegisterModalProps {
@@ -132,8 +133,27 @@ const OpenRegisterModal: React.FC<OpenRegisterModalProps> = ({ isOpen, onClose }
 
       // Success - close modal
       onClose();
-    } catch (error) {
-      // Error handled by slice
+    } catch (error: any) {
+      const errorMessage = error?.message || error || '';
+
+      // Check if error is "register already has open session"
+      if (errorMessage.includes('already has an open session') || errorMessage.includes('E401')) {
+        // Try to fetch user's existing session
+        const sessionResult = await dispatch(getCashierSession());
+
+        if (getCashierSession.fulfilled.match(sessionResult) && sessionResult.payload) {
+          // User has an existing session - close modal and use it
+          dispatch(showToast({ type: 'info', message: 'Se encontró su sesión activa existente' }));
+          onClose();
+        } else {
+          // Session belongs to another user
+          dispatch(showToast({
+            type: 'error',
+            message: 'Esta caja está siendo usada por otro usuario. Seleccione otra caja.'
+          }));
+        }
+      }
+      // Other errors are handled by the slice
     }
   };
 
