@@ -127,6 +127,37 @@ const StockPage: React.FC = () => {
     setShrinkageMovements(result.movements);
   };
 
+  // Helper to refresh all relevant data based on current tab
+  const refreshCurrentTabData = () => {
+    loadStock();
+    if (activeTab === 'movements') {
+      loadMovements();
+    } else if (activeTab === 'shrinkage') {
+      loadShrinkageMovements();
+    }
+  };
+
+  // Close handlers that properly reset all state
+  const handleCloseAdjustModal = () => {
+    setShowAdjustModal(false);
+    setSelectedItem(null);
+    setAdjustmentData({ quantity: '', reason: '', type: 'adjustment' });
+  };
+
+  const handleCloseShrinkageModal = () => {
+    setShowShrinkageModal(false);
+    setSelectedItem(null);
+    setAdjustmentData({ quantity: '', reason: '', type: 'adjustment' });
+  };
+
+  const handleCloseInventoryCountModal = () => {
+    setShowInventoryCountModal(false);
+  };
+
+  const handleCloseCreateTransferModal = () => {
+    setShowCreateTransferModal(false);
+  };
+
   // Handle stock adjustment
   const handleAdjustment = async (productIdFromModal?: string) => {
     const productId = selectedItem?.product_id || productIdFromModal;
@@ -140,10 +171,8 @@ const StockPage: React.FC = () => {
         reason: adjustmentData.reason,
       })).unwrap();
 
-      setShowAdjustModal(false);
-      setSelectedItem(null);
-      setAdjustmentData({ quantity: '', reason: '', type: 'adjustment' });
-      loadStock();
+      handleCloseAdjustModal();
+      refreshCurrentTabData();
     } catch (error) {
       // Error handled in slice
     }
@@ -162,14 +191,8 @@ const StockPage: React.FC = () => {
         reason: adjustmentData.reason || 'OTHER',
       })).unwrap();
 
-      setShowShrinkageModal(false);
-      setSelectedItem(null);
-      setAdjustmentData({ quantity: '', reason: '', type: 'adjustment' });
-      loadStock();
-      // Refresh shrinkage history if on shrinkage tab
-      if (activeTab === 'shrinkage') {
-        loadShrinkageMovements();
-      }
+      handleCloseShrinkageModal();
+      refreshCurrentTabData();
     } catch (error) {
       // Error handled in slice
     }
@@ -189,8 +212,8 @@ const StockPage: React.FC = () => {
         notes
       })).unwrap();
 
-      setShowInventoryCountModal(false);
-      loadStock();
+      handleCloseInventoryCountModal();
+      refreshCurrentTabData();
     } catch (error) {
       // Error handled in slice
     }
@@ -205,7 +228,7 @@ const StockPage: React.FC = () => {
   }) => {
     try {
       await dispatch(createTransfer(data)).unwrap();
-      setShowCreateTransferModal(false);
+      handleCloseCreateTransferModal();
       loadTransfers();
     } catch (error) {
       // Error handled in slice
@@ -238,8 +261,9 @@ const StockPage: React.FC = () => {
       const updatedTransfer = await dispatch(approveTransfer({ transferId, items })).unwrap();
       // Update local state immediately with the new transfer data
       setSelectedTransfer(updatedTransfer);
-      // Refresh the list
+      // Refresh the list and stock (approve deducts from source branch)
       loadTransfers();
+      loadStock();
     } catch (error) {
       // Error handled in slice
     }
@@ -251,10 +275,11 @@ const StockPage: React.FC = () => {
     notes?: string
   ) => {
     try {
-      await dispatch(receiveTransfer({ transferId, items, notes })).unwrap();
+      const updatedTransfer = await dispatch(receiveTransfer({ transferId, items, notes })).unwrap();
+      // Update local state with final transfer data, then close
+      setSelectedTransfer(updatedTransfer);
       // Close modal and clear selection
-      setShowTransferDetailsModal(false);
-      setSelectedTransfer(null);
+      handleCloseTransferModal();
       // Refresh data
       loadTransfers();
       loadStock();
@@ -267,10 +292,11 @@ const StockPage: React.FC = () => {
     // Save the status before clearing
     const wasInTransit = selectedTransfer?.status === 'IN_TRANSIT';
     try {
-      await dispatch(cancelTransfer({ transferId, reason })).unwrap();
+      const updatedTransfer = await dispatch(cancelTransfer({ transferId, reason })).unwrap();
+      // Update local state with cancelled transfer data
+      setSelectedTransfer(updatedTransfer);
       // Close modal and clear selection
-      setShowTransferDetailsModal(false);
-      setSelectedTransfer(null);
+      handleCloseTransferModal();
       // Refresh data
       loadTransfers();
       if (wasInTransit) {
@@ -452,10 +478,7 @@ const StockPage: React.FC = () => {
       {/* Modals */}
       <AdjustStockModal
         isOpen={showAdjustModal}
-        onClose={() => {
-          setShowAdjustModal(false);
-          setSelectedItem(null);
-        }}
+        onClose={handleCloseAdjustModal}
         selectedItem={selectedItem}
         stockItems={stock}
         adjustmentData={adjustmentData}
@@ -466,10 +489,7 @@ const StockPage: React.FC = () => {
 
       <ShrinkageModal
         isOpen={showShrinkageModal}
-        onClose={() => {
-          setShowShrinkageModal(false);
-          setSelectedItem(null);
-        }}
+        onClose={handleCloseShrinkageModal}
         selectedItem={selectedItem}
         stockItems={stock}
         adjustmentData={adjustmentData}
@@ -480,7 +500,7 @@ const StockPage: React.FC = () => {
 
       <InventoryCountModal
         isOpen={showInventoryCountModal}
-        onClose={() => setShowInventoryCountModal(false)}
+        onClose={handleCloseInventoryCountModal}
         stockItems={stock}
         products={products}
         onSubmit={handleInventoryCount}
@@ -489,7 +509,7 @@ const StockPage: React.FC = () => {
 
       <CreateTransferModal
         isOpen={showCreateTransferModal}
-        onClose={() => setShowCreateTransferModal(false)}
+        onClose={handleCloseCreateTransferModal}
         onSubmit={handleCreateTransfer}
         loading={loading}
         branches={availableBranches}

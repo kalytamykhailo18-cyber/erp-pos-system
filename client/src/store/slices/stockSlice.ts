@@ -305,6 +305,21 @@ const stockSlice = createSlice({
       // Add movement
       state.movements.unshift(action.payload);
     });
+
+    // Submit Inventory Count - update items based on the details returned
+    builder.addCase(submitInventoryCount.fulfilled, (state, action) => {
+      // Update each item's quantity based on the count results
+      if (action.payload.details) {
+        for (const detail of action.payload.details) {
+          const itemIndex = state.items.findIndex(
+            (item) => item.product_id === detail.product_id
+          );
+          if (itemIndex >= 0) {
+            state.items[itemIndex].quantity = detail.counted_quantity;
+          }
+        }
+      }
+    });
   },
 });
 

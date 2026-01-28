@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Button, Input } from '../../components/ui';
 import { Search, Plus, Trash2, Package } from 'lucide-react';
 import type { StockItem } from '../../services/api/stock.service';
@@ -34,6 +34,16 @@ const InventoryCountModal: React.FC<InventoryCountModalProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [notes, setNotes] = useState('');
   const [showProductSearch, setShowProductSearch] = useState(false);
+
+  // Reset all state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setEntries([]);
+      setSearchTerm('');
+      setNotes('');
+      setShowProductSearch(false);
+    }
+  }, [isOpen]);
 
   // Ensure arrays are always safe
   const safeProducts = Array.isArray(products) ? products : [];
