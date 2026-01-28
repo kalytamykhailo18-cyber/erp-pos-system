@@ -422,7 +422,20 @@ exports.approveTransfer = async (req, res, next) => {
     }, { transaction: t });
 
     await t.commit();
-    return success(res, transfer, 'Transfer approved and in transit');
+
+    // Re-fetch with full includes for response
+    const updatedTransfer = await StockTransfer.findByPk(transfer.id, {
+      include: [
+        { model: Branch, as: 'source_branch' },
+        { model: Branch, as: 'destination_branch' },
+        { model: User, as: 'requester', attributes: ['first_name', 'last_name'] },
+        { model: User, as: 'approver', attributes: ['first_name', 'last_name'] },
+        { model: User, as: 'shipper', attributes: ['first_name', 'last_name'] },
+        { model: StockTransferItem, as: 'items', include: [{ model: Product, as: 'product', attributes: ['name', 'sku'] }] }
+      ]
+    });
+
+    return success(res, updatedTransfer, 'Transfer approved and in transit');
   } catch (error) {
     await t.rollback();
     next(error);
@@ -492,7 +505,21 @@ exports.receiveTransfer = async (req, res, next) => {
     }, { transaction: t });
 
     await t.commit();
-    return success(res, transfer, 'Transfer received');
+
+    // Re-fetch with full includes for response
+    const updatedTransfer = await StockTransfer.findByPk(transfer.id, {
+      include: [
+        { model: Branch, as: 'source_branch' },
+        { model: Branch, as: 'destination_branch' },
+        { model: User, as: 'requester', attributes: ['first_name', 'last_name'] },
+        { model: User, as: 'approver', attributes: ['first_name', 'last_name'] },
+        { model: User, as: 'shipper', attributes: ['first_name', 'last_name'] },
+        { model: User, as: 'receiver', attributes: ['first_name', 'last_name'] },
+        { model: StockTransferItem, as: 'items', include: [{ model: Product, as: 'product', attributes: ['name', 'sku'] }] }
+      ]
+    });
+
+    return success(res, updatedTransfer, 'Transfer received');
   } catch (error) {
     await t.rollback();
     next(error);
@@ -546,7 +573,18 @@ exports.cancelTransfer = async (req, res, next) => {
     }, { transaction: t });
 
     await t.commit();
-    return success(res, null, 'Transfer cancelled');
+
+    // Re-fetch with full includes for response
+    const updatedTransfer = await StockTransfer.findByPk(transfer.id, {
+      include: [
+        { model: Branch, as: 'source_branch' },
+        { model: Branch, as: 'destination_branch' },
+        { model: User, as: 'requester', attributes: ['first_name', 'last_name'] },
+        { model: StockTransferItem, as: 'items', include: [{ model: Product, as: 'product', attributes: ['name', 'sku'] }] }
+      ]
+    });
+
+    return success(res, updatedTransfer, 'Transfer cancelled');
   } catch (error) {
     await t.rollback();
     next(error);

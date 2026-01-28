@@ -71,14 +71,17 @@ const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
   };
 
   const handleApprove = () => {
-    if (!transfer || !onApprove) return;
+    if (!transfer || !onApprove || !transfer.items || transfer.items.length === 0) {
+      console.error('Cannot approve: transfer items not loaded');
+      return;
+    }
 
-    const items = transfer.items?.map(item => ({
+    const items = transfer.items.map(item => ({
       id: item.id,
       shipped_quantity: shippedQuantities[item.id]
         ? Number(shippedQuantities[item.id])
         : Number(item.requested_quantity)
-    })) || [];
+    }));
 
     onApprove(transfer.id, items);
     setShowApproveForm(false);
@@ -86,14 +89,17 @@ const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
   };
 
   const handleReceive = () => {
-    if (!transfer || !onReceive) return;
+    if (!transfer || !onReceive || !transfer.items || transfer.items.length === 0) {
+      console.error('Cannot receive: transfer items not loaded');
+      return;
+    }
 
-    const items = transfer.items?.map(item => ({
+    const items = transfer.items.map(item => ({
       item_id: item.id,
       quantity_received: receivedQuantities[item.id]
         ? Number(receivedQuantities[item.id])
-        : Number(item.requested_quantity)
-    })) || [];
+        : Number(item.shipped_quantity || item.requested_quantity)
+    }));
 
     onReceive(transfer.id, items, receiveNotes || undefined);
     setShowReceiveForm(false);
@@ -123,8 +129,9 @@ const TransferDetailsModal: React.FC<TransferDetailsModalProps> = ({
   if (!transfer) return null;
 
   const statusInfo = getStatusInfo(transfer.status);
-  const canApprove = transfer.status === 'PENDING' && onApprove;
-  const canReceive = transfer.status === 'IN_TRANSIT' && onReceive;
+  const hasItems = transfer.items && transfer.items.length > 0;
+  const canApprove = transfer.status === 'PENDING' && onApprove && hasItems;
+  const canReceive = transfer.status === 'IN_TRANSIT' && onReceive && hasItems;
   const canCancel = (transfer.status === 'PENDING' || transfer.status === 'IN_TRANSIT') && onCancel;
 
   return (

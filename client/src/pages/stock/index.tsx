@@ -92,12 +92,12 @@ const StockPage: React.FC = () => {
     }
   }, [activeTab, currentBranch?.id]);
 
-  // Load products when inventory count modal is opened (for product search)
+  // Load products when modals that need product list are opened
   useEffect(() => {
-    if (showInventoryCountModal && products.length === 0) {
-      dispatch(loadProducts({ limit: 500 }));
+    if ((showInventoryCountModal || showCreateTransferModal) && products.length === 0) {
+      dispatch(loadProducts({ limit: 100 }));
     }
-  }, [showInventoryCountModal, products.length, dispatch]);
+  }, [showInventoryCountModal, showCreateTransferModal, products.length, dispatch]);
 
   const loadStock = () => {
     if (!currentBranch?.id) return;
@@ -212,9 +212,22 @@ const StockPage: React.FC = () => {
     }
   };
 
-  const handleViewTransferDetails = (transfer: StockTransfer) => {
-    setSelectedTransfer(transfer);
-    setShowTransferDetailsModal(true);
+  const handleViewTransferDetails = async (transfer: StockTransfer) => {
+    // Fetch full transfer details with items
+    try {
+      const result = await dispatch(fetchTransferById(transfer.id)).unwrap();
+      setSelectedTransfer(result);
+      setShowTransferDetailsModal(true);
+    } catch (error) {
+      // If fetch fails, use the transfer from the list (view only)
+      setSelectedTransfer(transfer);
+      setShowTransferDetailsModal(true);
+    }
+  };
+
+  const handleCloseTransferModal = () => {
+    setShowTransferDetailsModal(false);
+    setSelectedTransfer(null);
   };
 
   const handleApproveTransfer = async (
@@ -222,11 +235,11 @@ const StockPage: React.FC = () => {
     items: Array<{ id: string; shipped_quantity: number }>
   ) => {
     try {
-      await dispatch(approveTransfer({ transferId, items })).unwrap();
+      const updatedTransfer = await dispatch(approveTransfer({ transferId, items })).unwrap();
+      // Update local state immediately with the new transfer data
+      setSelectedTransfer(updatedTransfer);
+      // Refresh the list
       loadTransfers();
-      if (selectedTransfer?.id === transferId) {
-        await dispatch(fetchTransferById(transferId));
-      }
     } catch (error) {
       // Error handled in slice
     }
@@ -239,7 +252,10 @@ const StockPage: React.FC = () => {
   ) => {
     try {
       await dispatch(receiveTransfer({ transferId, items, notes })).unwrap();
+      // Close modal and clear selection
       setShowTransferDetailsModal(false);
+      setSelectedTransfer(null);
+      // Refresh data
       loadTransfers();
       loadStock();
     } catch (error) {
@@ -248,11 +264,16 @@ const StockPage: React.FC = () => {
   };
 
   const handleCancelTransfer = async (transferId: string, reason: string) => {
+    // Save the status before clearing
+    const wasInTransit = selectedTransfer?.status === 'IN_TRANSIT';
     try {
       await dispatch(cancelTransfer({ transferId, reason })).unwrap();
+      // Close modal and clear selection
       setShowTransferDetailsModal(false);
+      setSelectedTransfer(null);
+      // Refresh data
       loadTransfers();
-      if (selectedTransfer?.status === 'IN_TRANSIT') {
+      if (wasInTransit) {
         loadStock();
       }
     } catch (error) {
@@ -478,7 +499,7 @@ const StockPage: React.FC = () => {
 
       <TransferDetailsModal
         isOpen={showTransferDetailsModal}
-        onClose={() => setShowTransferDetailsModal(false)}
+        onClose={handleCloseTransferModal}
         transfer={selectedTransfer}
         onApprove={handleApproveTransfer}
         onReceive={handleReceiveTransfer}

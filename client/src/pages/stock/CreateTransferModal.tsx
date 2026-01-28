@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, Button, Input } from '../../components/ui';
+import { MdSearch } from 'react-icons/md';
 import type { UUID, Branch, Product } from '../../types';
 
 interface TransferItem {
   product_id: UUID;
   product_name?: string;
+  product_sku?: string;
   quantity: number;
 }
 
@@ -28,29 +30,57 @@ const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
   onClose,
   onSubmit,
   loading,
-  branches,
-  products,
+  branches = [],
+  products = [],
   currentBranchId
 }) => {
   const [fromBranchId, setFromBranchId] = useState<UUID>('');
   const [toBranchId, setToBranchId] = useState<UUID>('');
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<TransferItem[]>([]);
+  const [productSearch, setProductSearch] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<UUID>('');
   const [quantity, setQuantity] = useState('');
 
+  // Ensure arrays are safe
+  const safeBranches = Array.isArray(branches) ? branches : [];
+  const safeProducts = Array.isArray(products) ? products : [];
+
+  // Filter products based on search
+  const filteredProducts = useMemo(() => {
+    if (safeProducts.length === 0) return [];
+    if (!productSearch) return safeProducts.slice(0, 20);
+    const search = productSearch.toLowerCase();
+    return safeProducts.filter(p =>
+      p.name?.toLowerCase().includes(search) ||
+      p.sku?.toLowerCase().includes(search)
+    ).slice(0, 20);
+  }, [safeProducts, productSearch]);
+
+  // Reset state when modal opens/closes
   useEffect(() => {
-    if (currentBranchId) {
-      setFromBranchId(currentBranchId);
+    if (isOpen) {
+      if (currentBranchId) {
+        setFromBranchId(currentBranchId);
+      }
+    } else {
+      // Reset all state when modal closes
+      setFromBranchId(currentBranchId || '');
+      setToBranchId('');
+      setNotes('');
+      setItems([]);
+      setProductSearch('');
+      setSelectedProductId('');
+      setQuantity('');
     }
-  }, [currentBranchId]);
+  }, [isOpen, currentBranchId]);
 
   const handleAddItem = () => {
     if (!selectedProductId || !quantity || parseFloat(quantity) <= 0) {
       return;
     }
 
-    const product = products.find(p => p.id === selectedProductId);
+    const product = safeProducts.find(p => p.id === selectedProductId);
     if (!product) return;
 
     // Check if product already in list
@@ -65,13 +95,25 @@ const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
         {
           product_id: selectedProductId,
           product_name: product.name,
+          product_sku: product.sku,
           quantity: parseFloat(quantity)
         }
       ]);
     }
 
     setSelectedProductId('');
+    setProductSearch('');
     setQuantity('');
+  };
+
+  const handleSelectProduct = (product: Product) => {
+    setSelectedProductId(product.id);
+    setProductSearch(product.name);
+  };
+
+  const handleClearProduct = () => {
+    setSelectedProductId('');
+    setProductSearch('');
   };
 
   const handleRemoveItem = (productId: UUID) => {
@@ -100,16 +142,10 @@ const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
   };
 
   const handleClose = () => {
-    setFromBranchId(currentBranchId || '');
-    setToBranchId('');
-    setNotes('');
-    setItems([]);
-    setSelectedProductId('');
-    setQuantity('');
     onClose();
   };
 
-  const availableBranches = branches.filter(b => b.id !== fromBranchId);
+  const availableBranches = safeBranches.filter(b => b.id !== fromBranchId);
 
   return (
     <Modal
@@ -132,7 +168,7 @@ const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
               disabled={!!currentBranchId}
             >
               <option value="">Seleccionar sucursal</option>
-              {branches.map(branch => (
+              {safeBranches.map(branch => (
                 <option key={branch.id} value={branch.id}>
                   {branch.name}
                 </option>
@@ -166,48 +202,84 @@ const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
             Productos a Trasladar
           </h3>
 
-          <div className="grid grid-cols-12 gap-3 mb-4 animate-fade-up duration-normal">
-            <div className="col-span-7">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Producto *
-              </label>
-              <select
-                value={selectedProductId}
-                onChange={(e) => setSelectedProductId(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700"
-              >
-                <option value="">Seleccionar producto</option>
-                {products.map(product => (
-                  <option key={product.id} value={product.id}>
-                    {product.name} ({product.sku})
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Product Search & Selection */}
+          <div className="space-y-3 mb-4 animate-fade-up duration-normal">
+            <div className="grid grid-cols-12 gap-3">
+              <div className="col-span-7">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Producto *
+                </label>
+                {selectedProductId ? (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-sm">
+                    <span className="flex-1 text-sm text-primary-900 dark:text-primary-100">{productSearch}</span>
+                    <button
+                      type="button"
+                      onClick={handleClearProduct}
+                      className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+                    >
+                      Cambiar
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <Input
+                      placeholder="Buscar producto por nombre o SKU..."
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
+                      leftIcon={<MdSearch className="w-5 h-5" />}
+                    />
+                    {productSearch && filteredProducts.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm shadow-lg max-h-48 overflow-y-auto">
+                        {filteredProducts.map(product => (
+                          <button
+                            key={product.id}
+                            type="button"
+                            onClick={() => handleSelectProduct(product)}
+                            className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                          >
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">{product.name}</p>
+                            <p className="text-xs text-gray-500">SKU: {product.sku}</p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {productSearch && filteredProducts.length === 0 && safeProducts.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm shadow-lg p-4 text-center text-sm text-gray-500">
+                        No se encontraron productos
+                      </div>
+                    )}
+                    {safeProducts.length === 0 && (
+                      <p className="mt-1 text-xs text-warning-600">Cargando productos...</p>
+                    )}
+                  </div>
+                )}
+              </div>
 
-            <div className="col-span-3">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Cantidad *
-              </label>
-              <Input
-                type="number"
-                min="0.001"
-                step="0.001"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Cantidad *
+                </label>
+                <Input
+                  type="number"
+                  min="0.001"
+                  step="0.001"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder="0.00"
+                  disabled={!selectedProductId}
+                />
+              </div>
 
-            <div className="col-span-2 flex items-end">
-              <Button
-                variant="primary"
-                fullWidth
-                onClick={handleAddItem}
-                disabled={!selectedProductId || !quantity || parseFloat(quantity) <= 0}
-              >
-                Agregar
-              </Button>
+              <div className="col-span-2 flex items-end">
+                <Button
+                  variant="primary"
+                  fullWidth
+                  onClick={handleAddItem}
+                  disabled={!selectedProductId || !quantity || parseFloat(quantity) <= 0}
+                >
+                  Agregar
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -231,8 +303,11 @@ const CreateTransferModal: React.FC<CreateTransferModalProps> = ({
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {items.map((item) => (
                     <tr key={item.product_id} className="animate-fade-up duration-fast">
-                      <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
-                        {item.product_name}
+                      <td className="px-4 py-3">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{item.product_name}</p>
+                        {item.product_sku && (
+                          <p className="text-xs text-gray-500">SKU: {item.product_sku}</p>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-sm text-right text-gray-900 dark:text-white">
                         {new Intl.NumberFormat('es-AR').format(item.quantity)}
