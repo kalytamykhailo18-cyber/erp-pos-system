@@ -15,6 +15,10 @@
     "db:seed:undo": "npx sequelize-cli db:seed:undo:all",
     "db:reset": "npm run db:drop && npm run db:create && npm run db:migrate && npm run db:seed",
     "db:refresh": "npm run db:migrate:undo:all && npm run db:migrate && npm run db:seed",
+    "db:migrate:prod": "docker exec $(docker ps -q -f name=gretta-erp_backend) npm run db:migrate",
+    "db:seed:prod": "docker exec $(docker ps -q -f name=gretta-erp_backend) npm run db:seed",
+    "db:reset:prod": "docker exec $(docker ps -q -f name=gretta-erp_backend) sh -c 'npm run db:drop && npm run db:create && npm run db:migrate && npm run db:seed'",
+    "db:refresh:prod": "docker exec $(docker ps -q -f name=gretta-erp_backend) sh -c 'npm run db:migrate:undo:all && npm run db:migrate && npm run db:seed'",
     "test": "jest",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix"
