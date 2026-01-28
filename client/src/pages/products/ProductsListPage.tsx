@@ -106,10 +106,18 @@ const ProductsListPage: React.FC = () => {
   // Handle form changes
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
-    }));
+    const newValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+
+    setFormData((prev) => {
+      const updates: Partial<ProductFormData> = { [name]: newValue };
+
+      // Clear variety_id when species changes (varieties are filtered by species)
+      if (name === 'species_id' && value !== prev.species_id) {
+        updates.variety_id = '';
+      }
+
+      return { ...prev, ...updates };
+    });
   };
 
   // Open create modal
@@ -170,25 +178,28 @@ const ProductsListPage: React.FC = () => {
       name: formData.name,
     };
 
-    // Optional string fields - only include if non-empty
+    // Required string fields
     if (formData.sku) productData.sku = formData.sku;
-    if (formData.barcode) productData.barcode = formData.barcode;
-    if (formData.description) productData.description = formData.description;
 
-    // UUID fields - only include if non-empty
-    if (formData.category_id) productData.category_id = formData.category_id;
-    if (formData.unit_id) productData.unit_id = formData.unit_id;
+    // Optional string fields - include if non-empty, or null to clear when editing
+    productData.barcode = formData.barcode || null;
+    productData.description = formData.description || null;
+    productData.weight_size = formData.weight_size || null;
 
-    // Decimal fields - format to max 2 decimal places, only include if non-empty
-    if (formData.cost_price) productData.cost_price = formatDecimal(formData.cost_price);
-    if (formData.sell_price) productData.selling_price = formatDecimal(formData.sell_price);
-    if (formData.tax_rate) productData.tax_rate = formatDecimal(formData.tax_rate);
-    if (formData.min_stock) productData.minimum_stock = formatDecimal(formData.min_stock);
-    if (formData.protein_percent) productData.protein_percent = formatDecimal(formData.protein_percent);
-    if (formData.tare_weight) productData.tare_weight = formatDecimal(formData.tare_weight);
+    // UUID fields - include if non-empty, or null to clear when editing
+    productData.category_id = formData.category_id || null;
+    if (formData.unit_id) productData.unit_id = formData.unit_id; // Required field
 
-    // Integer fields - only include if non-empty
-    if (formData.scale_plu) productData.scale_plu = parseInt(formData.scale_plu);
+    // Decimal fields - format to max 2 decimal places
+    productData.cost_price = formData.cost_price ? formatDecimal(formData.cost_price) : null;
+    if (formData.sell_price) productData.selling_price = formatDecimal(formData.sell_price); // Required
+    productData.tax_rate = formData.tax_rate ? formatDecimal(formData.tax_rate) : '21';
+    productData.minimum_stock = formData.min_stock ? formatDecimal(formData.min_stock) : '0';
+    productData.protein_percent = formData.protein_percent ? formatDecimal(formData.protein_percent) : null;
+    productData.tare_weight = formData.tare_weight ? formatDecimal(formData.tare_weight) : null;
+
+    // Integer fields
+    productData.scale_plu = formData.scale_plu ? parseInt(formData.scale_plu) : null;
 
     // Boolean fields - always include with explicit boolean values
     productData.is_tax_included = Boolean(formData.is_tax_included);
@@ -199,11 +210,10 @@ const ProductsListPage: React.FC = () => {
     productData.export_to_scale = Boolean(formData.export_to_scale);
     productData.is_factory_direct = Boolean(formData.is_factory_direct);
 
-    // Taxonomy fields - only include if non-empty
-    if (formData.species_id) productData.species_id = formData.species_id;
-    if (formData.variety_id) productData.variety_id = formData.variety_id;
-    if (formData.product_type_id) productData.product_type_id = formData.product_type_id;
-    if (formData.weight_size) productData.weight_size = formData.weight_size;
+    // Taxonomy fields - include value or null to clear
+    productData.species_id = formData.species_id || null;
+    productData.variety_id = formData.variety_id || null;
+    productData.product_type_id = formData.product_type_id || null;
 
     // Initial stock only needed for create
     if (!editingProduct && formData.initial_stock) {
@@ -320,7 +330,11 @@ const ProductsListPage: React.FC = () => {
       {/* Product Form Modal */}
       <ProductFormModal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+          setEditingProduct(null);
+          setFormData(initialFormData);
+        }}
         onSubmit={handleSubmit}
         formData={formData}
         onChange={handleFormChange}

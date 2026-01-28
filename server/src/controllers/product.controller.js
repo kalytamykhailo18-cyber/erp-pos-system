@@ -221,7 +221,31 @@ exports.create = async (req, res, next) => {
     }
 
     await t.commit();
-    return created(res, product);
+
+    // Reload product with associations for frontend display
+    const productWithAssociations = await Product.findByPk(product.id, {
+      include: [
+        { model: Category, as: 'category', attributes: ['id', 'name'] },
+        { model: UnitOfMeasure, as: 'unit' },
+        {
+          model: require('../database/models').Species,
+          as: 'species',
+          attributes: ['id', 'name']
+        },
+        {
+          model: require('../database/models').Variety,
+          as: 'variety',
+          attributes: ['id', 'name', 'species_id']
+        },
+        {
+          model: require('../database/models').ProductType,
+          as: 'product_type',
+          attributes: ['id', 'name']
+        }
+      ]
+    });
+
+    return created(res, productWithAssociations);
   } catch (error) {
     await t.rollback();
     next(error);
@@ -243,7 +267,31 @@ exports.update = async (req, res, next) => {
     }
 
     await product.update(updateData);
-    return success(res, product);
+
+    // Reload product with associations for frontend display
+    const productWithAssociations = await Product.findByPk(product.id, {
+      include: [
+        { model: Category, as: 'category', attributes: ['id', 'name'] },
+        { model: UnitOfMeasure, as: 'unit' },
+        {
+          model: require('../database/models').Species,
+          as: 'species',
+          attributes: ['id', 'name']
+        },
+        {
+          model: require('../database/models').Variety,
+          as: 'variety',
+          attributes: ['id', 'name', 'species_id']
+        },
+        {
+          model: require('../database/models').ProductType,
+          as: 'product_type',
+          attributes: ['id', 'name']
+        }
+      ]
+    });
+
+    return success(res, productWithAssociations);
   } catch (error) {
     next(error);
   }

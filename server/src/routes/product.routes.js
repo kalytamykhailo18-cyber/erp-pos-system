@@ -124,12 +124,25 @@ router.post(
     decimalField('minimum_stock', { min: 0, required: false }),
     booleanField('is_weighable'),
     decimalField('shrinkage_percent', { min: 0, max: 100, required: false }),
+    // Nutritional information
+    decimalField('protein_percent', { min: 0, max: 100, required: false }),
+    // Three-level taxonomy (PART 6)
+    uuidField('species_id', false),
+    uuidField('variety_id', false),
+    uuidField('product_type_id', false),
+    stringField('weight_size', { maxLength: 50, required: false }),
+    booleanField('is_factory_direct'),
+    // Scale integration (PART 13)
     integerField('scale_plu', { min: 1, required: false }),
     booleanField('export_to_scale'),
-    decimalField('tare_weight', { min: 0, max: 10, required: false }), // PART 13: Tare weight in kg
+    decimalField('tare_weight', { min: 0, max: 10, required: false }),
+    // Status and display
+    booleanField('is_active'),
     booleanField('is_featured'),
     stringField('image_url', { maxLength: 500, required: false }),
     stringField('thumbnail_url', { maxLength: 500, required: false }),
+    // Initial stock (only for create)
+    decimalField('initial_stock', { min: 0, required: false }),
     validate
   ],
   productController.create
@@ -161,9 +174,19 @@ router.put(
     decimalField('minimum_stock', { min: 0, required: false }),
     booleanField('is_weighable', false),
     decimalField('shrinkage_percent', { min: 0, max: 100, required: false }),
+    // Nutritional information
+    decimalField('protein_percent', { min: 0, max: 100, required: false }),
+    // Three-level taxonomy (PART 6)
+    uuidField('species_id', false),
+    uuidField('variety_id', false),
+    uuidField('product_type_id', false),
+    stringField('weight_size', { maxLength: 50, required: false }),
+    booleanField('is_factory_direct', false),
+    // Scale integration (PART 13)
     integerField('scale_plu', { min: 1, required: false }),
     booleanField('export_to_scale', false),
-    decimalField('tare_weight', { min: 0, max: 10, required: false }), // PART 13: Tare weight in kg
+    decimalField('tare_weight', { min: 0, max: 10, required: false }),
+    // Status and display
     booleanField('is_active', false),
     booleanField('is_featured', false),
     stringField('image_url', { maxLength: 500, required: false }),

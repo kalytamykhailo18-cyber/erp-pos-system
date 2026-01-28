@@ -41,22 +41,28 @@ const uuidParam = (paramName = 'id') =>
  * Validates format: 8-4-4-4-12 hex characters
  */
 const uuidField = (fieldName, required = true) => {
-  const chain = body(fieldName)
+  // CRITICAL: .optional() must come FIRST to skip validation for falsy values
+  let chain = body(fieldName);
+  if (!required) {
+    chain = chain.optional({ values: 'falsy' });
+  }
+  return chain
     .matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
     .withMessage(`${fieldName} must be a valid UUID format`);
-  // Use 'falsy' to skip validation for empty strings, null, and undefined
-  return required ? chain : chain.optional({ values: 'falsy' });
 };
 
 /**
  * Email validation
  */
 const emailField = (fieldName = 'email', required = true) => {
-  const chain = body(fieldName)
+  let chain = body(fieldName);
+  if (!required) {
+    chain = chain.optional({ values: 'falsy' });
+  }
+  return chain
     .isEmail()
     .withMessage('Invalid email format')
     .normalizeEmail();
-  return required ? chain : chain.optional({ values: 'falsy' });
 };
 
 /**
@@ -83,9 +89,13 @@ const pinField = (fieldName = 'pin_code') =>
  * Database uses DECIMAL(12,2) - max 2 decimal places
  */
 const decimalField = (fieldName, { min, max, required = true, maxDecimals = 2 } = {}) => {
-  let chain = body(fieldName)
-    .isFloat()
-    .withMessage(`${fieldName} must be a valid number`);
+  // CRITICAL: .optional() must come FIRST to skip validation for falsy values
+  let chain = body(fieldName);
+  if (!required) {
+    chain = chain.optional({ values: 'falsy' });
+  }
+
+  chain = chain.isFloat().withMessage(`${fieldName} must be a valid number`);
 
   if (min !== undefined) {
     chain = chain.isFloat({ min }).withMessage(`${fieldName} must be at least ${min}`);
@@ -106,16 +116,20 @@ const decimalField = (fieldName, { min, max, required = true, maxDecimals = 2 } 
     return true;
   });
 
-  return required ? chain : chain.optional({ values: 'falsy' });
+  return chain;
 };
 
 /**
  * Integer field validation
  */
 const integerField = (fieldName, { min, max, required = true } = {}) => {
-  let chain = body(fieldName)
-    .isInt()
-    .withMessage(`${fieldName} must be an integer`);
+  // CRITICAL: .optional() must come FIRST to skip validation for falsy values
+  let chain = body(fieldName);
+  if (!required) {
+    chain = chain.optional({ values: 'falsy' });
+  }
+
+  chain = chain.isInt().withMessage(`${fieldName} must be an integer`);
 
   if (min !== undefined) {
     chain = chain.isInt({ min }).withMessage(`${fieldName} must be at least ${min}`);
@@ -125,17 +139,20 @@ const integerField = (fieldName, { min, max, required = true } = {}) => {
     chain = chain.isInt({ max }).withMessage(`${fieldName} must be at most ${max}`);
   }
 
-  return required ? chain : chain.optional({ values: 'falsy' });
+  return chain;
 };
 
 /**
  * String field validation
  */
 const stringField = (fieldName, { minLength, maxLength, required = true } = {}) => {
-  let chain = body(fieldName)
-    .isString()
-    .withMessage(`${fieldName} must be a string`)
-    .trim();
+  // CRITICAL: .optional() must come FIRST to skip validation for falsy values
+  let chain = body(fieldName);
+  if (!required) {
+    chain = chain.optional({ values: 'falsy' });
+  }
+
+  chain = chain.isString().withMessage(`${fieldName} must be a string`).trim();
 
   if (minLength !== undefined) {
     chain = chain.isLength({ min: minLength }).withMessage(`${fieldName} must be at least ${minLength} characters`);
@@ -145,56 +162,68 @@ const stringField = (fieldName, { minLength, maxLength, required = true } = {}) 
     chain = chain.isLength({ max: maxLength }).withMessage(`${fieldName} must be at most ${maxLength} characters`);
   }
 
-  return required ? chain : chain.optional({ values: 'falsy' });
+  return chain;
 };
 
 /**
  * Boolean field validation
  */
 const booleanField = (fieldName, required = false) => {
-  const chain = body(fieldName)
-    .isBoolean()
-    .withMessage(`${fieldName} must be a boolean`);
-  return required ? chain : chain.optional({ values: 'falsy' });
+  // CRITICAL: .optional() must come FIRST to skip validation for falsy values
+  let chain = body(fieldName);
+  if (!required) {
+    chain = chain.optional({ values: 'falsy' });
+  }
+  return chain.isBoolean().withMessage(`${fieldName} must be a boolean`);
 };
 
 /**
  * Enum field validation
  */
 const enumField = (fieldName, validValues, required = true) => {
-  const chain = body(fieldName)
-    .isIn(validValues)
-    .withMessage(`${fieldName} must be one of: ${validValues.join(', ')}`);
-  return required ? chain : chain.optional({ values: 'falsy' });
+  // CRITICAL: .optional() must come FIRST to skip validation for falsy values
+  let chain = body(fieldName);
+  if (!required) {
+    chain = chain.optional({ values: 'falsy' });
+  }
+  return chain.isIn(validValues).withMessage(`${fieldName} must be one of: ${validValues.join(', ')}`);
 };
 
 /**
  * Date field validation
  */
 const dateField = (fieldName, required = true) => {
-  const chain = body(fieldName)
-    .isISO8601()
-    .withMessage(`${fieldName} must be a valid ISO 8601 date`);
-  return required ? chain : chain.optional({ values: 'falsy' });
+  // CRITICAL: .optional() must come FIRST to skip validation for falsy values
+  let chain = body(fieldName);
+  if (!required) {
+    chain = chain.optional({ values: 'falsy' });
+  }
+  return chain.isISO8601().withMessage(`${fieldName} must be a valid ISO 8601 date`);
 };
 
 /**
  * Date only field validation (YYYY-MM-DD)
  */
 const dateOnlyField = (fieldName, required = true) => {
-  const chain = body(fieldName)
-    .matches(/^\d{4}-\d{2}-\d{2}$/)
-    .withMessage(`${fieldName} must be in YYYY-MM-DD format`);
-  return required ? chain : chain.optional({ values: 'falsy' });
+  // CRITICAL: .optional() must come FIRST to skip validation for falsy values
+  let chain = body(fieldName);
+  if (!required) {
+    chain = chain.optional({ values: 'falsy' });
+  }
+  return chain.matches(/^\d{4}-\d{2}-\d{2}$/).withMessage(`${fieldName} must be in YYYY-MM-DD format`);
 };
 
 /**
  * Array field validation
  */
 const arrayField = (fieldName, { minLength, maxLength, required = true } = {}) => {
-  let chain = body(fieldName)
-    .isArray()
-    .withMessage(`${fieldName} must be an array`);
+  // CRITICAL: .optional() must come FIRST to skip validation for falsy values
+  let chain = body(fieldName);
+  if (!required) {
+    chain = chain.optional({ values: 'falsy' });
+  }
+
+  chain = chain.isArray().withMessage(`${fieldName} must be an array`);
 
   if (minLength !== undefined) {
     chain = chain.isArray({ min: minLength }).withMessage(`${fieldName} must have at least ${minLength} items`);
@@ -204,7 +233,7 @@ const arrayField = (fieldName, { minLength, maxLength, required = true } = {}) =
     chain = chain.isArray({ max: maxLength }).withMessage(`${fieldName} must have at most ${maxLength} items`);
   }
 
-  return required ? chain : chain.optional({ values: 'falsy' });
+  return chain;
 };
 
 /**
