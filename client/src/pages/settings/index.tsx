@@ -7,6 +7,7 @@ import AlertSettings from './AlertSettings';
 import TaxonomySettings from './TaxonomySettings';
 import ScaleSettings from './ScaleSettings';
 import BillDenominationsPage from './BillDenominationsPage';
+import CashRegistersSettings from './CashRegistersSettings';
 import UsersManagement from '../users';
 
 const SettingsPage: React.FC = () => {
@@ -28,13 +29,13 @@ const SettingsPage: React.FC = () => {
   const canManageUsers = user?.role?.can_manage_users || false;
 
   // Determine default tab based on user permissions
-  const getDefaultTab = (): 'branch' | 'system' | 'alerts' | 'taxonomy' | 'scale' | 'denominations' | 'users' => {
+  const getDefaultTab = (): 'branch' | 'system' | 'alerts' | 'taxonomy' | 'scale' | 'denominations' | 'registers' | 'users' => {
     if (isOwner || isManager) return 'branch';
     if (canManageUsers) return 'users';
     return 'branch'; // Fallback
   };
 
-  const [activeTab, setActiveTab] = useState<'branch' | 'system' | 'alerts' | 'taxonomy' | 'scale' | 'denominations' | 'users'>(getDefaultTab());
+  const [activeTab, setActiveTab] = useState<'branch' | 'system' | 'alerts' | 'taxonomy' | 'scale' | 'denominations' | 'registers' | 'users'>(getDefaultTab());
 
   return (
     <div className="p-6 space-y-6">
@@ -84,6 +85,19 @@ const SettingsPage: React.FC = () => {
               onClick={() => setActiveTab('users')}
             >
               Gestión de Usuarios
+            </button>
+          )}
+
+          {canManageUsers && (
+            <button
+              className={`px-6 py-3 text-sm font-medium transition-colors animate-fade-up duration-normal ${
+                activeTab === 'registers'
+                  ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-500'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+              onClick={() => setActiveTab('registers')}
+            >
+              Cajas Registradoras
             </button>
           )}
 
@@ -145,6 +159,7 @@ const SettingsPage: React.FC = () => {
         {activeTab === 'branch' && (isOwner || isManager) && <BranchSettings />}
         {activeTab === 'system' && isOwner && <SystemSettings />}
         {activeTab === 'users' && canManageUsers && <UsersManagement />}
+        {activeTab === 'registers' && canManageUsers && <CashRegistersSettings />}
         {activeTab === 'alerts' && (isOwner || isManager) && <AlertSettings />}
         {activeTab === 'taxonomy' && isOwner && <TaxonomySettings />}
         {activeTab === 'scale' && (isOwner || isManager) && <ScaleSettings />}

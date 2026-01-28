@@ -11,6 +11,7 @@ const {
   decimalField,
   integerField,
   enumField,
+  booleanField,
   paginationQuery,
   denominationBreakdown,
   query
@@ -75,6 +76,7 @@ router.put(
   [
     uuidParam('id'),
     stringField('name', { maxLength: 50, required: false }),
+    booleanField('is_active', false),
     validate
   ],
   registerController.updateRegister

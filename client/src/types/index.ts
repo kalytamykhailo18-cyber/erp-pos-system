@@ -534,7 +534,7 @@ export interface Register {
   id: UUID;
   branch_id: UUID;
   branch?: Branch;
-  register_number: string;
+  register_number: number;
   name: string;
   is_active: boolean;
   current_session_id?: UUID;

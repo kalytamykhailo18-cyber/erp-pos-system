@@ -76,6 +76,19 @@ const initialState: RegistersState = {
   error: null,
 };
 
+// Types for create/update
+interface CreateRegisterData {
+  branch_id: UUID;
+  register_number: number;
+  name?: string;
+}
+
+interface UpdateRegisterData {
+  id: UUID;
+  name?: string;
+  is_active?: boolean;
+}
+
 // Async Thunks
 export const loadRegisters = createAsyncThunk<
   Register[],
@@ -95,6 +108,60 @@ export const loadRegisters = createAsyncThunk<
       return response.data;
     } catch (error) {
       return rejectWithValue('Error loading registers');
+    } finally {
+      dispatch(stopLoading());
+    }
+  }
+);
+
+export const createRegister = createAsyncThunk<
+  Register,
+  CreateRegisterData,
+  { rejectValue: string }
+>(
+  'registers/createRegister',
+  async (data, { dispatch, rejectWithValue }) => {
+    try {
+      dispatch(startLoading('Creando caja...'));
+      const response = await registerService.create(data);
+
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to create register');
+      }
+
+      dispatch(showToast({ type: 'success', message: 'Caja registradora creada' }));
+      return response.data;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error al crear caja';
+      dispatch(showToast({ type: 'error', message }));
+      return rejectWithValue(message);
+    } finally {
+      dispatch(stopLoading());
+    }
+  }
+);
+
+export const updateRegister = createAsyncThunk<
+  Register,
+  UpdateRegisterData,
+  { rejectValue: string }
+>(
+  'registers/updateRegister',
+  async ({ id, ...data }, { dispatch, rejectWithValue }) => {
+    try {
+      dispatch(startLoading('Actualizando caja...'));
+      const response = await registerService.update(id, data);
+
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to update register');
+      }
+
+      dispatch(showToast({ type: 'success', message: 'Caja registradora actualizada' }));
+      return response.data;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error al actualizar caja';
+      dispatch(showToast({ type: 'error', message }));
+      return rejectWithValue(message);
     } finally {
       dispatch(stopLoading());
     }
@@ -407,6 +474,19 @@ const registersSlice = createSlice({
         state.error = action.payload || 'Error loading registers';
         state.loading = false;
       });
+
+    // Create Register
+    builder.addCase(createRegister.fulfilled, (state, action) => {
+      state.registers.push(action.payload);
+    });
+
+    // Update Register
+    builder.addCase(updateRegister.fulfilled, (state, action) => {
+      const index = state.registers.findIndex((r) => r.id === action.payload.id);
+      if (index >= 0) {
+        state.registers[index] = action.payload;
+      }
+    });
 
     // Open Session
     builder
