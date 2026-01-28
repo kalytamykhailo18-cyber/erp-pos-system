@@ -257,6 +257,7 @@ router.post(
     uuidField('branch_id'),
     uuidField('product_id'),
     decimalField('quantity', { min: 0.001 }),
+    enumField('reason', ['POWDER_LOSS', 'PORTIONING', 'SCALE_ERROR', 'SPILLAGE', 'OTHER'], { required: false }),
     stringField('notes', { required: false }),
     validate
   ],

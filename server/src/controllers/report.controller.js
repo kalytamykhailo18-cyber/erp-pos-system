@@ -1381,8 +1381,12 @@ exports.getShrinkageReport = async (req, res, next) => {
   try {
     const { branch_id, from_date, to_date } = req.query;
 
-    const endDate = to_date ? new Date(to_date) : new Date();
-    const startDate = from_date ? new Date(from_date) : new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    // Parse dates and set endDate to end of day (23:59:59.999) to include records from that day
+    let endDate = to_date ? new Date(to_date) : new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    let startDate = from_date ? new Date(from_date) : new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    startDate.setHours(0, 0, 0, 0);
 
     // Build where clause for shrinkage movements
     const movementWhere = {

@@ -214,8 +214,16 @@ exports.getMovements = async (req, res, next) => {
     if (movement_type) where.movement_type = movement_type;
     if (start_date || end_date) {
       where.created_at = {};
-      if (start_date) where.created_at[Op.gte] = new Date(start_date);
-      if (end_date) where.created_at[Op.lte] = new Date(end_date);
+      if (start_date) {
+        const startDateTime = new Date(start_date);
+        startDateTime.setHours(0, 0, 0, 0);
+        where.created_at[Op.gte] = startDateTime;
+      }
+      if (end_date) {
+        const endDateTime = new Date(end_date);
+        endDateTime.setHours(23, 59, 59, 999);
+        where.created_at[Op.lte] = endDateTime;
+      }
     }
 
     const { count, rows } = await StockMovement.findAndCountAll({
@@ -557,8 +565,16 @@ exports.getShrinkage = async (req, res, next) => {
     if (reason) where.adjustment_reason = reason;
     if (start_date || end_date) {
       where.created_at = {};
-      if (start_date) where.created_at[Op.gte] = new Date(start_date);
-      if (end_date) where.created_at[Op.lte] = new Date(end_date);
+      if (start_date) {
+        const startDateTime = new Date(start_date);
+        startDateTime.setHours(0, 0, 0, 0);
+        where.created_at[Op.gte] = startDateTime;
+      }
+      if (end_date) {
+        const endDateTime = new Date(end_date);
+        endDateTime.setHours(23, 59, 59, 999);
+        where.created_at[Op.lte] = endDateTime;
+      }
     }
 
     const { count, rows } = await StockMovement.findAndCountAll({
@@ -607,12 +623,13 @@ exports.recordShrinkage = async (req, res, next) => {
     await stock.update({ quantity: newQuantity }, { transaction: t });
 
     // Create movement record with movement_type='SHRINKAGE'
+    // Store quantity as negative to indicate loss (consistent with other loss movements)
     const movement = await StockMovement.create({
       id: uuidv4(),
       branch_id,
       product_id,
       movement_type: 'SHRINKAGE',
-      quantity,
+      quantity: -quantity,
       quantity_before: previousQuantity,
       quantity_after: newQuantity,
       reference_type: 'ADJUSTMENT',
@@ -652,8 +669,16 @@ exports.getShrinkageReport = async (req, res, next) => {
     if (branch_id) where.branch_id = branch_id;
     if (start_date || end_date) {
       where.created_at = {};
-      if (start_date) where.created_at[Op.gte] = new Date(start_date);
-      if (end_date) where.created_at[Op.lte] = new Date(end_date);
+      if (start_date) {
+        const startDateTime = new Date(start_date);
+        startDateTime.setHours(0, 0, 0, 0);
+        where.created_at[Op.gte] = startDateTime;
+      }
+      if (end_date) {
+        const endDateTime = new Date(end_date);
+        endDateTime.setHours(23, 59, 59, 999);
+        where.created_at[Op.lte] = endDateTime;
+      }
     }
 
     // Group by reason

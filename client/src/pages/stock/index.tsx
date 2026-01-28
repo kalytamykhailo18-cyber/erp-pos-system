@@ -46,6 +46,7 @@ const StockPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<StockTab>('inventory');
   const [search, setSearch] = useState('');
   const [showLowStock, setShowLowStock] = useState(false);
+  const [shrinkageMovements, setShrinkageMovements] = useState<typeof movements>([]);
 
   // Modals
   const [showAdjustModal, setShowAdjustModal] = useState(false);
@@ -63,12 +64,12 @@ const StockPage: React.FC = () => {
     type: 'adjustment' as 'adjustment' | 'shrinkage' | 'count',
   });
 
-  // Load stock when tab changes
+  // Load stock when tab changes or when modals that need stock open
   useEffect(() => {
-    if (activeTab === 'inventory' && currentBranch?.id) {
+    if ((activeTab === 'inventory' || showShrinkageModal || showAdjustModal) && currentBranch?.id) {
       loadStock();
     }
-  }, [activeTab, currentBranch?.id, showLowStock]);
+  }, [activeTab, currentBranch?.id, showLowStock, showShrinkageModal, showAdjustModal]);
 
   // Load movements when tab changes
   useEffect(() => {
@@ -83,6 +84,13 @@ const StockPage: React.FC = () => {
       loadTransfers();
     }
   }, [activeTab]);
+
+  // Load shrinkage movements when tab changes
+  useEffect(() => {
+    if (activeTab === 'shrinkage' && currentBranch?.id) {
+      loadShrinkageMovements();
+    }
+  }, [activeTab, currentBranch?.id]);
 
   // Load products when inventory count modal is opened (for product search)
   useEffect(() => {
@@ -108,6 +116,15 @@ const StockPage: React.FC = () => {
 
   const loadTransfers = () => {
     dispatch(fetchTransfers({}));
+  };
+
+  const loadShrinkageMovements = async () => {
+    if (!currentBranch?.id) return;
+    const result = await dispatch(fetchStockMovements({
+      branch_id: currentBranch.id,
+      movement_type: 'SHRINKAGE',
+    })).unwrap();
+    setShrinkageMovements(result.movements);
   };
 
   // Handle stock adjustment
@@ -149,6 +166,10 @@ const StockPage: React.FC = () => {
       setSelectedItem(null);
       setAdjustmentData({ quantity: '', reason: '', type: 'adjustment' });
       loadStock();
+      // Refresh shrinkage history if on shrinkage tab
+      if (activeTab === 'shrinkage') {
+        loadShrinkageMovements();
+      }
     } catch (error) {
       // Error handled in slice
     }
@@ -340,32 +361,45 @@ const StockPage: React.FC = () => {
 
         {/* Shrinkage Tab */}
         {activeTab === 'shrinkage' && (
-          <Card className="p-6 animate-zoom-in duration-normal">
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-warning-100 dark:bg-warning-900/20 rounded-full mx-auto mb-4 flex items-center justify-center animate-flip-down duration-light-slow">
-                <MdInventory className="w-8 h-8 text-warning-500" />
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Historial de Mermas</h2>
+                <p className="text-sm text-gray-500">Registro de pérdidas por polvo, porcionado y otros</p>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2 animate-fade-up duration-normal">
-                Control de Mermas
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto animate-fade-up duration-light-slow">
-                Registra las mermas de productos (especialmente alimentos para mascotas) causadas por polvo, porcionado o pérdidas de peso.
-              </p>
-              {canAdjustStock ? (
+              {canAdjustStock && (
                 <Button
-                  variant="primary"
+                  variant="warning"
                   onClick={() => setShowShrinkageModal(true)}
-                  className="animate-fade-up duration-slow"
                 >
-                  Registrar Merma Rápida
+                  Registrar Merma
                 </Button>
-              ) : (
-                <p className="text-sm text-gray-500 dark:text-gray-400 animate-fade-up duration-slow">
-                  No tienes permisos para registrar mermas
-                </p>
               )}
             </div>
-          </Card>
+
+            {/* Shrinkage History */}
+            {shrinkageMovements.length === 0 ? (
+              <Card className="p-6 animate-zoom-in duration-normal">
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-warning-100 dark:bg-warning-900/20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <MdInventory className="w-8 h-8 text-warning-500" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    Sin mermas registradas
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                    No hay mermas registradas para esta sucursal. Las mermas se usan para registrar pérdidas por polvo, porcionado o diferencias de peso.
+                  </p>
+                </div>
+              </Card>
+            ) : (
+              <StockMovementsList
+                movements={shrinkageMovements}
+                loading={loading}
+              />
+            )}
+          </div>
         )}
 
         {/* Transfers Tab */}

@@ -25,8 +25,8 @@ interface InventoryCountModalProps {
 const InventoryCountModal: React.FC<InventoryCountModalProps> = ({
   isOpen,
   onClose,
-  stockItems,
-  products,
+  stockItems = [],
+  products = [],
   onSubmit,
   loading
 }) => {
@@ -35,14 +35,18 @@ const InventoryCountModal: React.FC<InventoryCountModalProps> = ({
   const [notes, setNotes] = useState('');
   const [showProductSearch, setShowProductSearch] = useState(false);
 
-  const filteredProducts = products.filter(p =>
-    (p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     p.sku.toLowerCase().includes(searchTerm.toLowerCase())) &&
+  // Ensure arrays are always safe
+  const safeProducts = Array.isArray(products) ? products : [];
+  const safeStockItems = Array.isArray(stockItems) ? stockItems : [];
+
+  const filteredProducts = safeProducts.filter(p =>
+    (p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     p.sku?.toLowerCase().includes(searchTerm.toLowerCase())) &&
     !entries.some(e => e.product_id === p.id)
   );
 
   const addProduct = (product: Product) => {
-    const stockItem = stockItems.find(s => s.product_id === product.id);
+    const stockItem = safeStockItems.find(s => s.product_id === product.id);
     const newEntry: InventoryEntry = {
       id: Math.random().toString(36).substr(2, 9),
       product_id: product.id,

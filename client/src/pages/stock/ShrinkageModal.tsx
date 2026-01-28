@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Modal, Button, Input } from '../../components/ui';
 import type { StockItem } from '../../services/api/stock.service';
 import { MdSearch } from 'react-icons/md';
@@ -24,7 +24,7 @@ const ShrinkageModal: React.FC<ShrinkageModalProps> = ({
   isOpen,
   onClose,
   selectedItem,
-  stockItems,
+  stockItems = [],
   adjustmentData,
   onDataChange,
   onSubmit,
@@ -33,22 +33,34 @@ const ShrinkageModal: React.FC<ShrinkageModalProps> = ({
   const [productSearch, setProductSearch] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
+  // Reset internal state when modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setProductSearch('');
+      setSelectedProductId(null);
+    }
+  }, [isOpen]);
+
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('es-AR').format(num);
   };
 
+  // Ensure stockItems is always an array
+  const safeStockItems = Array.isArray(stockItems) ? stockItems : [];
+
   // Filter stock items based on search
   const filteredItems = useMemo(() => {
-    if (!productSearch) return stockItems.slice(0, 10);
+    if (safeStockItems.length === 0) return [];
+    if (!productSearch) return safeStockItems.slice(0, 10);
     const search = productSearch.toLowerCase();
-    return stockItems.filter(item =>
-      item.product_name.toLowerCase().includes(search) ||
+    return safeStockItems.filter(item =>
+      item.product_name?.toLowerCase().includes(search) ||
       item.product_sku?.toLowerCase().includes(search)
     ).slice(0, 10);
-  }, [stockItems, productSearch]);
+  }, [safeStockItems, productSearch]);
 
   // Get the selected stock item (either pre-selected or from search)
-  const activeItem = selectedItem || stockItems.find(item => item.product_id === selectedProductId);
+  const activeItem = selectedItem || safeStockItems.find(item => item.product_id === selectedProductId) || null;
 
   const handleClose = () => {
     setProductSearch('');
