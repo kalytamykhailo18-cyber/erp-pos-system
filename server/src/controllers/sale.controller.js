@@ -896,31 +896,10 @@ exports.create = async (req, res, next) => {
       }
     }
 
-    await t.commit();
-
-    // Emit real-time event
-    const io = req.app.get('io');
-    if (io) {
-      io.emitToBranch(branch_id, EVENTS.SALE_CREATED, {
-        sale_id: sale.id,
-        sale_number: sale.sale_number,
-        total_amount: sale.total_amount,
-        created_by: req.user.first_name + ' ' + req.user.last_name
-      });
-    }
-
-    // Return created sale with details
-    const createdSale = await Sale.findByPk(sale.id, {
-      include: [
-        { model: SaleItem, as: 'items' },
-        { model: SalePayment, as: 'payments' }
-      ]
-    });
-
-    // Create audit log entry for sale creation
+    // Create audit log entry for sale creation (BEFORE commit)
     await logSaleCreate(req, sale, t);
 
-    // Log discount application if applicable
+    // Log discount application if applicable (BEFORE commit)
     if (saleDiscount > 0 && actualDiscountType !== 'WHOLESALE') {
       await logDiscountApply(
         req,
@@ -933,8 +912,27 @@ exports.create = async (req, res, next) => {
       );
     }
 
-    // Commit transaction before async operations
+    // Commit transaction
     await t.commit();
+
+    // Emit real-time event (AFTER commit)
+    const io = req.app.get('io');
+    if (io) {
+      io.emitToBranch(branch_id, EVENTS.SALE_CREATED, {
+        sale_id: sale.id,
+        sale_number: sale.sale_number,
+        total_amount: sale.total_amount,
+        created_by: req.user.first_name + ' ' + req.user.last_name
+      });
+    }
+
+    // Return created sale with details (AFTER commit)
+    const createdSale = await Sale.findByPk(sale.id, {
+      include: [
+        { model: SaleItem, as: 'items' },
+        { model: SalePayment, as: 'payments' }
+      ]
+    });
 
     // Get configurable thresholds for this branch
     const thresholds = await getAlertThresholds(branch_id, ['LARGE_DISCOUNT', 'HIGH_VALUE_SALE']);
