@@ -219,10 +219,9 @@ const InventoryCountModal: React.FC<InventoryCountModalProps> = ({
                         />
                       </div>
 
-                      {entry.counted_quantity && (
+                      {entry.counted_quantity !== '' && (
                         <div className={`text-sm font-medium ${getVarianceColor(variance)}`}>
-                          {variance > 0 && '+'}
-                          {variance.toFixed(3)}
+                          <span>{variance > 0 ? '+' : ''}{variance.toFixed(3)}</span>
                         </div>
                       )}
                     </div>

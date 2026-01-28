@@ -107,14 +107,29 @@ const Button: React.FC<ButtonProps> = ({
       endIcon={!loading && icon && iconPosition === 'right' ? icon : undefined}
       {...props}
     >
-      {loading ? (
-        <>
+      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            visibility: loading ? 'visible' : 'hidden',
+            position: loading ? 'static' : 'absolute'
+          }}
+        >
           <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} />
           <span>Cargando...</span>
-        </>
-      ) : (
-        children
-      )}
+        </span>
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            visibility: loading ? 'hidden' : 'visible',
+            position: loading ? 'absolute' : 'static'
+          }}
+        >
+          {children}
+        </span>
+      </span>
     </MuiButton>
   );
 };
