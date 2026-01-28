@@ -116,6 +116,32 @@ module.exports = {
         allowNull: true,
         comment: 'IVA condition: Responsable Inscripto, Monotributista, Exento, Consumidor Final'
       },
+      // Operating hours
+      weekday_opening_time: {
+        type: Sequelize.TIME,
+        defaultValue: '08:30:00',
+        comment: 'Opening time Monday-Saturday'
+      },
+      weekday_closing_time: {
+        type: Sequelize.TIME,
+        defaultValue: '20:00:00',
+        comment: 'Closing time Monday-Saturday'
+      },
+      afternoon_opening_time: {
+        type: Sequelize.TIME,
+        allowNull: true,
+        comment: 'Afternoon opening time for branches with split shifts (e.g., 16:45 for Aldo Bonzi)'
+      },
+      sunday_opening_time: {
+        type: Sequelize.TIME,
+        defaultValue: '09:00:00',
+        comment: 'Opening time on Sundays'
+      },
+      sunday_closing_time: {
+        type: Sequelize.TIME,
+        defaultValue: '13:45:00',
+        comment: 'Closing time on Sundays'
+      },
       is_active: {
         type: Sequelize.BOOLEAN,
         defaultValue: true

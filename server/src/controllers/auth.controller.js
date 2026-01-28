@@ -127,22 +127,28 @@ exports.login = async (req, res, next) => {
     // Generate token
     const { token, expiresAt } = generateToken(user, session.id, sessionBranchId);
 
-    // Build permissions object
+    // Build permissions object - user overrides take precedence over role defaults
+    const getPermission = (userPerm, rolePerm) => {
+      return userPerm !== null && userPerm !== undefined ? userPerm : (rolePerm || false);
+    };
+
     const permissions = {
-      canVoidSale: user.role.can_void_sale || false,
-      canGiveDiscount: user.role.can_give_discount || false,
-      canViewAllBranches: user.role.can_view_all_branches || false,
-      canCloseRegister: user.role.can_close_register || false,
-      canReopenClosing: user.role.can_reopen_closing || false,
-      canAdjustStock: user.role.can_adjust_stock || false,
-      canImportPrices: user.role.can_import_prices || false,
-      canManageUsers: user.role.can_manage_users || false,
-      canViewReports: user.role.can_view_reports || false,
-      canViewFinancials: user.role.can_view_financials || false,
-      canManageSuppliers: user.role.can_manage_suppliers || false,
-      canManageProducts: user.role.can_manage_products || false,
-      canIssueInvoiceA: user.role.can_issue_invoice_a || false,
-      maxDiscountPercent: user.role.max_discount_percent ? parseFloat(user.role.max_discount_percent) : 0
+      canVoidSale: getPermission(user.can_void_sale, user.role.can_void_sale),
+      canGiveDiscount: getPermission(user.can_give_discount, user.role.can_give_discount),
+      canViewAllBranches: getPermission(user.can_view_all_branches, user.role.can_view_all_branches),
+      canCloseRegister: getPermission(user.can_close_register, user.role.can_close_register),
+      canReopenClosing: getPermission(user.can_reopen_closing, user.role.can_reopen_closing),
+      canAdjustStock: getPermission(user.can_adjust_stock, user.role.can_adjust_stock),
+      canImportPrices: getPermission(user.can_import_prices, user.role.can_import_prices),
+      canManageUsers: getPermission(user.can_manage_users, user.role.can_manage_users),
+      canViewReports: getPermission(user.can_view_reports, user.role.can_view_reports),
+      canViewFinancials: getPermission(user.can_view_financials, user.role.can_view_financials),
+      canManageSuppliers: getPermission(user.can_manage_suppliers, user.role.can_manage_suppliers),
+      canManageProducts: getPermission(user.can_manage_products, user.role.can_manage_products),
+      canIssueInvoiceA: getPermission(user.can_issue_invoice_a, user.role.can_issue_invoice_a),
+      maxDiscountPercent: user.max_discount_percent !== null && user.max_discount_percent !== undefined
+        ? parseFloat(user.max_discount_percent)
+        : (user.role.max_discount_percent ? parseFloat(user.role.max_discount_percent) : 0)
     };
 
     // Get user branches with junction table data (is_primary)
@@ -226,12 +232,18 @@ exports.pinLogin = async (req, res, next) => {
     // Generate token
     const { token, expiresAt } = generateToken(user, session.id, branch_id);
 
-    // Build permissions
+    // Build permissions - user overrides take precedence over role defaults
+    const getPerm = (userPerm, rolePerm) => {
+      return userPerm !== null && userPerm !== undefined ? userPerm : (rolePerm || false);
+    };
+
     const permissions = {
-      canVoidSale: user.role.can_void_sale || false,
-      canGiveDiscount: user.role.can_give_discount || false,
-      canCloseRegister: user.role.can_close_register || false,
-      maxDiscountPercent: user.role.max_discount_percent ? parseFloat(user.role.max_discount_percent) : 0
+      canVoidSale: getPerm(user.can_void_sale, user.role.can_void_sale),
+      canGiveDiscount: getPerm(user.can_give_discount, user.role.can_give_discount),
+      canCloseRegister: getPerm(user.can_close_register, user.role.can_close_register),
+      maxDiscountPercent: user.max_discount_percent !== null && user.max_discount_percent !== undefined
+        ? parseFloat(user.max_discount_percent)
+        : (user.role.max_discount_percent ? parseFloat(user.role.max_discount_percent) : 0)
     };
 
     // Find active register session for this user and branch

@@ -33,6 +33,26 @@ export interface ValidationError {
   message: string;
 }
 
+// User permissions (merged from user overrides + role defaults)
+export interface UserPermissions {
+  canVoidSale: boolean;
+  canGiveDiscount: boolean;
+  canViewAllBranches: boolean;
+  canCloseRegister: boolean;
+  canReopenClosing: boolean;
+  canAdjustStock: boolean;
+  canImportPrices: boolean;
+  canManageUsers: boolean;
+  canViewReports: boolean;
+  canViewFinancials: boolean;
+  canManageSuppliers: boolean;
+  canManageProducts: boolean;
+  canIssueInvoiceA: boolean;
+  canManageExpenses?: boolean;
+  canApproveExpenses?: boolean;
+  maxDiscountPercent: number;
+}
+
 // Auth Types
 export interface User {
   id: UUID;
@@ -53,6 +73,25 @@ export interface User {
   locked_until?: ISODateString | null;
   language?: string;
   avatar_url?: string;
+  // Per-user permission overrides (null/undefined = use role default)
+  can_void_sale?: boolean | null;
+  can_give_discount?: boolean | null;
+  can_view_all_branches?: boolean | null;
+  can_close_register?: boolean | null;
+  can_reopen_closing?: boolean | null;
+  can_adjust_stock?: boolean | null;
+  can_import_prices?: boolean | null;
+  can_manage_users?: boolean | null;
+  can_view_reports?: boolean | null;
+  can_view_financials?: boolean | null;
+  can_manage_suppliers?: boolean | null;
+  can_manage_products?: boolean | null;
+  can_issue_invoice_a?: boolean | null;
+  can_manage_expenses?: boolean | null;
+  can_approve_expenses?: boolean | null;
+  max_discount_percent?: Decimal | null;
+  // Merged permissions (from login response)
+  permissions?: UserPermissions;
   created_at: ISODateString;
   updated_at?: ISODateString;
 }

@@ -42,24 +42,31 @@ const authenticate = async (req, res, next) => {
       throw new UnauthorizedError('User not found or inactive', 'E101');
     }
 
-    // Build permissions object
+    // Build permissions object - user overrides take precedence over role defaults
+    // If user permission is null, use role permission; otherwise use user permission
+    const getPermission = (userPerm, rolePerm) => {
+      return userPerm !== null && userPerm !== undefined ? userPerm : rolePerm;
+    };
+
     const permissions = {
-      canVoidSale: user.role.can_void_sale,
-      canGiveDiscount: user.role.can_give_discount,
-      canViewAllBranches: user.role.can_view_all_branches,
-      canCloseRegister: user.role.can_close_register,
-      canReopenClosing: user.role.can_reopen_closing,
-      canAdjustStock: user.role.can_adjust_stock,
-      canImportPrices: user.role.can_import_prices,
-      canManageUsers: user.role.can_manage_users,
-      canViewReports: user.role.can_view_reports,
-      canViewFinancials: user.role.can_view_financials,
-      canManageSuppliers: user.role.can_manage_suppliers,
-      canManageProducts: user.role.can_manage_products,
-      canIssueInvoiceA: user.role.can_issue_invoice_a,
-      canManageExpenses: user.role.can_manage_expenses,
-      canApproveExpenses: user.role.can_approve_expenses,
-      maxDiscountPercent: parseFloat(user.role.max_discount_percent)
+      canVoidSale: getPermission(user.can_void_sale, user.role.can_void_sale),
+      canGiveDiscount: getPermission(user.can_give_discount, user.role.can_give_discount),
+      canViewAllBranches: getPermission(user.can_view_all_branches, user.role.can_view_all_branches),
+      canCloseRegister: getPermission(user.can_close_register, user.role.can_close_register),
+      canReopenClosing: getPermission(user.can_reopen_closing, user.role.can_reopen_closing),
+      canAdjustStock: getPermission(user.can_adjust_stock, user.role.can_adjust_stock),
+      canImportPrices: getPermission(user.can_import_prices, user.role.can_import_prices),
+      canManageUsers: getPermission(user.can_manage_users, user.role.can_manage_users),
+      canViewReports: getPermission(user.can_view_reports, user.role.can_view_reports),
+      canViewFinancials: getPermission(user.can_view_financials, user.role.can_view_financials),
+      canManageSuppliers: getPermission(user.can_manage_suppliers, user.role.can_manage_suppliers),
+      canManageProducts: getPermission(user.can_manage_products, user.role.can_manage_products),
+      canIssueInvoiceA: getPermission(user.can_issue_invoice_a, user.role.can_issue_invoice_a),
+      canManageExpenses: getPermission(user.can_manage_expenses, user.role.can_manage_expenses),
+      canApproveExpenses: getPermission(user.can_approve_expenses, user.role.can_approve_expenses),
+      maxDiscountPercent: user.max_discount_percent !== null && user.max_discount_percent !== undefined
+        ? parseFloat(user.max_discount_percent)
+        : parseFloat(user.role.max_discount_percent)
     };
 
     // Attach to request
@@ -262,8 +269,14 @@ const verifyManagerPin = (requiredPermission) => {
         throw new UnauthorizedError('Invalid manager PIN', 'E107');
       }
 
-      // Check permission
-      if (!manager.role[requiredPermission]) {
+      // Check permission - user override takes precedence over role
+      const rolePermission = manager.role[requiredPermission];
+      const userPermission = manager[requiredPermission];
+      const hasPermission = userPermission !== null && userPermission !== undefined
+        ? userPermission
+        : rolePermission;
+
+      if (!hasPermission) {
         throw new ForbiddenError('Manager does not have required permission');
       }
 

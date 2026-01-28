@@ -40,7 +40,7 @@ const StockPage: React.FC = () => {
   const loading = useAppSelector((state) => state.ui.loading);
 
   // CRITICAL: Permission check for stock adjustments
-  const canAdjustStock = user?.role?.can_adjust_stock || false;
+  const canAdjustStock = user?.permissions?.canAdjustStock || false;
 
   // Local state
   const [activeTab, setActiveTab] = useState<StockTab>('inventory');

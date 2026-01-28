@@ -27,7 +27,7 @@ const LoyaltyPage: React.FC = () => {
   const { accounts, pointsTransactions, creditTransactions, config: loyaltyConfig, transactionsPagination } = useAppSelector((state) => state.loyalty);
   const loading = useAppSelector((state) => state.ui.loading);
 
-  const isOwner = user?.role?.can_view_all_branches;
+  const isOwner = user?.permissions?.canViewAllBranches;
 
   // State
   const [activeTab, setActiveTab] = useState<LoyaltyTab>('customers');

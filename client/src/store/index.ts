@@ -27,6 +27,7 @@ import nonSalesDeductionReducer from './slices/nonSalesDeductionSlice';
 import chatReducer from './slices/chatSlice';
 import denominationReducer from './slices/denominationSlice';
 import settingsReducer from './slices/settingsSlice';
+import branchesReducer from './slices/branchesSlice';
 
 export const store = configureStore({
   reducer: {
@@ -55,6 +56,7 @@ export const store = configureStore({
     chat: chatReducer,
     denomination: denominationReducer,
     settings: settingsReducer,
+    branches: branchesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -6,6 +6,18 @@ import type { PaginationState } from '../../components/ui/Pagination';
 import type { User } from '../../types';
 import { MdGroup, MdLock, MdEdit, MdLockOpen, MdKey, MdBlock } from 'react-icons/md';
 
+// Role name translations
+const roleNameMap: Record<string, string> = {
+  'OWNER': 'Dueño',
+  'MANAGER': 'Encargado',
+  'CASHIER': 'Cajero',
+};
+
+const getRoleDisplayName = (roleName: string | undefined): string => {
+  if (!roleName) return 'Sin rol';
+  return roleNameMap[roleName] || roleName;
+};
+
 interface UserListProps {
   users: User[];
   pagination: PaginationState;
@@ -158,7 +170,7 @@ const UserList: React.FC<UserListProps> = ({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2 py-1 text-xs font-medium rounded-sm bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
-                        {user.role?.name || 'Sin rol'}
+                        {getRoleDisplayName(user.role?.name)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">

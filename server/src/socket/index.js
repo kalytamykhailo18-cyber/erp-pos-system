@@ -91,13 +91,18 @@ const setupSocketIO = (io) => {
       }
 
       // Attach user info to socket
+      // Check user-level permission first, fall back to role permission
+      const canViewAllBranches = user.can_view_all_branches !== null && user.can_view_all_branches !== undefined
+        ? user.can_view_all_branches
+        : user.role.can_view_all_branches;
+
       socket.user = {
         id: user.id,
         email: user.email,
         role_name: user.role.name,
         branch_id: decoded.branch_id,
         permissions: {
-          canViewAllBranches: user.role.can_view_all_branches
+          canViewAllBranches
         }
       };
 

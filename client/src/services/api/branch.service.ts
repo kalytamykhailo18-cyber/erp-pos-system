@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { Branch, ApiResponse } from '../../types';
+import type { Branch, ApiResponse, PaginatedResponse } from '../../types';
 
 export interface UpdateBranchSettingsData {
   receipt_footer?: string;
@@ -22,6 +22,29 @@ export interface UpdateBranchSettingsData {
   has_shift_change?: boolean;
 }
 
+export interface CreateBranchData {
+  code: string;
+  name: string;
+  address?: string;
+  neighborhood?: string;
+  city?: string;
+  postal_code?: string;
+  phone?: string;
+  email?: string;
+}
+
+export interface UpdateBranchData {
+  code?: string;
+  name?: string;
+  address?: string;
+  neighborhood?: string;
+  city?: string;
+  postal_code?: string;
+  phone?: string;
+  email?: string;
+  is_active?: boolean;
+}
+
 const branchService = {
   // Get branch by ID
   getById: async (id: string): Promise<ApiResponse<Branch>> => {
@@ -35,9 +58,27 @@ const branchService = {
     return response.data;
   },
 
-  // Get all branches
-  getAll: async (): Promise<ApiResponse<Branch[]>> => {
-    const response = await apiClient.get<ApiResponse<Branch[]>>('/branches');
+  // Get all branches (paginated)
+  getAll: async (params?: { is_active?: string; search?: string }): Promise<PaginatedResponse<Branch>> => {
+    const response = await apiClient.get<PaginatedResponse<Branch>>('/branches', { params });
+    return response.data;
+  },
+
+  // Create new branch
+  create: async (data: CreateBranchData): Promise<ApiResponse<Branch>> => {
+    const response = await apiClient.post<ApiResponse<Branch>>('/branches', data);
+    return response.data;
+  },
+
+  // Update branch (name, code, address, etc.)
+  update: async (id: string, data: UpdateBranchData): Promise<ApiResponse<Branch>> => {
+    const response = await apiClient.put<ApiResponse<Branch>>(`/branches/${id}`, data);
+    return response.data;
+  },
+
+  // Deactivate branch (soft delete)
+  deactivate: async (id: string): Promise<ApiResponse<null>> => {
+    const response = await apiClient.delete<ApiResponse<null>>(`/branches/${id}`);
     return response.data;
   },
 };

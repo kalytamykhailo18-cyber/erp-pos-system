@@ -49,6 +49,11 @@ module.exports = {
         type: Sequelize.STRING(255),
         allowNull: true
       },
+      doorbell_apt: {
+        type: Sequelize.STRING(100),
+        allowNull: true,
+        comment: 'Doorbell number or apartment number for delivery'
+      },
       neighborhood: {
         type: Sequelize.STRING(100),
         allowNull: true

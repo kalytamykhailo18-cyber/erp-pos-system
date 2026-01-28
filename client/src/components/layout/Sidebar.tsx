@@ -56,7 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const branchMenuOpen = Boolean(branchAnchorEl);
   const userMenuOpen = Boolean(userAnchorEl);
 
-  const canAccessAllBranches = user?.role?.can_view_all_branches;
+  const canAccessAllBranches = user?.permissions?.canViewAllBranches;
 
   const handleBranchMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setBranchAnchorEl(event.currentTarget);

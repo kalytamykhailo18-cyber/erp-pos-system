@@ -85,6 +85,89 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(500),
       allowNull: true,
       comment: 'Cloudinary URL for user avatar image'
+    },
+    // Per-user permission overrides (null = use role default, true/false = override)
+    can_void_sale: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null,
+      comment: 'Override role permission - null uses role default'
+    },
+    can_give_discount: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null
+    },
+    can_view_all_branches: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null
+    },
+    can_close_register: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null
+    },
+    can_reopen_closing: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null
+    },
+    can_adjust_stock: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null
+    },
+    can_import_prices: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null
+    },
+    can_manage_users: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null
+    },
+    can_view_reports: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null
+    },
+    can_view_financials: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null
+    },
+    can_manage_suppliers: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null
+    },
+    can_manage_products: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null
+    },
+    can_issue_invoice_a: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null
+    },
+    can_manage_expenses: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null
+    },
+    can_approve_expenses: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: null
+    },
+    max_discount_percent: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true,
+      defaultValue: null,
+      comment: 'Override role max discount - null uses role default'
     }
   }, {
     tableName: 'users',

@@ -82,6 +82,15 @@ module.exports = {
         type: Sequelize.STRING(20),
         allowNull: true
       },
+      margin_percentage: {
+        type: Sequelize.DECIMAL(5, 2),
+        allowNull: true
+      },
+      rounding_value: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        defaultValue: 0
+      },
       uploaded_by: {
         type: Sequelize.UUID,
         allowNull: true,

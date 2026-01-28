@@ -99,6 +99,56 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         defaultValue: false
       },
+      // Three-level taxonomy
+      species_id: {
+        type: Sequelize.UUID,
+        allowNull: true,
+        references: {
+          model: 'species',
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL',
+        comment: 'Level 1: Species (Dog, Cat, Bird, etc.)'
+      },
+      variety_id: {
+        type: Sequelize.UUID,
+        allowNull: true,
+        references: {
+          model: 'varieties',
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL',
+        comment: 'Level 2: Variety (Adult, Puppy, Senior, etc.)'
+      },
+      product_type_id: {
+        type: Sequelize.UUID,
+        allowNull: true,
+        references: {
+          model: 'product_types',
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL',
+        comment: 'Level 3: Product Type (Food, Snacks, Accessories, etc.)'
+      },
+      weight_size: {
+        type: Sequelize.STRING(50),
+        allowNull: true,
+        comment: 'Package size display (e.g., "20 kg", "3 kg", "500g")'
+      },
+      is_factory_direct: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+        comment: 'TRUE if factory-direct brand (for recommendation system)'
+      },
+      tare_weight: {
+        type: Sequelize.DECIMAL(8, 3),
+        allowNull: true,
+        defaultValue: null,
+        comment: 'Tare weight in kg (bag/packaging weight to deduct from scale reading)'
+      },
       is_active: {
         type: Sequelize.BOOLEAN,
         defaultValue: true
@@ -131,6 +181,10 @@ module.exports = {
     await queryInterface.addIndex('products', ['barcode']);
     await queryInterface.addIndex('products', ['category_id']);
     await queryInterface.addIndex('products', ['is_active']);
+    await queryInterface.addIndex('products', ['species_id']);
+    await queryInterface.addIndex('products', ['variety_id']);
+    await queryInterface.addIndex('products', ['product_type_id']);
+    await queryInterface.addIndex('products', ['is_factory_direct']);
   },
 
   async down(queryInterface) {

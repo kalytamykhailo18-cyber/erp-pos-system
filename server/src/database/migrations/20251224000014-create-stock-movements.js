@@ -13,7 +13,8 @@ module.exports = {
         'ADJUSTMENT_MINUS',
         'SHRINKAGE',
         'INITIAL',
-        'INVENTORY_COUNT'
+        'INVENTORY_COUNT',
+        'NON_SALES_DEDUCTION'
       );
     `);
 

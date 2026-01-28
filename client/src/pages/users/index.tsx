@@ -26,7 +26,7 @@ const UsersPage: React.FC = () => {
   }), [reduxPagination]);
 
   // Check if user has permission to manage users
-  const canManageUsers = currentUser?.role?.can_manage_users || false;
+  const canManageUsers = currentUser?.permissions?.canManageUsers || false;
 
   useEffect(() => {
     dispatch(fetchUsers(filters));

@@ -1,10 +1,44 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAppDispatch } from '../../store';
+import { useAppDispatch, useAppSelector } from '../../store';
 import { createUser, updateUser, uploadUserAvatar, deleteUserAvatar } from '../../store/slices/usersSlice';
 import { roleService, branchService } from '../../services/api';
 import { Button } from '../../components/ui';
 import type { User, Role, Branch } from '../../types';
-import { MdClose, MdCameraAlt, MdDelete, MdPerson } from 'react-icons/md';
+import { MdClose, MdCameraAlt, MdDelete, MdPerson, MdExpandMore, MdExpandLess, MdSecurity } from 'react-icons/md';
+
+// Role name translations
+const roleNameMap: Record<string, string> = {
+  'OWNER': 'Dueño',
+  'MANAGER': 'Encargado',
+  'CASHIER': 'Cajero',
+};
+
+const getRoleDisplayName = (roleName: string): string => {
+  return roleNameMap[roleName] || roleName;
+};
+
+// Permission definitions with Spanish labels
+const PERMISSION_DEFINITIONS = [
+  { key: 'can_void_sale', label: 'Anular ventas', roleKey: 'can_void_sale' },
+  { key: 'can_give_discount', label: 'Dar descuentos', roleKey: 'can_give_discount' },
+  { key: 'can_view_all_branches', label: 'Ver todas las sucursales', roleKey: 'can_view_all_branches' },
+  { key: 'can_close_register', label: 'Cerrar caja', roleKey: 'can_close_register' },
+  { key: 'can_reopen_closing', label: 'Reabrir cierre', roleKey: 'can_reopen_closing' },
+  { key: 'can_adjust_stock', label: 'Ajustar stock', roleKey: 'can_adjust_stock' },
+  { key: 'can_import_prices', label: 'Importar precios', roleKey: 'can_import_prices' },
+  { key: 'can_manage_users', label: 'Gestionar usuarios', roleKey: 'can_manage_users' },
+  { key: 'can_view_reports', label: 'Ver reportes', roleKey: 'can_view_reports' },
+  { key: 'can_view_financials', label: 'Ver datos financieros', roleKey: 'can_view_financials' },
+  { key: 'can_manage_suppliers', label: 'Gestionar proveedores', roleKey: 'can_manage_suppliers' },
+  { key: 'can_manage_products', label: 'Gestionar productos', roleKey: 'can_manage_products' },
+  { key: 'can_issue_invoice_a', label: 'Emitir factura A', roleKey: 'can_issue_invoice_a' },
+  { key: 'can_manage_expenses', label: 'Gestionar gastos', roleKey: 'can_manage_expenses' },
+  { key: 'can_approve_expenses', label: 'Aprobar gastos', roleKey: 'can_approve_expenses' },
+] as const;
+
+interface PermissionOverrides {
+  [key: string]: boolean | string | null;
+}
 
 interface UserFormModalProps {
   user: User | null;
@@ -14,6 +48,9 @@ interface UserFormModalProps {
 
 const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) => {
   const dispatch = useAppDispatch();
+  const { user: currentUser } = useAppSelector((state) => state.auth);
+  const isOwner = currentUser?.role?.name === 'OWNER';
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
@@ -21,6 +58,19 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
   const [branches, setBranches] = useState<Branch[]>([]);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatar_url || null);
   const [pendingAvatar, setPendingAvatar] = useState<string | null>(null);
+  const [showPermissions, setShowPermissions] = useState(false);
+
+  // Initialize permission overrides from user data
+  const initializePermissions = (): PermissionOverrides => {
+    const perms: PermissionOverrides = {};
+    PERMISSION_DEFINITIONS.forEach(({ key }) => {
+      perms[key] = user?.[key as keyof User] as boolean | null ?? null;
+    });
+    perms['max_discount_percent'] = user?.max_discount_percent !== undefined ? user.max_discount_percent : null;
+    return perms;
+  };
+
+  const [permissionOverrides, setPermissionOverrides] = useState<PermissionOverrides>(initializePermissions);
   const [formData, setFormData] = useState({
     employee_code: user?.employee_code || '',
     email: user?.email || '',
@@ -129,6 +179,40 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
     }
   };
 
+  // Handle permission override change
+  const handlePermissionChange = (key: string, value: string) => {
+    let newValue: boolean | null = null;
+    if (value === 'true') newValue = true;
+    else if (value === 'false') newValue = false;
+    // else value === 'default' -> null
+
+    setPermissionOverrides((prev) => ({
+      ...prev,
+      [key]: newValue,
+    }));
+  };
+
+  // Handle max discount change
+  const handleMaxDiscountChange = (value: string) => {
+    if (value === '') {
+      setPermissionOverrides((prev) => ({
+        ...prev,
+        max_discount_percent: null,
+      }));
+    } else {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+        setPermissionOverrides((prev) => ({
+          ...prev,
+          max_discount_percent: value,
+        }));
+      }
+    }
+  };
+
+  // Get the selected role object
+  const selectedRole = roles.find((r) => r.id === formData.role_id);
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -188,6 +272,14 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
       if (formData.phone) submitData.phone = formData.phone;
       if (formData.primary_branch_id) submitData.primary_branch_id = formData.primary_branch_id;
       if (formData.pin_code) submitData.pin_code = formData.pin_code;
+
+      // Include permission overrides if owner is editing
+      if (isOwner) {
+        PERMISSION_DEFINITIONS.forEach(({ key }) => {
+          submitData[key] = permissionOverrides[key];
+        });
+        submitData.max_discount_percent = permissionOverrides.max_discount_percent;
+      }
 
       let userId: string;
 
@@ -452,7 +544,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
                 <option value="">Seleccionar rol...</option>
                 {roles.map((role) => (
                   <option key={role.id} value={role.id}>
-                    {role.name}
+                    {getRoleDisplayName(role.name)}
                   </option>
                 ))}
               </select>
@@ -515,6 +607,148 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
               </div>
             )}
           </div>
+
+          {/* Permission Overrides - Only visible to OWNER */}
+          {isOwner && (
+            <div className="border border-gray-200 dark:border-gray-700 rounded-sm overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setShowPermissions(!showPermissions)}
+                className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <MdSecurity className="w-5 h-5 text-primary-500" />
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    Permisos Personalizados
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    (anula permisos del rol)
+                  </span>
+                </div>
+                {showPermissions ? (
+                  <MdExpandLess className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <MdExpandMore className="w-5 h-5 text-gray-500" />
+                )}
+              </button>
+
+              {showPermissions && (
+                <div className="p-4 space-y-4 bg-white dark:bg-gray-800">
+                  {!formData.role_id ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                      Selecciona un rol primero para ver los permisos por defecto
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                        Selecciona "Por defecto" para usar el permiso del rol, o elige Habilitado/Deshabilitado para anularlo.
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {PERMISSION_DEFINITIONS.map(({ key, label, roleKey }) => {
+                          const roleDefault = selectedRole?.[roleKey as keyof Role] as boolean;
+                          const currentValue = permissionOverrides[key];
+
+                          return (
+                            <div key={key} className="flex items-center justify-between gap-2 p-2 rounded-sm bg-gray-50 dark:bg-gray-700/30">
+                              <div className="flex-1 min-w-0">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 block truncate">
+                                  {label}
+                                </span>
+                                <span className={`text-xs ${roleDefault ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                                  Rol: {roleDefault ? 'Sí' : 'No'}
+                                </span>
+                              </div>
+                              <select
+                                value={currentValue === null ? 'default' : currentValue ? 'true' : 'false'}
+                                onChange={(e) => handlePermissionChange(key, e.target.value)}
+                                className={`px-2 py-1 text-sm border rounded-sm bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                                  currentValue !== null
+                                    ? 'border-primary-500 dark:border-primary-400'
+                                    : 'border-gray-300 dark:border-gray-600'
+                                } text-gray-900 dark:text-white`}
+                              >
+                                <option value="default">Por defecto</option>
+                                <option value="true">Habilitado</option>
+                                <option value="false">Deshabilitado</option>
+                              </select>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Max Discount Override */}
+                      <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between gap-4 p-2 rounded-sm bg-gray-50 dark:bg-gray-700/30">
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 block">
+                              Descuento máximo (%)
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              Rol: {selectedRole?.max_discount_percent || 0}%
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.5"
+                              value={permissionOverrides.max_discount_percent === null ? '' : String(permissionOverrides.max_discount_percent)}
+                              onChange={(e) => handleMaxDiscountChange(e.target.value)}
+                              placeholder="Por defecto"
+                              className={`w-28 px-2 py-1 text-sm border rounded-sm bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                                permissionOverrides.max_discount_percent !== null
+                                  ? 'border-primary-500 dark:border-primary-400'
+                                  : 'border-gray-300 dark:border-gray-600'
+                              } text-gray-900 dark:text-white`}
+                            />
+                            {permissionOverrides.max_discount_percent !== null && (
+                              <button
+                                type="button"
+                                onClick={() => handleMaxDiscountChange('')}
+                                className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                              >
+                                Resetear
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Summary of overrides */}
+                      {Object.entries(permissionOverrides).some(([, v]) => v !== null) && (
+                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                          <p className="text-xs font-medium text-primary-600 dark:text-primary-400 mb-2">
+                            Permisos personalizados activos:
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            {PERMISSION_DEFINITIONS.filter(({ key }) => permissionOverrides[key] !== null).map(({ key, label }) => (
+                              <span
+                                key={key}
+                                className={`px-2 py-0.5 text-xs rounded-sm ${
+                                  permissionOverrides[key]
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                }`}
+                              >
+                                {label}: {permissionOverrides[key] ? 'Sí' : 'No'}
+                              </span>
+                            ))}
+                            {permissionOverrides.max_discount_percent !== null && (
+                              <span className="px-2 py-0.5 text-xs rounded-sm bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                                Descuento máx: {permissionOverrides.max_discount_percent}%
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">

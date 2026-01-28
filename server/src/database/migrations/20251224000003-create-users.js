@@ -84,6 +84,89 @@ module.exports = {
         allowNull: true,
         comment: 'Cloudinary URL for user avatar image'
       },
+      // Per-user permission overrides (null = use role default, true/false = override)
+      can_void_sale: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null,
+        comment: 'Override role permission - null uses role default'
+      },
+      can_give_discount: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null
+      },
+      can_view_all_branches: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null
+      },
+      can_close_register: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null
+      },
+      can_reopen_closing: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null
+      },
+      can_adjust_stock: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null
+      },
+      can_import_prices: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null
+      },
+      can_manage_users: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null
+      },
+      can_view_reports: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null
+      },
+      can_view_financials: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null
+      },
+      can_manage_suppliers: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null
+      },
+      can_manage_products: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null
+      },
+      can_issue_invoice_a: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null
+      },
+      can_manage_expenses: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null
+      },
+      can_approve_expenses: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: null
+      },
+      max_discount_percent: {
+        type: Sequelize.DECIMAL(5, 2),
+        allowNull: true,
+        defaultValue: null,
+        comment: 'Override role max discount - null uses role default'
+      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,

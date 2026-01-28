@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import BranchSettings from './BranchSettings';
+import BranchManagement from './BranchManagement';
 import SystemSettings from './SystemSettings';
 import AlertSettings from './AlertSettings';
 import TaxonomySettings from './TaxonomySettings';
@@ -26,25 +27,21 @@ const SettingsPage: React.FC = () => {
 
   const isOwner = user?.role?.name === 'OWNER';
   const isManager = user?.role?.name === 'MANAGER';
-  const canManageUsers = user?.role?.can_manage_users || false;
+  const canManageUsers = user?.permissions?.canManageUsers || false;
 
   // Determine default tab based on user permissions
-  const getDefaultTab = (): 'branch' | 'system' | 'alerts' | 'taxonomy' | 'scale' | 'denominations' | 'registers' | 'users' => {
+  const getDefaultTab = (): 'branch' | 'branches' | 'system' | 'alerts' | 'taxonomy' | 'scale' | 'denominations' | 'registers' | 'users' => {
     if (isOwner || isManager) return 'branch';
     if (canManageUsers) return 'users';
     return 'branch'; // Fallback
   };
 
-  const [activeTab, setActiveTab] = useState<'branch' | 'system' | 'alerts' | 'taxonomy' | 'scale' | 'denominations' | 'registers' | 'users'>(getDefaultTab());
+  const [activeTab, setActiveTab] = useState<'branch' | 'branches' | 'system' | 'alerts' | 'taxonomy' | 'scale' | 'denominations' | 'registers' | 'users'>(getDefaultTab());
 
   return (
     <div className="p-6 space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-6 animate-fade-down duration-fast">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white animate-fade-right duration-normal">Configuración</h1>
-        {/* Debug info - remove after verification */}
-        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-          Usuario: {user.first_name} {user.last_name} | Rol: {user.role?.name} | Permisos: can_manage_users={String(canManageUsers)}
-        </div>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md animate-fade-up duration-normal">
@@ -59,6 +56,19 @@ const SettingsPage: React.FC = () => {
               onClick={() => setActiveTab('branch')}
             >
               Sucursal
+            </button>
+          )}
+
+          {isOwner && (
+            <button
+              className={`px-6 py-3 text-sm font-medium transition-colors animate-fade-up duration-normal ${
+                activeTab === 'branches'
+                  ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-500'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+              onClick={() => setActiveTab('branches')}
+            >
+              Sucursales
             </button>
           )}
 
@@ -157,6 +167,7 @@ const SettingsPage: React.FC = () => {
 
       <div className="animate-zoom-in duration-normal">
         {activeTab === 'branch' && (isOwner || isManager) && <BranchSettings />}
+        {activeTab === 'branches' && isOwner && <BranchManagement />}
         {activeTab === 'system' && isOwner && <SystemSettings />}
         {activeTab === 'users' && canManageUsers && <UsersManagement />}
         {activeTab === 'registers' && canManageUsers && <CashRegistersSettings />}

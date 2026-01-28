@@ -1122,7 +1122,14 @@ exports.voidSale = async (req, res, next) => {
         }
       }
 
-      if (!manager || !manager.role.can_void_sale) {
+      // Check user-level permission first, fall back to role permission
+      const canVoidSale = manager && (
+        manager.can_void_sale !== null && manager.can_void_sale !== undefined
+          ? manager.can_void_sale
+          : manager.role.can_void_sale
+      );
+
+      if (!manager || !canVoidSale) {
         throw new BusinessError('Invalid manager PIN or insufficient permissions', 'E107');
       }
       approvedBy = manager.id;

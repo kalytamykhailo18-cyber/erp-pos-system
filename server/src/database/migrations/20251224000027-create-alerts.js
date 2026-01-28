@@ -14,7 +14,10 @@ module.exports = {
         'HIGH_VALUE_SALE',
         'SYNC_ERROR',
         'LOGIN_FAILED',
-        'PRICE_CHANGE'
+        'PRICE_CHANGE',
+        'LOW_PETTY_CASH',
+        'AFTER_HOURS_CLOSING',
+        'BANK_TRANSFER'
       );
     `);
 
@@ -107,6 +110,12 @@ module.exports = {
       resolution_notes: {
         type: Sequelize.TEXT,
         allowNull: true
+      },
+      metadata: {
+        type: Sequelize.JSONB,
+        allowNull: true,
+        defaultValue: null,
+        comment: 'Additional structured data for the alert (branch_name, amounts, references, etc.)'
       },
       created_at: {
         type: Sequelize.DATE,
