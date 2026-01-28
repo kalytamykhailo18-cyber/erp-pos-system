@@ -40,10 +40,19 @@ build_backend() {
 
 # Function to build frontend
 build_frontend() {
-    echo -e "${YELLOW}📦 Building frontend assets...${NC}"
+    echo -e "${YELLOW}🔄 Updating Service Worker version...${NC}"
     cd client
+    # Update SW version with current timestamp to force cache refresh
+    TIMESTAMP=$(date +%s%3N)
+    sed -i "s/{{BUILD_TIMESTAMP}}/$TIMESTAMP/g" ./public/sw.js
+    echo -e "${GREEN}✅ Service Worker version: v2-$TIMESTAMP${NC}"
+
+    echo -e "${YELLOW}📦 Building frontend assets...${NC}"
     # Skip TypeScript checking - use vite build directly
     npx vite build
+
+    # Restore placeholder for next build
+    sed -i "s/$TIMESTAMP/{{BUILD_TIMESTAMP}}/g" ./public/sw.js
     cd ..
 
     echo -e "${YELLOW}📦 Building frontend Docker image...${NC}"
