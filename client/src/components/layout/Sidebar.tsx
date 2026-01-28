@@ -222,19 +222,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Branch Selector (for owners) */}
         {canAccessAllBranches && availableBranches && availableBranches.length > 1 && (
-          <div className="px-4 py-3 border-b border-primary-600/30">
+          <div className="px-4 py-3 border-b border-primary-600/30 bg-primary-700/40">
+            <p className="text-[10px] uppercase tracking-wider text-white/50 font-semibold mb-1.5 px-1">
+              Sucursal Activa
+            </p>
             <button
               onClick={handleBranchMenuOpen}
-              className="w-full flex items-center justify-between px-3 py-2.5 text-sm bg-white/10 rounded-md hover:bg-white/20 backdrop-blur-sm"
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-sm bg-white/20 border border-white/20 rounded-md hover:bg-white/30 hover:border-white/30 backdrop-blur-sm shadow-sm transition-all"
               aria-controls={branchMenuOpen ? 'branch-menu' : undefined}
               aria-haspopup="true"
               aria-expanded={branchMenuOpen ? 'true' : undefined}
             >
-              <span className="font-medium text-white truncate">
+              <MdStore className="w-5 h-5 text-white/80 flex-shrink-0" />
+              <span className="font-semibold text-white truncate flex-1 text-left">
                 {currentBranch?.name || 'Todas las sucursales'}
               </span>
               <MdKeyboardArrowDown
-                className={`w-5 h-5 text-white/70 transition-transform ${
+                className={`w-5 h-5 text-white/70 flex-shrink-0 transition-transform ${
                   branchMenuOpen ? 'rotate-180' : ''
                 }`}
               />
