@@ -6,7 +6,7 @@
  * Handles price list export and scale barcode parsing
  */
 
-import { get, post } from './client';
+import { get, post, put } from './client';
 import type { ApiResponse, UUID } from '../../types';
 
 export interface ScaleProduct {
@@ -213,36 +213,29 @@ export const scaleService = {
   /**
    * Get scale configuration
    */
-  getConfiguration: (): Promise<ApiResponse<ScaleConfiguration>> => {
-    return get<ScaleConfiguration>('/scales/config');
+  getConfiguration: (branchId?: UUID): Promise<ApiResponse<ScaleConfiguration>> => {
+    return get<ScaleConfiguration>('/scales/config', branchId ? { branch_id: branchId } : undefined);
   },
 
   /**
    * Update scale configuration
    */
-  updateConfiguration: (config: Partial<ScaleConfiguration>): Promise<ApiResponse<ScaleConfiguration>> => {
-    return fetch('/api/v1/scales/config', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify(config),
-    }).then(res => res.json());
+  updateConfiguration: (config: Partial<ScaleConfiguration>, branchId?: UUID): Promise<ApiResponse<ScaleConfiguration>> => {
+    return put<ScaleConfiguration>('/scales/config' + (branchId ? `?branch_id=${branchId}` : ''), config);
   },
 
   /**
    * Test connection to scale
    */
-  testConnection: (): Promise<ApiResponse<ScaleConnectionTestResult>> => {
-    return post<ScaleConnectionTestResult>('/scales/connection/test', {});
+  testConnection: (branchId?: UUID): Promise<ApiResponse<ScaleConnectionTestResult>> => {
+    return post<ScaleConnectionTestResult>('/scales/connection/test', branchId ? { branch_id: branchId } : {});
   },
 
   /**
    * Synchronize products with scale now
    */
-  syncNow: (): Promise<ApiResponse<ScaleSyncResult>> => {
-    return post<ScaleSyncResult>('/scales/sync', {});
+  syncNow: (branchId?: UUID): Promise<ApiResponse<ScaleSyncResult>> => {
+    return post<ScaleSyncResult>('/scales/sync', branchId ? { branch_id: branchId } : {});
   },
 };
 

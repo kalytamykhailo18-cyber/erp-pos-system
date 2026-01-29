@@ -18,7 +18,7 @@ import scaleService, {
   ScaleConnectionTestResult,
   ScaleSyncResult
 } from '../../services/api/scale.service';
-import { MdDownload, MdRefresh, MdCheckCircle, MdWarning, MdError, MdScale, MdSync, MdWifi } from 'react-icons/md';
+import { MdDownload, MdRefresh, MdCheckCircle, MdWarning, MdError, MdScale, MdSync, MdWifi, MdSave } from 'react-icons/md';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 
@@ -49,15 +49,10 @@ const ScaleSettings: React.FC = () => {
   const [syncing, setSyncing] = useState(false);
   const [ftpPassword, setFtpPassword] = useState('');
 
-  useEffect(() => {
-    loadStatistics();
-    loadConfiguration();
-  }, []);
-
   const loadConfiguration = async () => {
     setConfigLoading(true);
     try {
-      const response = await scaleService.getConfiguration();
+      const response = await scaleService.getConfiguration(currentBranch?.id);
       setConfig(response.data);
     } catch (err: any) {
       console.error('Error loading configuration:', err);
@@ -78,6 +73,12 @@ const ScaleSettings: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadStatistics();
+    loadConfiguration();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentBranch]);
 
   const loadExportableProducts = async () => {
     setLoading(true);
@@ -122,7 +123,13 @@ const ScaleSettings: React.FC = () => {
       if (ftpPassword) {
         updateData.scale_ftp_password = ftpPassword;
       }
-      const response = await scaleService.updateConfiguration(updateData);
+      const response = await scaleService.updateConfiguration(updateData, currentBranch?.id);
+
+      if (!response.success) {
+        setError(response.error || 'Error al guardar configuración');
+        return;
+      }
+
       setConfig(response.data);
       setSuccess('Configuración guardada exitosamente');
       setFtpPassword(''); // Clear password after save
@@ -138,7 +145,13 @@ const ScaleSettings: React.FC = () => {
     setError(null);
     setSuccess(null);
     try {
-      const response = await scaleService.testConnection();
+      const response = await scaleService.testConnection(currentBranch?.id);
+
+      if (!response.success) {
+        setError(response.error || 'Error al probar conexión');
+        return;
+      }
+
       if (response.data.connected) {
         setSuccess(`Conexión exitosa: ${response.data.message}`);
       } else {
@@ -156,7 +169,13 @@ const ScaleSettings: React.FC = () => {
     setError(null);
     setSuccess(null);
     try {
-      const response = await scaleService.syncNow();
+      const response = await scaleService.syncNow(currentBranch?.id);
+
+      if (!response.success) {
+        setError(response.error || 'Error al sincronizar');
+        return;
+      }
+
       if (response.data.success) {
         setSuccess(`Sincronización exitosa: ${response.data.filename || 'Archivo enviado'}`);
         await loadConfiguration(); // Reload to get updated last_sync timestamp
@@ -364,6 +383,8 @@ const ScaleSettings: React.FC = () => {
                 variant="primary"
                 onClick={handleSaveConfiguration}
                 disabled={configSaving}
+                icon={configSaving ? <MdSync className="animate-spin" /> : <MdSave />}
+                iconPosition="left"
               >
                 {configSaving ? 'Guardando...' : 'Guardar Configuración'}
               </Button>
@@ -373,7 +394,7 @@ const ScaleSettings: React.FC = () => {
                 variant="secondary"
                 onClick={handleTestConnection}
                 disabled={testingConnection || !config.scale_ip}
-                icon={<MdWifi />}
+                icon={testingConnection ? <MdSync className="animate-spin" /> : <MdWifi />}
                 iconPosition="left"
               >
                 {testingConnection ? 'Probando...' : 'Probar Conexión'}

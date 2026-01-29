@@ -212,29 +212,32 @@ class ScaleController {
   }
 
   /**
-   * Get scale configuration
-   * GET /api/v1/scales/config
+   * Get scale configuration for specified or current branch
+   * GET /api/v1/scales/config?branch_id=xxx
    */
   async getConfiguration(req, res, next) {
     try {
-      const { SystemSettings } = require('../database/models');
+      const { Branch } = require('../database/models');
 
-      const settings = await SystemSettings.findOne();
+      // Use branch_id from query if provided, otherwise use user's branch
+      const branchId = req.query.branch_id || req.user.branch_id;
 
-      if (!settings) {
-        throw new BusinessError('System settings not found', 'E404');
+      const branch = await Branch.findByPk(branchId);
+
+      if (!branch) {
+        throw new BusinessError('Branch not found', 'E404');
       }
 
       // Don't expose FTP password
       const config = {
-        scale_ip: settings.scale_ip,
-        scale_port: settings.scale_port,
-        scale_enabled: settings.scale_enabled,
-        scale_sync_frequency: settings.scale_sync_frequency,
-        scale_last_sync: settings.scale_last_sync,
-        scale_connection_protocol: settings.scale_connection_protocol,
-        scale_ftp_username: settings.scale_ftp_username,
-        scale_upload_path: settings.scale_upload_path,
+        scale_ip: branch.scale_ip,
+        scale_port: branch.scale_port,
+        scale_enabled: branch.scale_enabled,
+        scale_sync_frequency: branch.scale_sync_frequency,
+        scale_last_sync: branch.scale_last_sync,
+        scale_connection_protocol: branch.scale_connection_protocol,
+        scale_ftp_username: branch.scale_ftp_username,
+        scale_upload_path: branch.scale_upload_path,
       };
 
       res.json({
@@ -247,12 +250,12 @@ class ScaleController {
   }
 
   /**
-   * Update scale configuration
-   * PUT /api/v1/scales/config
+   * Update scale configuration for specified or current branch
+   * PUT /api/v1/scales/config?branch_id=xxx
    */
   async updateConfiguration(req, res, next) {
     try {
-      const { SystemSettings } = require('../database/models');
+      const { Branch } = require('../database/models');
       const {
         scale_ip,
         scale_port,
@@ -264,35 +267,38 @@ class ScaleController {
         scale_upload_path,
       } = req.body;
 
-      const settings = await SystemSettings.findOne();
+      // Use branch_id from query or body if provided, otherwise use user's branch
+      const branchId = req.query.branch_id || req.body.branch_id || req.user.branch_id;
 
-      if (!settings) {
-        throw new BusinessError('System settings not found', 'E404');
+      const branch = await Branch.findByPk(branchId);
+
+      if (!branch) {
+        throw new BusinessError('Branch not found', 'E404');
       }
 
       // Update fields
-      if (scale_ip !== undefined) settings.scale_ip = scale_ip;
-      if (scale_port !== undefined) settings.scale_port = scale_port;
-      if (scale_enabled !== undefined) settings.scale_enabled = scale_enabled;
-      if (scale_sync_frequency !== undefined) settings.scale_sync_frequency = scale_sync_frequency;
-      if (scale_connection_protocol !== undefined) settings.scale_connection_protocol = scale_connection_protocol;
-      if (scale_ftp_username !== undefined) settings.scale_ftp_username = scale_ftp_username;
-      if (scale_ftp_password !== undefined) settings.scale_ftp_password = scale_ftp_password;
-      if (scale_upload_path !== undefined) settings.scale_upload_path = scale_upload_path;
+      if (scale_ip !== undefined) branch.scale_ip = scale_ip;
+      if (scale_port !== undefined) branch.scale_port = scale_port;
+      if (scale_enabled !== undefined) branch.scale_enabled = scale_enabled;
+      if (scale_sync_frequency !== undefined) branch.scale_sync_frequency = scale_sync_frequency;
+      if (scale_connection_protocol !== undefined) branch.scale_connection_protocol = scale_connection_protocol;
+      if (scale_ftp_username !== undefined) branch.scale_ftp_username = scale_ftp_username;
+      if (scale_ftp_password !== undefined) branch.scale_ftp_password = scale_ftp_password;
+      if (scale_upload_path !== undefined) branch.scale_upload_path = scale_upload_path;
 
-      await settings.save();
+      await branch.save();
 
       res.json({
         success: true,
         message: 'Scale configuration updated successfully',
         data: {
-          scale_ip: settings.scale_ip,
-          scale_port: settings.scale_port,
-          scale_enabled: settings.scale_enabled,
-          scale_sync_frequency: settings.scale_sync_frequency,
-          scale_connection_protocol: settings.scale_connection_protocol,
-          scale_ftp_username: settings.scale_ftp_username,
-          scale_upload_path: settings.scale_upload_path,
+          scale_ip: branch.scale_ip,
+          scale_port: branch.scale_port,
+          scale_enabled: branch.scale_enabled,
+          scale_sync_frequency: branch.scale_sync_frequency,
+          scale_connection_protocol: branch.scale_connection_protocol,
+          scale_ftp_username: branch.scale_ftp_username,
+          scale_upload_path: branch.scale_upload_path,
         },
       });
     } catch (error) {
@@ -301,31 +307,34 @@ class ScaleController {
   }
 
   /**
-   * Test connection to scale
-   * POST /api/v1/scales/connection/test
+   * Test connection to scale for specified or current branch
+   * POST /api/v1/scales/connection/test?branch_id=xxx
    */
   async testConnection(req, res, next) {
     try {
       const scaleConnectionService = require('../services/scaleConnection.service');
-      const { SystemSettings } = require('../database/models');
+      const { Branch } = require('../database/models');
 
-      const settings = await SystemSettings.findOne();
+      // Use branch_id from query or body if provided, otherwise use user's branch
+      const branchId = req.query.branch_id || req.body.branch_id || req.user.branch_id;
 
-      if (!settings) {
-        throw new BusinessError('System settings not found', 'E404');
+      const branch = await Branch.findByPk(branchId);
+
+      if (!branch) {
+        throw new BusinessError('Branch not found', 'E404');
       }
 
-      if (!settings.scale_ip) {
-        throw new BusinessError('Scale IP address not configured', 'E400');
+      if (!branch.scale_ip) {
+        throw new BusinessError('Scale IP address not configured for this branch', 'E400');
       }
 
       const result = await scaleConnectionService.testConnection({
-        ip: settings.scale_ip,
-        port: settings.scale_port,
-        protocol: settings.scale_connection_protocol,
-        username: settings.scale_ftp_username,
-        password: settings.scale_ftp_password,
-        uploadPath: settings.scale_upload_path,
+        ip: branch.scale_ip,
+        port: branch.scale_port,
+        protocol: branch.scale_connection_protocol,
+        username: branch.scale_ftp_username,
+        password: branch.scale_ftp_password,
+        uploadPath: branch.scale_upload_path,
       });
 
       res.json({
@@ -338,41 +347,44 @@ class ScaleController {
   }
 
   /**
-   * Synchronize products with scale
-   * POST /api/v1/scales/sync
+   * Synchronize products with scale for specified or current branch
+   * POST /api/v1/scales/sync?branch_id=xxx
    */
   async syncNow(req, res, next) {
     try {
       const scaleConnectionService = require('../services/scaleConnection.service');
-      const { SystemSettings } = require('../database/models');
+      const { Branch } = require('../database/models');
 
-      const settings = await SystemSettings.findOne();
+      // Use branch_id from query or body if provided, otherwise use user's branch
+      const branchId = req.query.branch_id || req.body.branch_id || req.user.branch_id;
 
-      if (!settings) {
-        throw new BusinessError('System settings not found', 'E404');
+      const branch = await Branch.findByPk(branchId);
+
+      if (!branch) {
+        throw new BusinessError('Branch not found', 'E404');
       }
 
-      if (!settings.scale_ip) {
-        throw new BusinessError('Scale IP address not configured', 'E400');
+      if (!branch.scale_ip) {
+        throw new BusinessError('Scale IP address not configured for this branch', 'E400');
       }
 
-      // Generate price list
-      const fileContent = await scaleExportService.exportToKretzAuraFormat({});
+      // Generate price list for this branch
+      const fileContent = await scaleExportService.exportToKretzAuraFormat({ branch_id: branchId });
 
       // Upload to scale
       const result = await scaleConnectionService.uploadPriceList({
-        ip: settings.scale_ip,
-        port: settings.scale_port,
-        protocol: settings.scale_connection_protocol,
-        username: settings.scale_ftp_username,
-        password: settings.scale_ftp_password,
-        uploadPath: settings.scale_upload_path,
+        ip: branch.scale_ip,
+        port: branch.scale_port,
+        protocol: branch.scale_connection_protocol,
+        username: branch.scale_ftp_username,
+        password: branch.scale_ftp_password,
+        uploadPath: branch.scale_upload_path,
         fileContent,
       });
 
-      // Update last sync time
-      settings.scale_last_sync = new Date();
-      await settings.save();
+      // Update last sync time for this branch
+      branch.scale_last_sync = new Date();
+      await branch.save();
 
       res.json({
         success: true,

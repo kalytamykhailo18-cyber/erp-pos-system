@@ -150,6 +150,57 @@ module.exports = {
         type: Sequelize.STRING(50),
         defaultValue: 'America/Argentina/Buenos_Aires'
       },
+      // Kretz Aura Scale Integration (per branch)
+      scale_ip: {
+        type: Sequelize.STRING(50),
+        allowNull: true,
+        comment: 'IP address of Kretz Aura scale for this branch'
+      },
+      scale_port: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        defaultValue: 21,
+        comment: 'Port for scale connection (default FTP port 21)'
+      },
+      scale_enabled: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        comment: 'Enable automatic scale synchronization for this branch'
+      },
+      scale_sync_frequency: {
+        type: Sequelize.ENUM('manual', 'hourly', 'daily'),
+        allowNull: false,
+        defaultValue: 'manual',
+        comment: 'Frequency of automatic synchronization'
+      },
+      scale_last_sync: {
+        type: Sequelize.DATE,
+        allowNull: true,
+        comment: 'Last successful synchronization timestamp for this branch'
+      },
+      scale_connection_protocol: {
+        type: Sequelize.ENUM('ftp', 'http', 'tcp'),
+        allowNull: false,
+        defaultValue: 'ftp',
+        comment: 'Protocol to use for scale communication'
+      },
+      scale_ftp_username: {
+        type: Sequelize.STRING(100),
+        allowNull: true,
+        comment: 'FTP username for scale connection'
+      },
+      scale_ftp_password: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+        comment: 'FTP password for scale connection (encrypted)'
+      },
+      scale_upload_path: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+        defaultValue: '/import',
+        comment: 'Path on scale FTP server for file upload'
+      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,

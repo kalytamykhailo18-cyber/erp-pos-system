@@ -121,12 +121,14 @@ router.get(
 
 /**
  * Get scale configuration
- * GET /api/v1/scales/config
+ * GET /api/v1/scales/config?branch_id=xxx
  */
 router.get(
   '/config',
   authenticate,
   requireRole(['OWNER', 'MANAGER']),
+  query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('Invalid branch ID'),
+  validate,
   scaleController.getConfiguration
 );
 
@@ -139,37 +141,52 @@ router.put(
   '/config',
   authenticate,
   requireRole(['OWNER']),
-  body('scale_ip').optional().isIP().withMessage('Invalid IP address'),
-  body('scale_port').optional().isInt({ min: 1, max: 65535 }).withMessage('Port must be between 1 and 65535'),
-  body('scale_enabled').optional().isBoolean().withMessage('scale_enabled must be boolean'),
-  body('scale_sync_frequency').optional().isIn(['manual', 'hourly', 'daily']).withMessage('Invalid sync frequency'),
-  body('scale_connection_protocol').optional().isIn(['ftp', 'http', 'tcp']).withMessage('Invalid protocol'),
-  body('scale_ftp_username').optional().isString().withMessage('Username must be string'),
-  body('scale_ftp_password').optional().isString().withMessage('Password must be string'),
-  body('scale_upload_path').optional().isString().withMessage('Upload path must be string'),
+  body('scale_ip').optional({ values: 'null' }).custom((value) => {
+    if (value === '' || value === null || value === undefined) return true;
+    if (!/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(value)) {
+      throw new Error('Invalid IP address');
+    }
+    return true;
+  }),
+  body('scale_port').optional({ values: 'null' }).isInt({ min: 1, max: 65535 }).withMessage('Port must be between 1 and 65535'),
+  body('scale_enabled').optional({ values: 'null' }).isBoolean().withMessage('scale_enabled must be boolean'),
+  body('scale_sync_frequency').optional({ values: 'null' }).isIn(['manual', 'hourly', 'daily']).withMessage('Invalid sync frequency'),
+  body('scale_connection_protocol').optional({ values: 'null' }).isIn(['ftp', 'http', 'tcp']).withMessage('Invalid protocol'),
+  body('scale_ftp_username').optional({ values: 'null' }).isString().withMessage('Username must be string'),
+  body('scale_ftp_password').optional({ values: 'null' }).isString().withMessage('Password must be string'),
+  body('scale_upload_path').optional({ values: 'null' }).isString().withMessage('Upload path must be string'),
+  body('branch_id').optional({ values: 'null' }).matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('Invalid branch ID'),
   validate,
   scaleController.updateConfiguration
 );
 
 /**
  * Test connection to scale
- * POST /api/v1/scales/connection/test
+ * POST /api/v1/scales/connection/test?branch_id=xxx
+ * Body: { branch_id?: "xxx" }
  */
 router.post(
   '/connection/test',
   authenticate,
   requireRole(['OWNER', 'MANAGER']),
+  query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('Invalid branch ID'),
+  body('branch_id').optional({ values: 'null' }).matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('Invalid branch ID'),
+  validate,
   scaleController.testConnection
 );
 
 /**
  * Synchronize products with scale now
- * POST /api/v1/scales/sync
+ * POST /api/v1/scales/sync?branch_id=xxx
+ * Body: { branch_id?: "xxx" }
  */
 router.post(
   '/sync',
   authenticate,
   requireRole(['OWNER', 'MANAGER']),
+  query('branch_id').optional().matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('Invalid branch ID'),
+  body('branch_id').optional({ values: 'null' }).matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).withMessage('Invalid branch ID'),
+  validate,
   scaleController.syncNow
 );
 

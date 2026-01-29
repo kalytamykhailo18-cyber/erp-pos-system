@@ -49,47 +49,6 @@ module.exports = {
         type: Sequelize.STRING(255),
         allowNull: true
       },
-      scale_ip: {
-        type: Sequelize.STRING(50),
-        allowNull: true
-      },
-      scale_port: {
-        type: Sequelize.INTEGER,
-        allowNull: true,
-        defaultValue: 3001
-      },
-      scale_enabled: {
-        type: Sequelize.BOOLEAN,
-        allowNull: false,
-        defaultValue: false
-      },
-      scale_sync_frequency: {
-        type: Sequelize.ENUM('manual', 'hourly', 'daily'),
-        allowNull: false,
-        defaultValue: 'manual'
-      },
-      scale_last_sync: {
-        type: Sequelize.DATE,
-        allowNull: true
-      },
-      scale_connection_protocol: {
-        type: Sequelize.ENUM('ftp', 'http', 'tcp'),
-        allowNull: false,
-        defaultValue: 'ftp'
-      },
-      scale_ftp_username: {
-        type: Sequelize.STRING(100),
-        allowNull: true
-      },
-      scale_ftp_password: {
-        type: Sequelize.STRING(255),
-        allowNull: true
-      },
-      scale_upload_path: {
-        type: Sequelize.STRING(255),
-        allowNull: true,
-        defaultValue: '/import'
-      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
