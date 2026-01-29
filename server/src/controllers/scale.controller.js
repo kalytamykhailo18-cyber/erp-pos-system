@@ -312,7 +312,7 @@ class ScaleController {
    */
   async testConnection(req, res, next) {
     try {
-      const scaleConnectionService = require('../services/scaleConnection.service');
+      const { getIO } = require('../socket');
       const { Branch } = require('../database/models');
 
       // Use branch_id from query or body if provided, otherwise use user's branch
@@ -328,7 +328,20 @@ class ScaleController {
         throw new BusinessError('Scale IP address not configured for this branch', 'E400');
       }
 
-      const result = await scaleConnectionService.testConnection({
+      // Get Socket.IO instance and Scale Bridge handler
+      const io = getIO();
+      const scaleBridge = io.scaleBridge;
+
+      // Check if bridge is connected
+      if (!scaleBridge.isBridgeConnected(branchId)) {
+        throw new BusinessError(
+          'Scale Bridge no conectado. Por favor asegúrese de que el servicio Scale Bridge esté ejecutándose en esta sucursal. Ver documentación: scale-bridge/README.md',
+          'E503'
+        );
+      }
+
+      // Send test command to bridge
+      const result = await scaleBridge.testConnection(branchId, {
         ip: branch.scale_ip,
         port: branch.scale_port,
         protocol: branch.scale_connection_protocol,
@@ -352,7 +365,7 @@ class ScaleController {
    */
   async syncNow(req, res, next) {
     try {
-      const scaleConnectionService = require('../services/scaleConnection.service');
+      const { getIO } = require('../socket');
       const { Branch } = require('../database/models');
 
       // Use branch_id from query or body if provided, otherwise use user's branch
@@ -368,19 +381,30 @@ class ScaleController {
         throw new BusinessError('Scale IP address not configured for this branch', 'E400');
       }
 
+      // Get Socket.IO instance and Scale Bridge handler
+      const io = getIO();
+      const scaleBridge = io.scaleBridge;
+
+      // Check if bridge is connected
+      if (!scaleBridge.isBridgeConnected(branchId)) {
+        throw new BusinessError(
+          'Scale Bridge no conectado. Por favor asegúrese de que el servicio Scale Bridge esté ejecutándose en esta sucursal. Ver documentación: scale-bridge/README.md',
+          'E503'
+        );
+      }
+
       // Generate price list for this branch
       const fileContent = await scaleExportService.exportToKretzAuraFormat({ branch_id: branchId });
 
-      // Upload to scale
-      const result = await scaleConnectionService.uploadPriceList({
+      // Send sync command to bridge
+      const result = await scaleBridge.syncPriceList(branchId, {
         ip: branch.scale_ip,
         port: branch.scale_port,
         protocol: branch.scale_connection_protocol,
         username: branch.scale_ftp_username,
         password: branch.scale_ftp_password,
         uploadPath: branch.scale_upload_path,
-        fileContent,
-      });
+      }, fileContent);
 
       // Update last sync time for this branch
       branch.scale_last_sync = new Date();

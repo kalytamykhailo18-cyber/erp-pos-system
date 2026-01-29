@@ -35,6 +35,7 @@ const shippingRoutes = require('./shipping.routes');
 const expenseRoutes = require('./expense.routes');
 const denominationRoutes = require('./denomination.routes');
 const settingsRoutes = require('./settings.routes');
+const systemRoutes = require('./system.routes');
 
 // API Version prefix
 const API_VERSION = '/v1';
@@ -73,5 +74,6 @@ router.use(`${API_VERSION}/shipping`, shippingRoutes);
 router.use(`${API_VERSION}/expenses`, expenseRoutes);
 router.use(`${API_VERSION}/denominations`, denominationRoutes);
 router.use(`${API_VERSION}/settings`, settingsRoutes);
+router.use(`${API_VERSION}/system`, systemRoutes);
 
 module.exports = router;

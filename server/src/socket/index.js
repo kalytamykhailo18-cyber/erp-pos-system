@@ -243,6 +243,14 @@ const setupSocketIO = (io) => {
   };
 
   logger.info('Socket.IO configured successfully');
+
+  // Initialize Scale Bridge handler
+  const ScaleBridgeHandler = require('./scaleBridgeHandler');
+  const scaleBridgeHandler = new ScaleBridgeHandler(io);
+  scaleBridgeHandler.initialize();
+
+  // Attach bridge handler to io for use in controllers
+  io.scaleBridge = scaleBridgeHandler;
 };
 
 /**

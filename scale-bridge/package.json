@@ -1,0 +1,26 @@
+{
+  "name": "scale-bridge",
+  "version": "1.0.0",
+  "description": "Local bridge service for Kretz Aura scale synchronization",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "install-service": "node install-service.js",
+    "uninstall-service": "node uninstall-service.js"
+  },
+  "keywords": [
+    "scale",
+    "kretz",
+    "bridge",
+    "pos"
+  ],
+  "author": "Gretta's ERP",
+  "license": "ISC",
+  "dependencies": {
+    "socket.io-client": "^4.7.2",
+    "basic-ftp": "^5.0.4",
+    "dotenv": "^16.3.1",
+    "winston": "^3.11.0",
+    "node-windows": "^1.0.0-beta.8"
+  }
+}

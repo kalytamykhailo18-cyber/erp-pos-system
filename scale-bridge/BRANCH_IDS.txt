@@ -1,0 +1,45 @@
+# Branch IDs for Scale Bridge Configuration
+
+## Sucursales Configuradas
+
+1. **Sucursal Central** (BR004)
+   Branch ID: a72df959-f80d-4b4a-bad7-a148179c1259
+
+2. **Sucursal La Tablada** (BR001)
+   Branch ID: edbecacf-0625-4898-b3da-257f6b9dfddf
+
+3. **Sucursal San Justo** (BR002)
+   Branch ID: 4255ce7d-ab28-4488-a69f-91135a82a082
+
+4. **Sucursal Villa del Parque** (BR003)
+   Branch ID: 459a1c17-2dcf-4df4-95fc-a9e0b15d3bac
+
+## Instrucciones
+
+Para cada sucursal, debe:
+
+1. Copiar esta carpeta a la PC de la sucursal: C:\gretta-erp\scale-bridge\
+2. Copiar .env.example a .env
+3. Editar .env y configurar el BRANCH_ID correspondiente a esa sucursal
+4. Ejecutar: npm install
+5. Ejecutar como Administrador: npm run install-service
+
+## Ejemplo de Configuración
+
+Para **Sucursal Central**, el archivo .env debe contener:
+
+```
+BRANCH_ID=a72df959-f80d-4b4a-bad7-a148179c1259
+BACKEND_URL=https://api.grettas-erp.com
+LOG_LEVEL=info
+```
+
+Para **Sucursal La Tablada**, el archivo .env debe contener:
+
+```
+BRANCH_ID=edbecacf-0625-4898-b3da-257f6b9dfddf
+BACKEND_URL=https://api.grettas-erp.com
+LOG_LEVEL=info
+```
+
+Y así sucesivamente para cada sucursal.
