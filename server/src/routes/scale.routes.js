@@ -119,4 +119,58 @@ router.get(
   scaleController.getProductByPLU
 );
 
+/**
+ * Get scale configuration
+ * GET /api/v1/scales/config
+ */
+router.get(
+  '/config',
+  authenticate,
+  requireRole(['OWNER', 'MANAGER']),
+  scaleController.getConfiguration
+);
+
+/**
+ * Update scale configuration
+ * PUT /api/v1/scales/config
+ * Body: { scale_ip, scale_port, scale_enabled, scale_sync_frequency, etc. }
+ */
+router.put(
+  '/config',
+  authenticate,
+  requireRole(['OWNER']),
+  body('scale_ip').optional().isIP().withMessage('Invalid IP address'),
+  body('scale_port').optional().isInt({ min: 1, max: 65535 }).withMessage('Port must be between 1 and 65535'),
+  body('scale_enabled').optional().isBoolean().withMessage('scale_enabled must be boolean'),
+  body('scale_sync_frequency').optional().isIn(['manual', 'hourly', 'daily']).withMessage('Invalid sync frequency'),
+  body('scale_connection_protocol').optional().isIn(['ftp', 'http', 'tcp']).withMessage('Invalid protocol'),
+  body('scale_ftp_username').optional().isString().withMessage('Username must be string'),
+  body('scale_ftp_password').optional().isString().withMessage('Password must be string'),
+  body('scale_upload_path').optional().isString().withMessage('Upload path must be string'),
+  validate,
+  scaleController.updateConfiguration
+);
+
+/**
+ * Test connection to scale
+ * POST /api/v1/scales/connection/test
+ */
+router.post(
+  '/connection/test',
+  authenticate,
+  requireRole(['OWNER', 'MANAGER']),
+  scaleController.testConnection
+);
+
+/**
+ * Synchronize products with scale now
+ * POST /api/v1/scales/sync
+ */
+router.post(
+  '/sync',
+  authenticate,
+  requireRole(['OWNER', 'MANAGER']),
+  scaleController.syncNow
+);
+
 module.exports = router;

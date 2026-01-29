@@ -51,6 +51,56 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING(255),
       allowNull: true,
       comment: 'FactuHoy API key for electronic invoicing'
+    },
+    scale_ip: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      comment: 'IP address of Kretz Aura scale'
+    },
+    scale_port: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 3001,
+      comment: 'Port for scale connection'
+    },
+    scale_enabled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      comment: 'Enable automatic scale synchronization'
+    },
+    scale_sync_frequency: {
+      type: DataTypes.ENUM('manual', 'hourly', 'daily'),
+      allowNull: false,
+      defaultValue: 'manual',
+      comment: 'Frequency of automatic synchronization'
+    },
+    scale_last_sync: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Last successful synchronization timestamp'
+    },
+    scale_connection_protocol: {
+      type: DataTypes.ENUM('ftp', 'http', 'tcp'),
+      allowNull: false,
+      defaultValue: 'ftp',
+      comment: 'Protocol to use for scale communication'
+    },
+    scale_ftp_username: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'FTP username for scale connection'
+    },
+    scale_ftp_password: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: 'FTP password for scale connection (encrypted)'
+    },
+    scale_upload_path: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: '/import',
+      comment: 'Path on scale for file upload'
     }
   }, {
     tableName: 'system_settings',

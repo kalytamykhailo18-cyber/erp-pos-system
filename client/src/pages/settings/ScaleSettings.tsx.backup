@@ -11,14 +11,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui';
-import scaleService, {
-  ScaleExportStatistics,
-  ScaleProduct,
-  ScaleConfiguration,
-  ScaleConnectionTestResult,
-  ScaleSyncResult
-} from '../../services/api/scale.service';
-import { MdDownload, MdRefresh, MdCheckCircle, MdWarning, MdError, MdScale, MdSync, MdWifi } from 'react-icons/md';
+import scaleService, { ScaleExportStatistics, ScaleProduct } from '../../services/api/scale.service';
+import { MdDownload, MdRefresh, MdCheckCircle, MdWarning, MdError, MdScale } from 'react-icons/md';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 
@@ -33,38 +27,9 @@ const ScaleSettings: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Connection configuration state
-  const [config, setConfig] = useState<ScaleConfiguration>({
-    scale_ip: '',
-    scale_port: 21,
-    scale_enabled: false,
-    scale_sync_frequency: 'manual',
-    scale_connection_protocol: 'ftp',
-    scale_ftp_username: '',
-    scale_upload_path: '/prices',
-  });
-  const [configLoading, setConfigLoading] = useState(false);
-  const [configSaving, setConfigSaving] = useState(false);
-  const [testingConnection, setTestingConnection] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [ftpPassword, setFtpPassword] = useState('');
-
   useEffect(() => {
     loadStatistics();
-    loadConfiguration();
   }, []);
-
-  const loadConfiguration = async () => {
-    setConfigLoading(true);
-    try {
-      const response = await scaleService.getConfiguration();
-      setConfig(response.data);
-    } catch (err: any) {
-      console.error('Error loading configuration:', err);
-    } finally {
-      setConfigLoading(false);
-    }
-  };
 
   const loadStatistics = async () => {
     setLoading(true);
@@ -109,68 +74,6 @@ const ScaleSettings: React.FC = () => {
     }
   };
 
-  const handleFormChange = (field: keyof ScaleConfiguration, value: any) => {
-    setConfig({ ...config, [field]: value });
-  };
-
-  const handleSaveConfiguration = async () => {
-    setConfigSaving(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      const updateData: any = { ...config };
-      if (ftpPassword) {
-        updateData.scale_ftp_password = ftpPassword;
-      }
-      const response = await scaleService.updateConfiguration(updateData);
-      setConfig(response.data);
-      setSuccess('Configuración guardada exitosamente');
-      setFtpPassword(''); // Clear password after save
-    } catch (err: any) {
-      setError(err.message || 'Error al guardar configuración');
-    } finally {
-      setConfigSaving(false);
-    }
-  };
-
-  const handleTestConnection = async () => {
-    setTestingConnection(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      const response = await scaleService.testConnection();
-      if (response.data.connected) {
-        setSuccess(`Conexión exitosa: ${response.data.message}`);
-      } else {
-        setError(`Error de conexión: ${response.data.error || response.data.message}`);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Error al probar conexión');
-    } finally {
-      setTestingConnection(false);
-    }
-  };
-
-  const handleSyncNow = async () => {
-    setSyncing(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      const response = await scaleService.syncNow();
-      if (response.data.success) {
-        setSuccess(`Sincronización exitosa: ${response.data.filename || 'Archivo enviado'}`);
-        await loadConfiguration(); // Reload to get updated last_sync timestamp
-        await loadStatistics(); // Reload statistics
-      } else {
-        setError('Error al sincronizar con la balanza');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Error al sincronizar');
-    } finally {
-      setSyncing(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -182,7 +85,7 @@ const ScaleSettings: React.FC = () => {
               Exportación de Precios para Balanza Kretz Aura
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Configura la conexión IP y exporta precios automáticamente a la balanza
+              Genera y descarga archivos de precios para importar en el software de la balanza Kretz Aura
             </p>
           </div>
         </div>
@@ -206,195 +109,6 @@ const ScaleSettings: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Configuration Card */}
-      <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-6 animate-fade-up duration-fast">
-        <div className="flex items-center gap-3 mb-6">
-          <MdWifi className="text-2xl text-primary-600 dark:text-primary-400" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-            Configuración de Conexión
-          </h3>
-        </div>
-
-        {configLoading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-primary-600 mx-auto"></div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-4">Cargando configuración...</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* IP and Port */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Dirección IP de la Balanza
-                </label>
-                <input
-                  type="text"
-                  value={config.scale_ip || ''}
-                  onChange={(e) => handleFormChange('scale_ip', e.target.value)}
-                  placeholder="192.168.1.100"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Puerto
-                </label>
-                <input
-                  type="number"
-                  value={config.scale_port || 21}
-                  onChange={(e) => handleFormChange('scale_port', parseInt(e.target.value))}
-                  placeholder="21"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            {/* Protocol and Sync Frequency */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Protocolo de Conexión
-                </label>
-                <select
-                  value={config.scale_connection_protocol}
-                  onChange={(e) => handleFormChange('scale_connection_protocol', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                >
-                  <option value="ftp">FTP (File Transfer Protocol)</option>
-                  <option value="http">HTTP (Web Service)</option>
-                  <option value="tcp">TCP (Socket Connection)</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Frecuencia de Sincronización
-                </label>
-                <select
-                  value={config.scale_sync_frequency}
-                  onChange={(e) => handleFormChange('scale_sync_frequency', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                >
-                  <option value="manual">Manual (solo cuando se solicite)</option>
-                  <option value="hourly">Cada Hora</option>
-                  <option value="daily">Diaria (00:00)</option>
-                </select>
-              </div>
-            </div>
-
-            {/* FTP Credentials (show only if FTP protocol) */}
-            {config.scale_connection_protocol === 'ftp' && (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Usuario FTP
-                    </label>
-                    <input
-                      type="text"
-                      value={config.scale_ftp_username || ''}
-                      onChange={(e) => handleFormChange('scale_ftp_username', e.target.value)}
-                      placeholder="usuario"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Contraseña FTP
-                    </label>
-                    <input
-                      type="password"
-                      value={ftpPassword}
-                      onChange={(e) => setFtpPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Dejar en blanco para mantener la contraseña actual
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Ruta de Subida en Servidor FTP
-                  </label>
-                  <input
-                    type="text"
-                    value={config.scale_upload_path || ''}
-                    onChange={(e) => handleFormChange('scale_upload_path', e.target.value)}
-                    placeholder="/prices"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Enable Automatic Sync */}
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="scale_enabled"
-                checked={config.scale_enabled}
-                onChange={(e) => handleFormChange('scale_enabled', e.target.checked)}
-                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-              />
-              <label htmlFor="scale_enabled" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Habilitar Sincronización Automática
-              </label>
-            </div>
-
-            {/* Last Sync Timestamp */}
-            {config.scale_last_sync && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-sm p-3">
-                <p className="text-sm text-blue-800 dark:text-blue-200">
-                  <strong>Última Sincronización:</strong>{' '}
-                  {new Date(config.scale_last_sync).toLocaleString('es-AR', {
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                  })}
-                </p>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <Button
-                type="button"
-                variant="primary"
-                onClick={handleSaveConfiguration}
-                disabled={configSaving}
-              >
-                {configSaving ? 'Guardando...' : 'Guardar Configuración'}
-              </Button>
-
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleTestConnection}
-                disabled={testingConnection || !config.scale_ip}
-                icon={<MdWifi />}
-                iconPosition="left"
-              >
-                {testingConnection ? 'Probando...' : 'Probar Conexión'}
-              </Button>
-
-              {config.scale_enabled && config.scale_ip && (
-                <Button
-                  type="button"
-                  variant="accent"
-                  onClick={handleSyncNow}
-                  disabled={syncing}
-                  icon={<MdSync className={syncing ? 'animate-spin' : ''} />}
-                  iconPosition="left"
-                >
-                  {syncing ? 'Sincronizando...' : 'Sincronizar Ahora'}
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* Statistics Card */}
       <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-6 animate-fade-up duration-normal">
@@ -465,7 +179,7 @@ const ScaleSettings: React.FC = () => {
       {statistics && statistics.export_ready && (
         <div className="bg-white dark:bg-gray-800 rounded-sm shadow-md p-6 animate-fade-up duration-slow">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-            Descargar Lista de Precios (Modo Manual)
+            Descargar Lista de Precios
           </h3>
 
           <div className="space-y-4">

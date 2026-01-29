@@ -56,6 +56,36 @@ export interface PLUValidationResult {
   };
 }
 
+export interface ScaleConfiguration {
+  scale_ip?: string;
+  scale_port?: number;
+  scale_enabled: boolean;
+  scale_sync_frequency: 'manual' | 'hourly' | 'daily';
+  scale_last_sync?: string;
+  scale_connection_protocol: 'ftp' | 'http' | 'tcp';
+  scale_ftp_username?: string;
+  scale_upload_path?: string;
+}
+
+export interface ScaleConnectionTestResult {
+  connected: boolean;
+  protocol: string;
+  ip: string;
+  port: number;
+  message: string;
+  error?: string;
+}
+
+export interface ScaleSyncResult {
+  success: boolean;
+  protocol: string;
+  filename?: string;
+  remotePath?: string;
+  url?: string;
+  size: number;
+  timestamp: string;
+}
+
 export const scaleService = {
   /**
    * Get all products marked for scale export
@@ -178,6 +208,41 @@ export const scaleService = {
    */
   getProductByPLU: (plu: number): Promise<ApiResponse<ScaleProduct>> => {
     return get<ScaleProduct>(`/scales/products/plu/${plu}`);
+  },
+
+  /**
+   * Get scale configuration
+   */
+  getConfiguration: (): Promise<ApiResponse<ScaleConfiguration>> => {
+    return get<ScaleConfiguration>('/scales/config');
+  },
+
+  /**
+   * Update scale configuration
+   */
+  updateConfiguration: (config: Partial<ScaleConfiguration>): Promise<ApiResponse<ScaleConfiguration>> => {
+    return fetch('/api/v1/scales/config', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify(config),
+    }).then(res => res.json());
+  },
+
+  /**
+   * Test connection to scale
+   */
+  testConnection: (): Promise<ApiResponse<ScaleConnectionTestResult>> => {
+    return post<ScaleConnectionTestResult>('/scales/connection/test', {});
+  },
+
+  /**
+   * Synchronize products with scale now
+   */
+  syncNow: (): Promise<ApiResponse<ScaleSyncResult>> => {
+    return post<ScaleSyncResult>('/scales/sync', {});
   },
 };
 
