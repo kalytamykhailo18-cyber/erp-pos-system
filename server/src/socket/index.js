@@ -73,6 +73,19 @@ const setupSocketIO = (io) => {
   // Authentication middleware
   io.use(async (socket, next) => {
     try {
+      // Check if this is a Scale Bridge connection - they don't need JWT
+      const isScaleBridge = socket.nsp.name === '/scale-bridge' || socket.handshake.auth.type === 'scale-bridge';
+
+      if (isScaleBridge) {
+        // Scale Bridge connections only need branch_id and type
+        if (!socket.handshake.auth.branch_id || socket.handshake.auth.type !== 'scale-bridge') {
+          return next(new Error('Scale Bridge requires branch_id and type=scale-bridge'));
+        }
+        // Allow Scale Bridge connections without JWT
+        return next();
+      }
+
+      // Regular user connections require JWT
       const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
 
       if (!token) {

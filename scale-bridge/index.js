@@ -50,9 +50,10 @@ class ScaleBridge {
    */
   connectToBackend() {
     logger.info('Connecting to backend...');
+    logger.info(`Target: ${this.backendUrl}/scale-bridge`);
 
-    this.socket = io(this.backendUrl, {
-      path: '/scale-bridge',
+    // Connect to the /scale-bridge namespace
+    this.socket = io(`${this.backendUrl}/scale-bridge`, {
       transports: ['websocket'],
       auth: {
         branch_id: this.branchId,
@@ -61,11 +62,13 @@ class ScaleBridge {
       reconnection: true,
       reconnectionDelay: 5000,
       reconnectionDelayMax: 30000,
+      rejectUnauthorized: false, // For self-signed certificates in production
     });
 
     // Connection established
     this.socket.on('connect', () => {
       logger.info('✅ Connected to backend successfully');
+      logger.info(`Socket ID: ${this.socket.id}`);
       this.reconnectAttempts = 0;
 
       // Register this bridge
@@ -78,7 +81,13 @@ class ScaleBridge {
     // Connection error
     this.socket.on('connect_error', (error) => {
       this.reconnectAttempts++;
-      logger.error(`Connection error (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}):`, error.message);
+      logger.error(`Connection error (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}):`);
+      logger.error(`Error type: ${error.type}`);
+      logger.error(`Error message: ${error.message}`);
+      logger.error(`Error description: ${error.description || 'N/A'}`);
+      if (error.data) {
+        logger.error(`Error data: ${JSON.stringify(error.data)}`);
+      }
 
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         logger.error('Max reconnection attempts reached. Exiting...');
