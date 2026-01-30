@@ -1,10 +1,11 @@
 @echo off
 echo ========================================
-echo SCALE BRIDGE - INSTALACION
+echo SCALE BRIDGE - INSTALACION KRETZ RS-232
 echo ========================================
 echo.
-echo Este programa debe ejecutarse en una PC Windows
-echo ubicada en la sucursal, en la misma red que la balanza.
+echo ADVERTENCIA: Implementacion RS-232 NO PROBADA
+echo Este programa ha sido desarrollado pero NO verificado
+echo con balanza Kretz fisica. Puede requerir ajustes.
 echo.
 pause
 
@@ -23,59 +24,114 @@ echo Node.js encontrado:
 node --version
 
 echo.
-echo Instalando dependencias...
-call npm install
+echo Verificando Python...
+python --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo ERROR: Python no esta instalado.
+    echo.
+    echo El modulo serialport REQUIERE Python para compilarse.
+    echo Descargue e instale Python desde:
+    echo https://www.python.org/downloads/
+    echo.
+    echo IMPORTANTE: Durante instalacion marcar "Add Python to PATH"
+    echo.
+    pause
+    exit /b 1
+)
+
+echo Python encontrado:
+python --version
+
+echo.
+echo ========================================
+echo INSTALANDO DEPENDENCIAS
+echo ========================================
+echo.
+echo NOTA: Este proceso compilara el modulo serialport.
+echo Puede tardar varios minutos y requiere:
+echo - Python
+echo - Visual Studio Build Tools
+echo.
+echo Si aparecen errores, instale Visual Studio Build Tools:
+echo https://visualstudio.microsoft.com/downloads/
+echo Buscar "Build Tools for Visual Studio 2022"
+echo.
+pause
+
+echo.
+echo Instalando...
+call npm install --verbose
 
 if %errorlevel% neq 0 (
+    echo.
     echo ERROR: No se pudieron instalar las dependencias.
+    echo.
+    echo POSIBLES CAUSAS:
+    echo 1. Python no esta en PATH
+    echo 2. Visual Studio Build Tools no instalado
+    echo 3. Permisos insuficientes (ejecute como Administrador)
+    echo.
+    echo Consulte README_CLIENTE.txt para instrucciones detalladas.
+    echo.
     pause
     exit /b 1
 )
 
 echo.
 echo ========================================
-echo CONFIGURACION REQUERIDA
+echo CONFIGURACION - BALANZA KRETZ
 echo ========================================
 echo.
-echo Antes de continuar, necesitamos la siguiente informacion:
+echo Para conectar via RS-232/Serial, necesita:
 echo.
-echo 1. Direccion IP de la balanza iTegra
-echo    Ejemplo: 192.168.1.50
+echo 1. Numero de Puerto COM
+echo    Verificar en: Administrador de Dispositivos ^> Puertos (COM y LPT)
+echo    Ejemplo: COM1, COM2, COM3
 echo.
-echo 2. Protocolo de conexion
-echo    ¿La balanza usa FTP, HTTP, o carpeta compartida?
+echo 2. Baud Rate (velocidad)
+echo    Estandar Kretz: 9600
+echo    Verificar en manual de su balanza
 echo.
-echo 3. Puerto (si usa FTP o HTTP)
-echo    FTP usa puerto 21
-echo    HTTP usa puerto 80 o 8080
+echo 3. Cable RS-232
+echo    Conectado entre PC y balanza
+echo    Balanza debe estar encendida
 echo.
-echo 4. Credenciales (si las requiere)
-echo    Usuario y contraseña
+echo IMPORTANTE: Configure estos valores en el sistema web:
+echo https://grettas-erp.com ^> Configuracion ^> Balanza
 echo.
-echo 5. Ruta del archivo
-echo    Ejemplo: /PRECIOLU.TXT o /ARTICULO.TXT
-echo.
-echo Por favor consulte el manual de la balanza iTegra
-echo o contacte al soporte tecnico del fabricante.
+echo Protocolo: RS-232/Serial (Puerto COM)
+echo Puerto COM: Verificar en Administrador de Dispositivos
+echo Baud Rate: 9600 (o segun manual Kretz)
 echo.
 pause
 
 echo.
 echo ========================================
-echo Edite el archivo .env con la informacion correcta
+echo PROBANDO SCALE BRIDGE
 echo ========================================
-notepad .env
+echo.
+echo Se iniciara Scale Bridge en modo prueba.
+echo Debe ver: "Connected to backend successfully"
+echo.
+echo Presione Ctrl+C para detener cuando vea la conexion exitosa.
+echo.
+pause
 
 echo.
-echo ¿Desea probar la conexion ahora? (S/N)
-set /p test="Presione S para probar: "
+echo Iniciando Scale Bridge...
+echo.
+node index.js
 
-if /i "%test%"=="S" (
-    echo.
-    echo Iniciando Scale Bridge...
-    echo Presione Ctrl+C para detener
-    echo.
-    node index.js
-)
-
+echo.
+echo ========================================
+echo Si la conexion fue exitosa:
+echo 1. Abrir https://grettas-erp.com
+echo 2. Ir a: Configuracion ^> Balanza
+echo 3. Configurar Puerto COM y Baud Rate
+echo 4. Probar Conexion
+echo 5. Si funciona, Sincronizar
+echo.
+echo NOTA: Esta es version BETA no probada con hardware real.
+echo Reporte cualquier problema encontrado.
+echo ========================================
 pause
