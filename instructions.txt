@@ -1,0 +1,97 @@
+INSTRUCCIONES - INTEGRACIÓN DE BALANZA
+======================================================
+
+PROBLEMA IDENTIFICADO:
+----------------------
+El Scale Bridge está ejecutándose en el servidor cloud (138.219.41.188),
+pero necesita ejecutarse en una PC dentro de la sucursal que tenga acceso
+a la red local de la balanza (192.168.x.x).
+
+El servidor cloud NO puede acceder a direcciones IP privadas (192.168.x.x)
+porque están en redes diferentes.
+
+SOLUCIÓN:
+---------
+Instalar Scale Bridge en una PC Windows ubicada en la sucursal, en la misma
+red local que la balanza iTegra.
+
+REQUISITOS:
+-----------
+1. Una PC Windows en la sucursal
+2. La PC debe tener acceso a Internet
+3. La PC debe estar en la misma red que la balanza iTegra
+4. Node.js instalado (https://nodejs.org/)
+
+PASOS:
+------
+
+1. Descargar el archivo scale-bridge-installer.tar.gz del servidor:
+   scp root@138.219.41.188:/home/erp-pos-system/scale-bridge-installer.tar.gz .
+
+2. Extraer el archivo en C:\scale-bridge\
+
+3. Abrir CMD como Administrador y ejecutar:
+   cd C:\scale-bridge
+   INSTALAR.bat
+
+4. INFORMACIÓN CRÍTICA NECESARIA SOBRE LA BALANZA iTEGRA:
+
+   Necesitamos saber:
+   a) ¿Cuál es la dirección IP de la balanza?
+      - Verificar en la configuración de red de la balanza
+      - O hacer ping desde una PC de la sucursal
+
+   b) ¿Qué protocolo usa la balanza para recibir archivos?
+      Opciones comunes en balanzas iTegra:
+      - FTP (File Transfer Protocol) - puerto 21
+      - HTTP/REST API - puerto 80 o 8080
+      - Carpeta compartida de Windows (SMB/CIFS)
+      - Puerto serie RS232 (COM)
+
+   c) ¿Qué formato de archivo necesita?
+      - CSV con formato específico
+      - TXT con formato específico
+      - XML
+      - Formato propietario iTegra
+
+   d) ¿Dónde se debe colocar el archivo?
+      Ejemplos comunes:
+      - /PRECIOLU.TXT
+      - /ARTICULO.TXT
+      - /import/precios.csv
+      - C:\Balanza\Precios\
+
+   e) ¿Requiere usuario y contraseña?
+
+5. CÓMO OBTENER ESTA INFORMACIÓN:
+
+   Opción A: Consultar el manual de la balanza iTegra
+   Opción B: Contactar al soporte técnico de iTegra
+   Opción C: Si tienen software existente que ya carga precios,
+            verificar su configuración
+   Opción D: Revisar la configuración en el panel de la balanza
+
+6. Una vez obtenida la información, editar el archivo .env y probar:
+   node index.js
+
+7. Si la prueba funciona, instalar como servicio de Windows:
+   node install-service.js
+
+ESTADO ACTUAL:
+--------------
+- Backend funcionando correctamente ✓
+- Frontend funcionando correctamente ✓
+- SSL/HTTPS funcionando correctamente ✓
+- Scale Bridge código listo ✓
+- Falta: Información de conexión de la balanza iTegra
+- Falta: Instalación de Scale Bridge en la sucursal
+
+CONTACTO:
+---------
+Una vez tengan la información de la balanza, podemos proceder con la
+configuración y pruebas.
+
+NOTA IMPORTANTE:
+---------------
+Las balanzas iTegra pueden variar según el modelo. No todas usan FTP.
+Es CRÍTICO confirmar el protocolo exacto con el fabricante o manual.
