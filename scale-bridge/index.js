@@ -1,17 +1,11 @@
 /**
- * Scale Bridge Service
+ * Scale Bridge Service - Multi-Branch Dynamic Version
  *
- * This service runs locally at each branch and acts as a bridge between
- * the cloud backend and the local Kretz Aura scale.
+ * This service handles scale communication for ALL branches dynamically.
+ * No hardcoded branch_id required.
  *
  * Architecture:
- * Cloud Backend <--WebSocket--> Local Bridge <--FTP/HTTP/TCP--> Scale
- *
- * Benefits:
- * - Backend on cloud can communicate with scale on private network
- * - No VPN or port forwarding required
- * - Outbound WebSocket connection (no firewall issues)
- * - Can run as Windows service
+ * Cloud Backend <--WebSocket--> Scale Bridge <--FTP/HTTP/TCP--> Any Branch Scale
  */
 
 require('dotenv').config();
@@ -22,7 +16,6 @@ const logger = require('./logger');
 class ScaleBridge {
   constructor() {
     this.socket = null;
-    this.branchId = process.env.BRANCH_ID;
     this.backendUrl = process.env.BACKEND_URL || 'https://api.grettas-erp.com';
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = parseInt(process.env.MAX_RECONNECTION_ATTEMPTS) || 20;
@@ -36,14 +29,9 @@ class ScaleBridge {
    * Start the bridge service
    */
   start() {
-    logger.info('=== Scale Bridge Service Starting ===');
-    logger.info(`Branch ID: ${this.branchId}`);
+    logger.info('=== Scale Bridge Service Starting (Multi-Branch Mode) ===');
     logger.info(`Backend URL: ${this.backendUrl}`);
-
-    if (!this.branchId) {
-      logger.error('BRANCH_ID not configured! Please set BRANCH_ID in .env file');
-      process.exit(1);
-    }
+    logger.info('This bridge will handle requests for ALL branches dynamically');
 
     this.connectToBackend();
   }
@@ -61,24 +49,24 @@ class ScaleBridge {
     this.socket = io(`${this.backendUrl}/scale-bridge`, {
       transports: ['websocket'],
       auth: {
-        branch_id: this.branchId,
         type: 'scale-bridge',
+        mode: 'multi-branch',
       },
       reconnection: true,
       reconnectionDelay: this.reconnectionDelay,
       reconnectionDelayMax: this.reconnectionDelayMax,
-      rejectUnauthorized: false, // For self-signed certificates in production
+      rejectUnauthorized: false,
     });
 
     // Connection established
     this.socket.on('connect', () => {
-      logger.info('✅ Connected to backend successfully');
+      logger.info('Connected to backend successfully');
       logger.info(`Socket ID: ${this.socket.id}`);
       this.reconnectAttempts = 0;
 
-      // Register this bridge
+      // Register this bridge as multi-branch handler
       this.socket.emit('bridge:register', {
-        branch_id: this.branchId,
+        mode: 'multi-branch',
         timestamp: new Date().toISOString(),
       });
     });
@@ -107,25 +95,26 @@ class ScaleBridge {
 
     // Test connection command from backend
     this.socket.on('scale:test-connection', async (data) => {
-      logger.info('Received test connection command');
+      const { request_id, branch_id, config } = data;
+      logger.info(`Received test connection command for branch: ${branch_id}`);
 
       try {
-        const result = await this.scaleClient.testConnection(data.config);
+        const result = await this.scaleClient.testConnection(config);
 
         this.socket.emit('scale:test-connection-result', {
-          request_id: data.request_id,
-          branch_id: this.branchId,
+          request_id,
+          branch_id,
           success: true,
           result,
         });
 
-        logger.info('Test connection completed successfully');
+        logger.info(`Test connection completed for branch: ${branch_id}`);
       } catch (error) {
-        logger.error('Test connection failed:', error);
+        logger.error(`Test connection failed for branch ${branch_id}:`, error);
 
         this.socket.emit('scale:test-connection-result', {
-          request_id: data.request_id,
-          branch_id: this.branchId,
+          request_id,
+          branch_id,
           success: false,
           error: error.message,
         });
@@ -134,25 +123,26 @@ class ScaleBridge {
 
     // Sync/upload command from backend
     this.socket.on('scale:sync', async (data) => {
-      logger.info('Received sync command');
+      const { request_id, branch_id, config, fileContent } = data;
+      logger.info(`Received sync command for branch: ${branch_id}`);
 
       try {
-        const result = await this.scaleClient.uploadPriceList(data.config, data.fileContent);
+        const result = await this.scaleClient.uploadPriceList(config, fileContent);
 
         this.socket.emit('scale:sync-result', {
-          request_id: data.request_id,
-          branch_id: this.branchId,
+          request_id,
+          branch_id,
           success: true,
           result,
         });
 
-        logger.info('Sync completed successfully');
+        logger.info(`Sync completed for branch: ${branch_id}`);
       } catch (error) {
-        logger.error('Sync failed:', error);
+        logger.error(`Sync failed for branch ${branch_id}:`, error);
 
         this.socket.emit('scale:sync-result', {
-          request_id: data.request_id,
-          branch_id: this.branchId,
+          request_id,
+          branch_id,
           success: false,
           error: error.message,
         });
@@ -162,7 +152,6 @@ class ScaleBridge {
     // Ping/pong for keepalive
     this.socket.on('ping', () => {
       this.socket.emit('pong', {
-        branch_id: this.branchId,
         timestamp: new Date().toISOString(),
       });
     });

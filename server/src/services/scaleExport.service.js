@@ -19,10 +19,9 @@ class ScaleExportService {
       is_active: true,
     };
 
-    // Optional branch filtering (if products are branch-specific in the future)
-    if (filters.branch_id) {
-      where.branch_id = filters.branch_id;
-    }
+    // Note: Products are shared across all branches
+    // Only inventory/stock is branch-specific
+    // branch_id filter removed - Product table has no branch_id column
 
     const products = await Product.findAll({
       where,
