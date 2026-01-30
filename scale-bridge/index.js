@@ -22,11 +22,14 @@ const logger = require('./logger');
 class ScaleBridge {
   constructor() {
     this.socket = null;
-    this.scaleClient = new ScaleClient();
     this.branchId = process.env.BRANCH_ID;
     this.backendUrl = process.env.BACKEND_URL || 'https://api.grettas-erp.com';
     this.reconnectAttempts = 0;
-    this.maxReconnectAttempts = 10;
+    this.maxReconnectAttempts = parseInt(process.env.MAX_RECONNECTION_ATTEMPTS) || 20;
+    this.reconnectionDelay = parseInt(process.env.RECONNECTION_DELAY) || 10000;
+    this.reconnectionDelayMax = parseInt(process.env.RECONNECTION_DELAY_MAX) || 60000;
+    this.requestTimeout = parseInt(process.env.REQUEST_TIMEOUT) || 60000;
+    this.scaleClient = new ScaleClient(this.requestTimeout);
   }
 
   /**
@@ -51,6 +54,8 @@ class ScaleBridge {
   connectToBackend() {
     logger.info('Connecting to backend...');
     logger.info(`Target: ${this.backendUrl}/scale-bridge`);
+    logger.info(`Reconnection delay: ${this.reconnectionDelay}ms, Max: ${this.reconnectionDelayMax}ms`);
+    logger.info(`Request timeout: ${this.requestTimeout}ms, Max attempts: ${this.maxReconnectAttempts}`);
 
     // Connect to the /scale-bridge namespace
     this.socket = io(`${this.backendUrl}/scale-bridge`, {
@@ -60,8 +65,8 @@ class ScaleBridge {
         type: 'scale-bridge',
       },
       reconnection: true,
-      reconnectionDelay: 5000,
-      reconnectionDelayMax: 30000,
+      reconnectionDelay: this.reconnectionDelay,
+      reconnectionDelayMax: this.reconnectionDelayMax,
       rejectUnauthorized: false, // For self-signed certificates in production
     });
 

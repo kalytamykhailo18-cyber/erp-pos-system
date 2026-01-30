@@ -9,13 +9,17 @@ const http = require('http');
 const logger = require('./logger');
 
 class ScaleClient {
+  constructor(timeout) {
+    this.timeout = timeout || 60000;
+  }
+
   /**
    * Test connection to scale
    */
   async testConnection(config) {
     const { ip, port, protocol, username, password } = config;
 
-    logger.info(`Testing ${protocol} connection to ${ip}:${port}`);
+    logger.info(`Testing ${protocol} connection to ${ip}:${port} (timeout: ${this.timeout}ms)`);
 
     switch (protocol) {
       case 'ftp':
@@ -34,7 +38,7 @@ class ScaleClient {
    */
   async testFTP(ip, port, username, password) {
     const client = new ftp.Client();
-    client.ftp.timeout = 5000;
+    client.ftp.timeout = this.timeout;
 
     try {
       await client.access({
@@ -69,7 +73,7 @@ class ScaleClient {
     return new Promise((resolve, reject) => {
       const url = `http://${ip}:${port || 80}/`;
 
-      const req = http.get(url, { timeout: 5000 }, (res) => {
+      const req = http.get(url, { timeout: this.timeout }, (res) => {
         resolve({
           connected: true,
           protocol: 'http',
@@ -97,7 +101,7 @@ class ScaleClient {
   async testTCP(ip, port) {
     return new Promise((resolve, reject) => {
       const socket = new net.Socket();
-      socket.setTimeout(5000);
+      socket.setTimeout(this.timeout);
 
       socket.on('connect', () => {
         socket.destroy();
@@ -149,7 +153,7 @@ class ScaleClient {
    */
   async uploadFTP(ip, port, username, password, uploadPath, fileContent) {
     const client = new ftp.Client();
-    client.ftp.timeout = 10000;
+    client.ftp.timeout = this.timeout;
 
     try {
       await client.access({
