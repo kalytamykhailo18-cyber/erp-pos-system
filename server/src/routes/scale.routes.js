@@ -143,15 +143,18 @@ router.put(
   requireRole(['OWNER']),
   body('scale_ip').optional({ values: 'null' }).custom((value) => {
     if (value === '' || value === null || value === undefined) return true;
-    if (!/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(value)) {
-      throw new Error('Invalid IP address');
+    // Allow IP addresses (192.168.1.100) OR COM port names (COM1, COM2, etc.)
+    const isIP = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(value);
+    const isCOMPort = /^COM\d+$/i.test(value);
+    if (!isIP && !isCOMPort) {
+      throw new Error('Must be valid IP address or COM port (e.g., COM1)');
     }
     return true;
   }),
   body('scale_port').optional({ values: 'null' }).isInt({ min: 1, max: 65535 }).withMessage('Port must be between 1 and 65535'),
   body('scale_enabled').optional({ values: 'null' }).isBoolean().withMessage('scale_enabled must be boolean'),
   body('scale_sync_frequency').optional({ values: 'null' }).isIn(['manual', 'hourly', 'daily']).withMessage('Invalid sync frequency'),
-  body('scale_connection_protocol').optional({ values: 'null' }).isIn(['ftp', 'http', 'tcp']).withMessage('Invalid protocol'),
+  body('scale_connection_protocol').optional({ values: 'null' }).isIn(['serial', 'ftp', 'http', 'tcp']).withMessage('Invalid protocol'),
   body('scale_ftp_username').optional({ values: 'null' }).isString().withMessage('Username must be string'),
   body('scale_ftp_password').optional({ values: 'null' }).isString().withMessage('Password must be string'),
   body('scale_upload_path').optional({ values: 'null' }).isString().withMessage('Upload path must be string'),

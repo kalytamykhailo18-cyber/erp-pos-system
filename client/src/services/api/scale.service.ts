@@ -62,7 +62,7 @@ export interface ScaleConfiguration {
   scale_enabled: boolean;
   scale_sync_frequency: 'manual' | 'hourly' | 'daily';
   scale_last_sync?: string;
-  scale_connection_protocol: 'ftp' | 'http' | 'tcp';
+  scale_connection_protocol: 'serial' | 'ftp' | 'http' | 'tcp';
   scale_ftp_username?: string;
   scale_upload_path?: string;
 }

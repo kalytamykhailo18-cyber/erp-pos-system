@@ -154,13 +154,13 @@ module.exports = {
       scale_ip: {
         type: Sequelize.STRING(50),
         allowNull: true,
-        comment: 'IP address of Kretz Aura scale for this branch'
+        comment: 'IP address for network protocols or COM port name (e.g., COM1) for serial protocol'
       },
       scale_port: {
         type: Sequelize.INTEGER,
         allowNull: true,
         defaultValue: 21,
-        comment: 'Port for scale connection (default FTP port 21)'
+        comment: 'Port for network protocols (e.g., FTP port 21) or baud rate for serial (e.g., 9600)'
       },
       scale_enabled: {
         type: Sequelize.BOOLEAN,
@@ -180,10 +180,10 @@ module.exports = {
         comment: 'Last successful synchronization timestamp for this branch'
       },
       scale_connection_protocol: {
-        type: Sequelize.ENUM('ftp', 'http', 'tcp'),
+        type: Sequelize.ENUM('serial', 'ftp', 'http', 'tcp'),
         allowNull: false,
         defaultValue: 'ftp',
-        comment: 'Protocol to use for scale communication'
+        comment: 'Protocol to use for scale communication (serial=RS-232/COM port)'
       },
       scale_ftp_username: {
         type: Sequelize.STRING(100),

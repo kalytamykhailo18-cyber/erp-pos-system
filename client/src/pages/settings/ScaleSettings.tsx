@@ -242,33 +242,78 @@ const ScaleSettings: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {/* IP and Port */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Dirección IP de la Balanza
-                </label>
-                <input
-                  type="text"
-                  value={config.scale_ip || ''}
-                  onChange={(e) => handleFormChange('scale_ip', e.target.value)}
-                  placeholder="192.168.1.100"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
+            {/* Serial or Network Configuration */}
+            {config.scale_connection_protocol === 'serial' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Puerto COM
+                  </label>
+                  <select
+                    value={config.scale_ip || 'COM1'}
+                    onChange={(e) => handleFormChange('scale_ip', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="COM1">COM1</option>
+                    <option value="COM2">COM2</option>
+                    <option value="COM3">COM3</option>
+                    <option value="COM4">COM4</option>
+                    <option value="COM5">COM5</option>
+                    <option value="COM6">COM6</option>
+                    <option value="COM7">COM7</option>
+                    <option value="COM8">COM8</option>
+                  </select>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Puerto donde está conectada la balanza
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Baud Rate
+                  </label>
+                  <select
+                    value={config.scale_port || 9600}
+                    onChange={(e) => handleFormChange('scale_port', parseInt(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="9600">9600 (Kretz Standard)</option>
+                    <option value="19200">19200</option>
+                    <option value="38400">38400</option>
+                    <option value="115200">115200</option>
+                  </select>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    9600 baud, 8 bits, 1 stop, No parity
+                  </p>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Puerto
-                </label>
-                <input
-                  type="number"
-                  value={config.scale_port || 21}
-                  onChange={(e) => handleFormChange('scale_port', parseInt(e.target.value))}
-                  placeholder="21"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Dirección IP de la Balanza
+                  </label>
+                  <input
+                    type="text"
+                    value={config.scale_ip || ''}
+                    onChange={(e) => handleFormChange('scale_ip', e.target.value)}
+                    placeholder="192.168.1.100"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Puerto
+                  </label>
+                  <input
+                    type="number"
+                    value={config.scale_port || 21}
+                    onChange={(e) => handleFormChange('scale_port', parseInt(e.target.value))}
+                    placeholder="21"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Protocol and Sync Frequency */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -281,6 +326,7 @@ const ScaleSettings: React.FC = () => {
                   onChange={(e) => handleFormChange('scale_connection_protocol', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
+                  <option value="serial">RS-232/Serial (Puerto COM)</option>
                   <option value="ftp">FTP (File Transfer Protocol)</option>
                   <option value="http">HTTP (Web Service)</option>
                   <option value="tcp">TCP (Socket Connection)</option>

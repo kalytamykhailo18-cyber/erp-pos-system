@@ -1,11 +1,12 @@
 /**
  * Scale Client
- * Handles direct communication with Kretz Aura scale
+ * Handles direct communication with Kretz scales (network and RS-232)
  */
 
 const ftp = require('basic-ftp');
 const net = require('net');
 const http = require('http');
+const { SerialPort } = require('serialport');
 const logger = require('./logger');
 
 class ScaleClient {
@@ -18,6 +19,11 @@ class ScaleClient {
    */
   async testConnection(config) {
     const { ip, port, protocol, username, password } = config;
+
+    if (protocol === 'serial') {
+      logger.info(`Testing serial connection to ${ip} (timeout: ${this.timeout}ms)`);
+      return await this.testSerial(ip, port);
+    }
 
     logger.info(`Testing ${protocol} connection to ${ip}:${port} (timeout: ${this.timeout}ms)`);
 
@@ -129,10 +135,61 @@ class ScaleClient {
   }
 
   /**
+   * Test Serial (RS-232) connection
+   * @param {string} comPort - COM port name (e.g., "COM1", "COM2")
+   * @param {number} baudRate - Baud rate (default: 9600)
+   */
+  async testSerial(comPort, baudRate) {
+    return new Promise((resolve, reject) => {
+      const port = new SerialPort({
+        path: comPort,
+        baudRate: parseInt(baudRate) || 9600,
+        dataBits: 8,
+        stopBits: 1,
+        parity: 'none',
+        autoOpen: false,
+      });
+
+      const timeout = setTimeout(() => {
+        port.close();
+        reject(new Error('Serial port open timeout'));
+      }, this.timeout);
+
+      port.open((err) => {
+        clearTimeout(timeout);
+
+        if (err) {
+          reject(new Error(`Serial port open failed: ${err.message}`));
+          return;
+        }
+
+        port.close((closeErr) => {
+          if (closeErr) {
+            logger.warn(`Error closing serial port: ${closeErr.message}`);
+          }
+
+          resolve({
+            connected: true,
+            protocol: 'serial',
+            comPort,
+            baudRate: parseInt(baudRate) || 9600,
+            message: 'Serial port connection successful',
+          });
+        });
+      });
+    });
+  }
+
+  /**
    * Upload price list to scale
    */
   async uploadPriceList(config, fileContent) {
     const { ip, port, protocol, username, password, uploadPath } = config;
+
+    if (protocol === 'serial') {
+      logger.info(`Uploading price list via serial to ${ip}`);
+      return await this.uploadSerial(ip, port, fileContent);
+    }
 
     logger.info(`Uploading price list via ${protocol} to ${ip}:${port}`);
 
@@ -281,6 +338,108 @@ class ScaleClient {
       });
 
       socket.connect(port, ip);
+    });
+  }
+
+  /**
+   * Upload via Serial (RS-232) - Kretz Report/Single protocol
+   * @param {string} comPort - COM port name (e.g., "COM1")
+   * @param {number} baudRate - Baud rate (default: 9600)
+   * @param {string} fileContent - CSV price list
+   */
+  async uploadSerial(comPort, baudRate, fileContent) {
+    return new Promise((resolve, reject) => {
+      const port = new SerialPort({
+        path: comPort,
+        baudRate: parseInt(baudRate) || 9600,
+        dataBits: 8,
+        stopBits: 1,
+        parity: 'none',
+        autoOpen: false,
+      });
+
+      let uploadComplete = false;
+      let responseData = '';
+
+      const timeout = setTimeout(() => {
+        if (!uploadComplete) {
+          port.close();
+          reject(new Error('Serial upload timeout'));
+        }
+      }, this.timeout);
+
+      port.on('data', (data) => {
+        responseData += data.toString();
+        logger.info(`Serial response: ${data.toString()}`);
+      });
+
+      port.open((err) => {
+        if (err) {
+          clearTimeout(timeout);
+          reject(new Error(`Serial port open failed: ${err.message}`));
+          return;
+        }
+
+        logger.info(`Serial port ${comPort} opened at ${baudRate} baud`);
+
+        // Kretz scales typically accept data line by line
+        // Split CSV into lines and send with small delays
+        const lines = fileContent.split('\n');
+        let lineIndex = 0;
+
+        const sendNextLine = () => {
+          if (lineIndex >= lines.length) {
+            // All lines sent
+            uploadComplete = true;
+            clearTimeout(timeout);
+
+            setTimeout(() => {
+              port.close((closeErr) => {
+                if (closeErr) {
+                  logger.warn(`Error closing serial port: ${closeErr.message}`);
+                }
+
+                logger.info(`Price list uploaded via serial: ${comPort}`);
+
+                resolve({
+                  success: true,
+                  protocol: 'serial',
+                  comPort,
+                  baudRate: parseInt(baudRate) || 9600,
+                  lines: lines.length,
+                  size: fileContent.length,
+                  timestamp: new Date().toISOString(),
+                  response: responseData,
+                });
+              });
+            }, 1000); // Wait 1 second before closing port
+            return;
+          }
+
+          const line = lines[lineIndex];
+          if (line.trim()) {
+            logger.info(`Sending line ${lineIndex + 1}/${lines.length}: ${line.substring(0, 50)}...`);
+            port.write(line + '\r\n', (writeErr) => {
+              if (writeErr) {
+                clearTimeout(timeout);
+                port.close();
+                reject(new Error(`Serial write failed: ${writeErr.message}`));
+                return;
+              }
+
+              lineIndex++;
+              // Small delay between lines (50ms)
+              setTimeout(sendNextLine, 50);
+            });
+          } else {
+            lineIndex++;
+            setTimeout(sendNextLine, 10);
+          }
+        };
+
+        // Start sending lines
+        sendNextLine();
+      });
     });
   }
 }
