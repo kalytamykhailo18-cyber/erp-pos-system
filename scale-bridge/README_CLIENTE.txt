@@ -148,14 +148,14 @@ Error "Scale Bridge not connected":
 - node index.js no está ejecutándose
 - Sin internet
 - Firewall bloquea Node.js
-- Revisar logs/combined.log
+- Revisar C:\ScaleBridge\logs\combined.log
 
 Error al sincronizar:
 - Balanza apagada
 - Cable desconectado
 - Configuración serial incorrecta (baud rate, etc.)
 - ⚠️ Protocolo no compatible con su modelo
-- Revisar logs/combined.log para ver qué falla
+- Revisar C:\ScaleBridge\logs\combined.log para ver qué falla
 
 Balanza no responde:
 - ⚠️ El formato de datos puede ser incorrecto
@@ -176,7 +176,7 @@ Para desinstalar: node uninstall-service.js
 
 LOGS:
 -----
-Ubicación: C:\scale-bridge\logs\
+Ubicación: C:\ScaleBridge\logs\
 - combined.log: Todos los eventos
 - error.log: Solo errores
 
@@ -188,8 +188,8 @@ Si encuentra problemas, DEBE reportar:
 
 1. Modelo EXACTO de su balanza Kretz
 2. Configuración serial del manual Kretz
-3. Contenido de logs/combined.log (últimas 50 líneas)
-4. Contenido de logs/error.log
+3. Contenido de C:\ScaleBridge\logs\combined.log (últimas 50 líneas)
+4. Contenido de C:\ScaleBridge\logs\error.log
 5. Qué paso específico falla
 
 SIN ESTA INFORMACIÓN no podemos ayudar.

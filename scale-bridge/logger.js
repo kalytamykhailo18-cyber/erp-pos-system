@@ -4,6 +4,15 @@
 
 const winston = require('winston');
 const path = require('path');
+const fs = require('fs');
+
+// Fixed log directory on C: drive for easy access
+const logDir = path.join('C:', 'ScaleBridge', 'logs');
+
+// Create directory if it doesn't exist
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
 
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
@@ -30,13 +39,13 @@ const logger = winston.createLogger({
     }),
     // File output
     new winston.transports.File({
-      filename: path.join(__dirname, 'logs', 'error.log'),
+      filename: path.join(logDir, 'error.log'),
       level: 'error',
       maxsize: 5242880, // 5MB
       maxFiles: 5,
     }),
     new winston.transports.File({
-      filename: path.join(__dirname, 'logs', 'combined.log'),
+      filename: path.join(logDir, 'combined.log'),
       maxsize: 5242880, // 5MB
       maxFiles: 5,
     }),

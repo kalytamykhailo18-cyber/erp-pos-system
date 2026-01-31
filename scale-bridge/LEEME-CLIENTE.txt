@@ -1,0 +1,91 @@
+================================================================
+SCALE BRIDGE - INSTALACION SIMPLE PARA KRETZ RS-232
+================================================================
+
+CONFIGURACION KRETZ: 9600 baud, 8 bits, 1 stop, No parity
+
+INSTALACION (2 PASOS):
+----------------------
+
+PASO 1: Ejecutar instalador
+
+   Doble click en: INSTALL-AUTO.bat
+
+   (Ejecutar como Administrador si pide permisos)
+
+   El instalador hara TODO automaticamente:
+   - Descarga Node.js si necesita
+   - Instala Scale Bridge
+   - Instala todas las dependencias
+
+   Esperar a que termine (5-10 minutos)
+
+
+PASO 2: Configurar en sistema web
+
+   1. Abrir: https://grettas-erp.com
+
+   2. Ir a: Configuracion > Balanza
+
+   3. Configurar:
+      - Protocolo: RS-232/Serial (Puerto COM)
+      - Puerto COM: COM1 (ver abajo como verificar)
+      - Baud Rate: 9600
+      - Habilitar sincronizacion: SI
+      - Guardar
+
+   4. Ejecutar Scale Bridge:
+      Doble click: START.bat
+
+      Debe ver: "Connected to backend successfully"
+
+   5. Probar conexion:
+      En sistema web: Configuracion > Balanza > Probar Conexion
+
+   6. Si funciona, sincronizar:
+      Configuracion > Balanza > Sincronizar Ahora
+
+
+COMO VERIFICAR PUERTO COM:
+---------------------------
+
+1. Presionar: Windows + X
+2. Seleccionar: Administrador de Dispositivos
+3. Expandir: Puertos (COM y LPT)
+4. Buscar: "Puerto de comunicaciones (COMx)"
+5. Anotar el numero: COM1, COM2, COM3, etc.
+
+
+SI HAY PROBLEMAS:
+-----------------
+
+Error "No se pudo descargar Node.js":
+- Descargar manualmente: https://nodejs.org/
+- Ejecutar instalador .msi
+- Luego ejecutar: npm install --omit=dev
+
+Error "Serial port open failed":
+- Verificar numero COM correcto
+- Cerrar otros programas que usen el puerto
+- Balanza debe estar encendida
+
+Error "Scale Bridge not connected":
+- Verificar conexion Internet
+- Ejecutar START.bat como Administrador
+- Revisar logs en: C:\ScaleBridge\logs\combined.log
+
+
+SOPORTE:
+--------
+Reportar problemas con:
+1. Modelo exacto balanza Kretz
+2. Archivo: C:\ScaleBridge\logs\combined.log
+3. Paso donde falla
+
+
+ARCHIVOS IMPORTANTES:
+---------------------
+- INSTALL-AUTO.bat           : Instalador automatico
+- START.bat                  : Iniciar Scale Bridge
+- C:\ScaleBridge\logs\       : Carpeta de logs (se crea automaticamente)
+================================================================

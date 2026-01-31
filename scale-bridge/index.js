@@ -96,10 +96,20 @@ class ScaleBridge {
     // Test connection command from backend
     this.socket.on('scale:test-connection', async (data) => {
       const { request_id, branch_id, config } = data;
-      logger.info(`Received test connection command for branch: ${branch_id}`);
+      logger.info(`=== TEST CONNECTION COMMAND RECEIVED ===`);
+      logger.info(`Request ID: ${request_id}`);
+      logger.info(`Branch ID: ${branch_id}`);
+      logger.info(`Protocol: ${config.protocol}`);
+      logger.info(`IP/COM: ${config.ip}`);
+      logger.info(`Port/Baud: ${config.port}`);
+      logger.info(`Full config: ${JSON.stringify(config)}`);
 
       try {
+        logger.info(`Starting test connection...`);
         const result = await this.scaleClient.testConnection(config);
+
+        logger.info(`Test connection SUCCESS`);
+        logger.info(`Result: ${JSON.stringify(result)}`);
 
         this.socket.emit('scale:test-connection-result', {
           request_id,
@@ -108,9 +118,11 @@ class ScaleBridge {
           result,
         });
 
-        logger.info(`Test connection completed for branch: ${branch_id}`);
+        logger.info(`Test result sent to backend for branch ${branch_id}`);
       } catch (error) {
-        logger.error(`Test connection failed for branch ${branch_id}:`, error);
+        logger.error(`Test connection FAILED for branch ${branch_id}`);
+        logger.error(`Error message: ${error.message}`);
+        logger.error(`Error stack: ${error.stack}`);
 
         this.socket.emit('scale:test-connection-result', {
           request_id,
@@ -118,16 +130,30 @@ class ScaleBridge {
           success: false,
           error: error.message,
         });
+
+        logger.info(`Error result sent to backend for branch ${branch_id}`);
       }
+      logger.info(`=== TEST CONNECTION COMPLETED ===`);
     });
 
     // Sync/upload command from backend
     this.socket.on('scale:sync', async (data) => {
       const { request_id, branch_id, config, fileContent } = data;
-      logger.info(`Received sync command for branch: ${branch_id}`);
+      logger.info(`=== SYNC COMMAND RECEIVED ===`);
+      logger.info(`Request ID: ${request_id}`);
+      logger.info(`Branch ID: ${branch_id}`);
+      logger.info(`Protocol: ${config.protocol}`);
+      logger.info(`IP/COM: ${config.ip}`);
+      logger.info(`Port/Baud: ${config.port}`);
+      logger.info(`File size: ${fileContent ? fileContent.length : 0} bytes`);
+      logger.info(`Full config: ${JSON.stringify(config)}`);
 
       try {
+        logger.info(`Starting price list upload...`);
         const result = await this.scaleClient.uploadPriceList(config, fileContent);
+
+        logger.info(`Upload SUCCESS`);
+        logger.info(`Result: ${JSON.stringify(result)}`);
 
         this.socket.emit('scale:sync-result', {
           request_id,
@@ -136,9 +162,11 @@ class ScaleBridge {
           result,
         });
 
-        logger.info(`Sync completed for branch: ${branch_id}`);
+        logger.info(`Sync result sent to backend for branch ${branch_id}`);
       } catch (error) {
-        logger.error(`Sync failed for branch ${branch_id}:`, error);
+        logger.error(`Upload FAILED for branch ${branch_id}`);
+        logger.error(`Error message: ${error.message}`);
+        logger.error(`Error stack: ${error.stack}`);
 
         this.socket.emit('scale:sync-result', {
           request_id,
@@ -146,7 +174,10 @@ class ScaleBridge {
           success: false,
           error: error.message,
         });
+
+        logger.info(`Error result sent to backend for branch ${branch_id}`);
       }
+      logger.info(`=== SYNC COMPLETED ===`);
     });
 
     // Ping/pong for keepalive

@@ -1,0 +1,59 @@
+SCALE BRIDGE - INSTALACION SIMPLE (SIN COMPILACION)
+====================================================
+
+CONFIGURACION KRETZ: 9600 baud, 8 bits, 1 stop, No parity
+
+INSTALACION (3 PASOS):
+----------------------
+
+1. Instalar Node.js 18 LTS:
+   https://nodejs.org/
+   Descargar instalador Windows (.msi)
+   Ejecutar instalador (siguiente, siguiente, instalar)
+
+2. Extraer esta carpeta a:
+   C:\ScaleBridge\
+
+3. Abrir CMD como Administrador:
+   Windows + X > "Terminal (Admin)" o "Command Prompt (Admin)"
+   
+   Ejecutar:
+   cd C:\ScaleBridge
+   npm install --omit=dev
+
+   NOTA: npm descargara binarios precompilados automaticamente.
+   No requiere Python ni Visual Studio si usa Node.js 18 LTS.
+
+4. Iniciar Scale Bridge:
+   node index.js
+
+   Debe ver: "Connected to backend successfully"
+
+5. Configurar en sistema web:
+   https://grettas-erp.com > Configuracion > Balanza
+   
+   - Protocolo: RS-232/Serial (Puerto COM)
+   - Puerto COM: COM1 (verificar en Administrador Dispositivos)
+   - Baud Rate: 9600
+   - Guardar
+
+6. Probar:
+   Configuracion > Balanza > Probar Conexion
+   Configuracion > Balanza > Sincronizar
+
+SI npm install FALLA:
+---------------------
+Ejecutar:
+npm install --omit=dev --force
+
+Esto forzara uso de binarios precompilados.
+
+PUERTO COM:
+-----------
+Windows + X > Administrador de Dispositivos
+Expandir "Puertos (COM y LPT)"
+Anotar numero: COM1, COM2, etc.
+
+LOGS:
+-----
+C:\ScaleBridge\logs\combined.log

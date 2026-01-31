@@ -1,0 +1,24 @@
+{
+  "name": "scale-bridge",
+  "version": "1.1.2",
+  "description": "Scale Bridge for Kretz RS-232",
+  "main": "index.js",
+  "bin": "index.js",
+  "pkg": {
+    "assets": [
+      ".env.example"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ],
+    "outputPath": "dist"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.7.2",
+    "basic-ftp": "^5.0.4",
+    "dotenv": "^16.3.1",
+    "winston": "^3.11.0",
+    "node-windows": "^1.0.0-beta.8",
+    "serialport": "^12.0.0"
+  }
+}

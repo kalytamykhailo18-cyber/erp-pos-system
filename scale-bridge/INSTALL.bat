@@ -81,6 +81,6 @@ echo   1. Abra services.msc
 echo   2. Busque "Scale Bridge"
 echo   3. Estado debe ser "En ejecucion"
 echo.
-echo Logs en: %cd%\logs\
+echo Logs en: C:\ScaleBridge\logs\
 echo.
 pause

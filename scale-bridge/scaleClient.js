@@ -141,6 +141,11 @@ class ScaleClient {
    */
   async testSerial(comPort, baudRate) {
     return new Promise((resolve, reject) => {
+      logger.info(`[Test Serial] Step 1: Creating SerialPort object`);
+      logger.info(`[Test Serial] COM Port: ${comPort}`);
+      logger.info(`[Test Serial] Baud Rate: ${parseInt(baudRate) || 9600}`);
+      logger.info(`[Test Serial] Config: 8 data bits, 1 stop bit, no parity`);
+
       const port = new SerialPort({
         path: comPort,
         baudRate: parseInt(baudRate) || 9600,
@@ -150,23 +155,37 @@ class ScaleClient {
         autoOpen: false,
       });
 
+      logger.info(`[Test Serial] Step 2: SerialPort object created`);
+      logger.info(`[Test Serial] Step 3: Setting timeout ${this.timeout}ms`);
+
       const timeout = setTimeout(() => {
+        logger.error(`[Test Serial] Timeout reached after ${this.timeout}ms`);
         port.close();
         reject(new Error('Serial port open timeout'));
       }, this.timeout);
+
+      logger.info(`[Test Serial] Step 4: Opening serial port ${comPort}...`);
 
       port.open((err) => {
         clearTimeout(timeout);
 
         if (err) {
+          logger.error(`[Test Serial] Step 5: Port open FAILED - ${err.message}`);
           reject(new Error(`Serial port open failed: ${err.message}`));
           return;
         }
 
+        logger.info(`[Test Serial] Step 5: Port opened successfully`);
+        logger.info(`[Test Serial] Step 6: Closing port...`);
+
         port.close((closeErr) => {
           if (closeErr) {
-            logger.warn(`Error closing serial port: ${closeErr.message}`);
+            logger.warn(`[Test Serial] Step 7: Close warning - ${closeErr.message}`);
+          } else {
+            logger.info(`[Test Serial] Step 7: Port closed successfully`);
           }
+
+          logger.info(`[Test Serial] Step 8: Test completed successfully`);
 
           resolve({
             connected: true,
@@ -349,6 +368,14 @@ class ScaleClient {
    */
   async uploadSerial(comPort, baudRate, fileContent) {
     return new Promise((resolve, reject) => {
+      logger.info(`[Upload Serial] Step 1: Starting serial upload`);
+      logger.info(`[Upload Serial] COM Port: ${comPort}`);
+      logger.info(`[Upload Serial] Baud Rate: ${parseInt(baudRate) || 9600}`);
+      logger.info(`[Upload Serial] Data size: ${fileContent.length} bytes`);
+      logger.info(`[Upload Serial] Config: 8 data bits, 1 stop bit, no parity, \\r\\n line terminator`);
+
+      logger.info(`[Upload Serial] Step 2: Creating SerialPort object`);
+
       const port = new SerialPort({
         path: comPort,
         baudRate: parseInt(baudRate) || 9600,
@@ -361,30 +388,42 @@ class ScaleClient {
       let uploadComplete = false;
       let responseData = '';
 
+      logger.info(`[Upload Serial] Step 3: Setting timeout ${this.timeout}ms`);
+
       const timeout = setTimeout(() => {
         if (!uploadComplete) {
+          logger.error(`[Upload Serial] Timeout reached after ${this.timeout}ms`);
           port.close();
           reject(new Error('Serial upload timeout'));
         }
       }, this.timeout);
 
       port.on('data', (data) => {
-        responseData += data.toString();
-        logger.info(`Serial response: ${data.toString()}`);
+        const response = data.toString();
+        responseData += response;
+        logger.info(`[Upload Serial] Scale response: ${response}`);
       });
+
+      logger.info(`[Upload Serial] Step 4: Opening serial port ${comPort}...`);
 
       port.open((err) => {
         if (err) {
           clearTimeout(timeout);
+          logger.error(`[Upload Serial] Step 5: Port open FAILED - ${err.message}`);
           reject(new Error(`Serial port open failed: ${err.message}`));
           return;
         }
 
-        logger.info(`Serial port ${comPort} opened at ${baudRate} baud`);
+        logger.info(`[Upload Serial] Step 5: Port opened successfully`);
 
         // Kretz scales typically accept data line by line
         // Split CSV into lines and send with small delays
         const lines = fileContent.split('\n');
+        const totalLines = lines.length;
+
+        logger.info(`[Upload Serial] Step 6: Splitting data into ${totalLines} lines`);
+        logger.info(`[Upload Serial] Step 7: Starting line-by-line transmission with 50ms delay`);
+
         let lineIndex = 0;
 
         const sendNextLine = () => {
@@ -393,13 +432,25 @@ class ScaleClient {
             uploadComplete = true;
             clearTimeout(timeout);
 
+            logger.info(`[Upload Serial] Step 8: All ${totalLines} lines sent successfully`);
+            logger.info(`[Upload Serial] Step 9: Waiting 1 second before closing port...`);
+
             setTimeout(() => {
+              logger.info(`[Upload Serial] Step 10: Closing port...`);
+
               port.close((closeErr) => {
                 if (closeErr) {
-                  logger.warn(`Error closing serial port: ${closeErr.message}`);
+                  logger.warn(`[Upload Serial] Step 11: Close warning - ${closeErr.message}`);
+                } else {
+                  logger.info(`[Upload Serial] Step 11: Port closed successfully`);
                 }
 
-                logger.info(`Price list uploaded via serial: ${comPort}`);
+                logger.info(`[Upload Serial] Step 12: Upload completed successfully`);
+                logger.info(`[Upload Serial] Total bytes sent: ${fileContent.length}`);
+                logger.info(`[Upload Serial] Total lines sent: ${totalLines}`);
+                if (responseData) {
+                  logger.info(`[Upload Serial] Scale response data: ${responseData}`);
+                }
 
                 resolve({
                   success: true,
@@ -418,10 +469,13 @@ class ScaleClient {
 
           const line = lines[lineIndex];
           if (line.trim()) {
-            logger.info(`Sending line ${lineIndex + 1}/${lines.length}: ${line.substring(0, 50)}...`);
+            const linePreview = line.length > 50 ? line.substring(0, 50) + '...' : line;
+            logger.info(`[Upload Serial] Sending line ${lineIndex + 1}/${totalLines}: ${linePreview}`);
+
             port.write(line + '\r\n', (writeErr) => {
               if (writeErr) {
                 clearTimeout(timeout);
+                logger.error(`[Upload Serial] Write FAILED at line ${lineIndex + 1}: ${writeErr.message}`);
                 port.close();
                 reject(new Error(`Serial write failed: ${writeErr.message}`));
                 return;
@@ -432,6 +486,7 @@ class ScaleClient {
               setTimeout(sendNextLine, 50);
             });
           } else {
+            // Skip empty lines faster
             lineIndex++;
             setTimeout(sendNextLine, 10);
           }
