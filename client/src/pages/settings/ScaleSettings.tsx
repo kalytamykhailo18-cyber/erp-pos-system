@@ -111,7 +111,29 @@ const ScaleSettings: React.FC = () => {
   };
 
   const handleFormChange = (field: keyof ScaleConfiguration, value: any) => {
-    setConfig({ ...config, [field]: value });
+    // Special handling when protocol changes
+    if (field === 'scale_connection_protocol') {
+      if (value === 'serial') {
+        // Switching TO serial: set COM port and baud rate defaults
+        setConfig({
+          ...config,
+          scale_connection_protocol: value,
+          scale_ip: 'COM1',
+          scale_port: 9600,
+        });
+      } else {
+        // Switching FROM serial to network: reset to network defaults
+        setConfig({
+          ...config,
+          scale_connection_protocol: value,
+          scale_ip: '',
+          scale_port: value === 'ftp' ? 21 : 80,
+        });
+      }
+    } else {
+      // Normal field update
+      setConfig({ ...config, [field]: value });
+    }
   };
 
   const handleSaveConfiguration = async () => {
@@ -449,7 +471,7 @@ const ScaleSettings: React.FC = () => {
               {config.scale_enabled && config.scale_ip && (
                 <Button
                   type="button"
-                  variant="accent"
+                  variant="success"
                   onClick={handleSyncNow}
                   disabled={syncing}
                   icon={<MdSync className={syncing ? 'animate-spin' : ''} />}
